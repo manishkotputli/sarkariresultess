@@ -1,0 +1,1212 @@
+<%- include('../weblayout/layout-top', { title: title }) %>
+
+<style>
+  /* Base Layout Adjustments */
+  .news-marquee-wrapper {
+    text-align: center;
+    font-size: 13px;
+    margin-bottom: 10px;
+    padding: 0 5px;
+  }
+  
+  .news-marquee a {
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* TOP BOXES - 2 COLUMNS ON MOBILE & DESKTOP */
+  .top-boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 5px;
+    max-width: 1000px;
+    margin: 0 auto 15px auto;
+  }
+
+  .top-box-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ffffff !important;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 8px 5px;
+    text-decoration: none;
+    border-radius: 2px;
+    min-height: 42px;
+    box-sizing: border-box;
+    line-height: 1.2;
+  }
+
+  /* DYNAMIC SECTIONS - 2 COLUMNS PARALLEL ON MOBILE */
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 5px;
+    max-width: 1000px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  /* If 3 columns needed on desktop, auto-adjusts */
+  @media (min-width: 768px) {
+    .columns {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .col-box {
+    border: 1px solid #777;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100%;
+  }
+
+  .col-title {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 15px;
+    text-align: center;
+    padding: 6px 4px;
+    background-color: #ab2828; /* Default red header */
+  }
+
+  /* Different header colors if needed */
+  .t-blue { background-color: #0033cc; }
+  .t-red { background-color: #ab2828; }
+  .t-green { background-color: #008000; }
+
+  .col-links {
+    padding: 6px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .col-links a {
+    color: #0033cc;
+    font-weight: 600;
+    font-size: 12px;
+    text-decoration: none;
+    line-height: 1.3;
+    display: block;
+    word-break: break-word;
+  }
+
+  .col-links a:hover {
+    color: #ff0000;
+    text-decoration: underline;
+  }
+
+  .view-all-wrapper {
+    text-align: right;
+    padding: 4px 6px 6px 6px;
+  }
+
+  .view-all-btn {
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffffff;
+    text-decoration: none;
+  }
+
+  .post-link {
+  display: flex !important;
+  align-items: center;
+  gap: 1px;
+}
+
+.new-post-gif {
+  width: 25px;
+  height: auto;
+  display: inline-block;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+/* ms */
+/* SEO CONTENT & TABLE SECTION */
+  .seo-footer-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #000;
+  }
+
+  .seo-intro-text {
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 15px;
+  }
+
+  .seo-badge {
+    background-color: #0056b3;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    display: inline-block;
+  }
+
+  .table-title-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .sarkari-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+
+  .sarkari-table td {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: center;
+    width: 33.33%;
+  }
+
+  .sarkari-table a {
+    color: #0000ff;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .sarkari-table a:hover {
+    text-decoration: underline;
+  }
+
+  /* OFFICIAL WEBSITE BANNER & DISCOVER BOX */
+  .official-banner {
+    background-color: #ab2828;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    padding: 6px;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .discover-card {
+    border: 1px solid #e0e0e0;
+    background: #f4f7ff;
+    border-radius: 4px;
+    margin: 15px 0;
+    overflow: hidden;
+  }
+
+  .discover-header {
+    padding: 10px 15px;
+    font-weight: bold;
+    color: #444;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .discover-list {
+    background: #fff;
+  }
+
+  .discover-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+    text-decoration: none;
+  }
+
+  .disclaimer-text {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 15px;
+  }
+
+  /* FAQ SECTION */
+  .faq-container {
+        max-width: 1000px;
+    margin: 20px auto;
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    background: #ffffffff;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    color: #000;
+  }
+
+  .faq-title {
+    font-size: 22px;
+    color: #1a365d;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .faq-item {
+    margin-bottom: 15px;
+  }
+
+  .faq-question {
+    font-weight: bold;
+    font-size: 14px;
+    color: #000;
+    margin-bottom: 5px;
+  }
+
+  .faq-answer {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  /* BANNER SECTION STYLES */
+  .home-banners-wrapper {
+    max-width: 1000px;
+    margin: 10px auto;
+    padding: 0 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .banner-item {
+    display: block;
+    text-align: center;
+    padding: 10px 15px;
+    font-weight: bold;
+    font-size: 14px;
+    text-decoration: none;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .banner-item:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+</style>
+
+<!-- MARQUEE NEWS TICKER -->
+<div class="news-marquee-wrapper">
+  <% (marqueeRows || []).forEach(function(entry) { %>
+    <% var categoryName = entry[0]; var items = entry[1]; %>
+    <marquee behavior="alternate" onmouseover="this.stop()" onmouseout="this.start()" class="news-marquee">
+      <% items.forEach(function(post, idx) { %>
+        <a href="/post/<%= post.slug %>" target="_blank" style="color:<%= post.highlight_color || '#0033cc' %>;">
+          <%= post.title %>
+        </a>
+        <% if (idx !== items.length - 1) { %>
+          <span style="color:red; font-weight:bold;"> || </span>
+        <% } %>
+      <% }) %>
+    </marquee>
+  <% }) %>
+</div>
+
+
+<!-- BANNERS SECTION -->
+<!-- BANNER CAROUSEL SECTION -->
+<% if (typeof banners !== 'undefined' && banners && banners.length > 0) { %>
+  <div class="banner-carousel-container">
+    <div class="banner-carousel-track" id="bannerTrack">
+      <% banners.forEach(function(banner) { %>
+        <div class="banner-slide">
+          <a href="<%= banner.url || '#' %>" target="_blank" class="banner-link">
+            <% if (banner.image) { %>
+              <img src="<%= banner.image %>" alt="<%= banner.text || 'Banner' %>" class="banner-img" />
+            <% } else { %>
+              <div class="banner-text-box" style="background-color: <%= banner.color || '#ab2828' %>;">
+                <%= banner.text %>
+              </div>
+            <% } %>
+          </a>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+
+  <style>
+    .banner-carousel-container {
+      max-width: 1000px;
+      margin: 10px auto;
+      overflow: hidden;
+      position: relative;
+      border-radius: 6px;
+    }
+    .banner-carousel-track {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+    }
+    .banner-slide {
+      min-width: 100%;
+      box-sizing: border-box;
+    }
+    .banner-link {
+      display: block;
+      text-decoration: none;
+    }
+    .banner-img {
+      width: 100%;
+      max-height: 250px;
+      object-fit:scale-down;
+      display: block;
+      border-radius: 6px;
+    }
+    .banner-text-box {
+      padding: 12px 20px;
+      color: #ffffff;
+      font-weight: bold;
+      text-align: center;
+      font-size: 15px;
+      border-radius: 4px;
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const track = document.getElementById('bannerTrack');
+      const slides = track ? track.children : [];
+      if (slides.length > 1) {
+        let currentIndex = 0;
+        setInterval(() => {
+          currentIndex = (currentIndex + 1) % slides.length;
+          track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }, 4000); // Har 4 second me slide switch hoga
+      }
+    });
+  </script>
+<% } %>
+
+
+<!-- TOP BUTTON GRID (2 COLUMNS ON MOBILE) -->
+<div class="top-boxes">
+  <% (topPosts || []).forEach(function(post) { %>
+    <a href="/post/<%= post.slug %>" target="_blank" class="top-box-item" style="background: <%= post.highlight_color || '#0033cc' %>">
+      <%= post.title %>
+    </a>
+  <% }) %>
+</div>
+
+<!-- DYNAMIC HOME SECTIONS (2 COLUMNS ON MOBILE) -->
+<div class="columns">
+  <% (dynamicSections || []).forEach(function(sec) { %>
+    <div class="col-box">
+      <div>
+        <div class="col-title <%= sec.colorClass || 't-red' %>">
+          <%= sec.title %>
+        </div>
+        <div class="col-links">
+          <% if (sec.posts && sec.posts.length) { %>
+            <% sec.posts.forEach(function(item) { %>
+  <a href="/post/<%= item.slug %>" target="_blank" class="post-link">
+    &bull; <%= item.title %>
+
+    <% 
+      const postDate = item.post_date 
+        ? new Date(item.post_date).toISOString().split('T')[0] 
+        : '';
+      
+      const today = new Date().toISOString().split('T')[0];
+    %>
+
+    <% if (postDate === today) { %>
+      <img src="/admin-assets/new.gif" class="new-post-gif" alt="NEW">
+    <% } %>
+  </a>
+<% }) %>
+          <% } else { %>
+            <span style="font-size:11px; color:#666;">No posts available</span>
+          <% } %>
+        </div>
+      </div>
+      <div class="view-all-wrapper">
+        <a href="/category/<%= sec.category ? sec.category.slug : '' %>" target="_blank" class="view-all-btn">View All &rarr;</a>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<!-- SECTION 1: SEO TEXT, LINKS TABLE & DISCOVER MORE (IMAGE 1 & 2 TOP) -->
+<div class="seo-footer-container">
+  
+  <div class="seo-intro-text">
+    <a href="/" style="font-weight:bold; color:#000;">Sarkari Result™ 2026</a> : Find Latest Sarkari <span class="seo-badge">job</span> Vacancies And Sarkari Exam Results At Sarkariresult.Com.Cm Official Website Of Sarkari Result Since 2026. Get All The Information You Need On Govt <span class="seo-badge">jobs</span> And Online From, Exam, Results, Admit Card In One Place.
+    <br><br>
+    <span class="seo-badge">Career News Updates</span>
+  </div>
+
+  <div class="table-title-header">
+    *** <a href="/" style="color:red; font-style:italic;">Top Sarkari Result Pages</a> ***
+  </div>
+
+ <table class="sarkari-table">
+    <tr>
+        <td><a href="https://bharatresult.com/" target="_blank" rel="noopener">Bharat Result</a></td>
+        <td><a href="https://www.uppolice.gov.in/" target="_blank" rel="noopener">Up Police Result</a></td>
+        <td><a href="https://police.bihar.gov.in/" target="_blank" rel="noopener">Bihar Police Result</a></td>
+    </tr>
+
+    <tr>
+        <td><a href="https://www.sarkariexam.com/" target="_blank" rel="noopener">Sarkari Exam</a></td>
+        <td><a href="https://www.sarkariresult.com/" target="_blank" rel="noopener">SarkariResult Hindi</a></td>
+        <td><a href="https://www.sarkariresult.com/railway/rrb-ntpc/" target="_blank" rel="noopener">Sarkari Result Ntpc</a></td>
+    </tr>
+
+    <tr>
+        <td><a href="https://www.sarkariresult.com/" target="_blank" rel="noopener">Sarkari Result 2026</a></td>
+        <td><a href="https://www.sarkariresult.com/" target="_blank" rel="noopener">Sarkari Result</a></td>
+        <td><a href="https://www.sarkariresult.com/" target="_blank" rel="noopener">Sarkari</a></td>
+    </tr>
+
+    <tr>
+        <td><a href="https://www.sarkariresult.com/" target="_blank" rel="noopener">Sarkari Naukri</a></td>
+        <td><a href="https://www.sarkariresult.com/10th/" target="_blank" rel="noopener">Sarkari Result 10th</a></td>
+        <td><a href="https://www.sarkariresult.com/" target="_blank" rel="noopener">Sarkari Result Center</a></td>
+    </tr>
+
+    <tr>
+        <td><a href="https://www.sarkariresult.com/12th/" target="_blank" rel="noopener">Sarkari Result 10+2</a></td>
+        <td><a href="https://www.sarkariresult.com/" target="_blank" rel="noopener">Sarkariresult</a></td>
+        <td><a href="https://www.sarkariresult.com/ssc/" target="_blank" rel="noopener">Sarkari Result SSC</a></td>
+    </tr>
+</table>
+
+  <!-- =========================================================
+     SECTION 2: ABOUT SARKARIRESULTESS.COM
+========================================================= -->
+
+<div class="seo-footer-container">
+
+  <div class="official-banner">
+    About SarkariResultess.Com
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      <strong>SarkariResultess.Com</strong> is an independent online
+      information portal that provides useful updates related to
+      government jobs, Sarkari Result, recruitment notifications,
+      online application forms, admit cards, answer keys, examination
+      schedules and other competitive examination information.
+    </p>
+
+    <p>
+      Our goal is to make important government job and examination
+      information easier to find in one place. Candidates can explore
+      different categories and quickly find information about
+      <strong>latest government jobs, Sarkari Naukri, exam results,
+      admit cards, answer keys and recruitment notifications.</strong>
+    </p>
+
+    <p>
+      Information is organised in a simple format so that students and
+      job seekers can easily understand important dates, eligibility,
+      vacancies, application details and examination-related updates.
+    </p>
+
+  </div>
+
+
+  <!-- IMPORTANT LINKS -->
+
+  <div class="official-banner">
+    Explore SarkariResultess.Com
+  </div>
+
+  <table class="sarkari-table">
+
+    <tr>
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Latest Government Jobs
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/result" target="_blank">
+          Sarkari Result
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/admit-card" target="_blank">
+          Admit Card
+        </a>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <a href="/category/answer-key" target="_blank">
+          Answer Key
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/syllabus" target="_blank">
+          Exam Syllabus
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Sarkari Naukri
+        </a>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Government Recruitment
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/result" target="_blank">
+          Government Exam Result
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Latest Vacancy
+        </a>
+      </td>
+    </tr>
+
+  </table>
+
+
+  <!-- DISCOVER MORE -->
+
+  <div class="discover-card">
+
+    <div class="discover-header">
+      Important Sections
+    </div>
+
+    <div class="discover-list">
+
+      <a href="/category/latest-jobs" target="_blank" class="discover-item">
+        <span>Latest Government Jobs 2026</span>
+        <span>&rsaquo;</span>
+      </a>
+
+      <a href="/category/result" target="_blank" class="discover-item">
+        <span>Sarkari Result 2026</span>
+        <span>&rsaquo;</span>
+      </a>
+
+      <a href="/category/admit-card" target="_blank" class="discover-item">
+        <span>Latest Admit Card</span>
+        <span>&rsaquo;</span>
+      </a>
+
+      <a href="/category/answer-key" target="_blank" class="discover-item">
+        <span>Latest Answer Key</span>
+        <span>&rsaquo;</span>
+      </a>
+
+      <a href="/category/syllabus" target="_blank" class="discover-item">
+        <span>Government Exam Syllabus</span>
+        <span>&rsaquo;</span>
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       SECTION 3: LATEST GOVERNMENT JOBS
+  ====================================================== -->
+
+  <div class="official-banner">
+    Latest Government Jobs 2026
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      Government jobs continue to be a popular career choice for
+      candidates looking for stable employment opportunities. Every year,
+      central and state government departments release recruitment
+      notifications for different posts and qualifications.
+    </p>
+
+    <p>
+      SarkariResultess.Com helps candidates find information about
+      <strong>latest government jobs 2026, Sarkari Naukri, government
+      recruitment, online forms, vacancies and important examination
+      dates.</strong>
+    </p>
+
+    <p>
+      Candidates can visit the
+      <a href="/category/latest-jobs" target="_blank">
+        Latest Jobs
+      </a>
+      section to check newly published recruitment updates and
+      application information.
+    </p>
+
+  </div>
+
+
+  <!-- =====================================================
+       SECTION 4: SARKARI RESULT
+  ====================================================== -->
+
+  <div class="official-banner">
+    Sarkari Result 2026
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      Candidates preparing for government examinations regularly look
+      for result announcements, merit lists, score cards and selection
+      updates. SarkariResultess.Com provides a dedicated
+      <a href="/category/result" target="_blank">
+        Sarkari Result
+      </a>
+      section where candidates can find examination result updates.
+    </p>
+
+    <p>
+      Result information may include written examination results,
+      preliminary examination results, main examination results,
+      merit lists, shortlisted candidates and final selection updates,
+      depending on the recruitment process.
+    </p>
+
+    <div class="seo-highlight">
+
+      <strong>Important:</strong>
+      Candidates should always verify the final result and selection
+      information from the official website or notification of the
+      concerned examination authority.
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       SECTION 5: ADMIT CARD & ANSWER KEY
+  ====================================================== -->
+
+  <div class="official-banner">
+    Admit Card, Answer Key & Exam Updates
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      After submitting an online application, candidates may need to
+      follow several stages including application status, examination
+      city information, admit card, examination date, answer key and
+      result.
+    </p>
+
+  </div>
+
+
+  <table class="sarkari-table">
+
+    <tr>
+
+      <td>
+        <a href="/category/admit-card" target="_blank">
+          Latest Admit Card
+        </a>
+
+        <br>
+
+        <small>
+          Check examination hall ticket and admit card updates.
+        </small>
+      </td>
+
+      <td>
+        <a href="/category/answer-key" target="_blank">
+          Latest Answer Key
+        </a>
+
+        <br>
+
+        <small>
+          Find answer key and examination-related updates.
+        </small>
+      </td>
+
+      <td>
+        <a href="/category/result" target="_blank">
+          Latest Results
+        </a>
+
+        <br>
+
+        <small>
+          Check recently published examination results.
+        </small>
+      </td>
+
+    </tr>
+
+  </table>
+
+
+  <!-- =====================================================
+       SECTION 6: CENTRAL & STATE GOVERNMENT JOBS
+  ====================================================== -->
+
+  <div class="official-banner">
+    Central & State Government Jobs
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      Government recruitment is conducted by both central and state
+      government departments. Vacancies may be released for different
+      educational qualifications, age groups and professional
+      backgrounds.
+    </p>
+
+    <p>
+      SarkariResultess.Com covers information across different
+      recruitment categories so candidates can easily discover relevant
+      opportunities.
+    </p>
+
+  </div>
+
+
+  <table class="sarkari-table">
+
+    <tr>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Central Government Jobs
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          State Government Jobs
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Police Recruitment
+        </a>
+      </td>
+
+    </tr>
+
+    <tr>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Railway Jobs
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Banking Jobs
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Teaching Jobs
+        </a>
+      </td>
+
+    </tr>
+
+    <tr>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Defence Jobs
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Medical Jobs
+        </a>
+      </td>
+
+      <td>
+        <a href="/category/latest-jobs" target="_blank">
+          Graduate Jobs
+        </a>
+      </td>
+
+    </tr>
+
+  </table>
+
+
+  <!-- =====================================================
+       SECTION 7: QUALIFICATION BASED JOBS
+  ====================================================== -->
+
+  <div class="official-banner">
+    Government Jobs According to Qualification
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      Government recruitment notifications are released for candidates
+      with different educational qualifications. Eligibility varies from
+      one recruitment to another, therefore candidates should always
+      read the complete official notification.
+    </p>
+
+  </div>
+
+
+  <table class="sarkari-table">
+
+    <tr>
+
+      <td>
+        <strong>10th Pass Jobs</strong>
+        <br>
+        Railway, Police, Group D and other recruitment opportunities.
+      </td>
+
+      <td>
+        <strong>12th Pass Jobs</strong>
+        <br>
+        Clerk, Police, Defence and various competitive examinations.
+      </td>
+
+      <td>
+        <strong>Graduate Jobs</strong>
+        <br>
+        SSC, Banking, UPSC, PSC and other graduate-level recruitment.
+      </td>
+
+    </tr>
+
+  </table>
+
+
+  <!-- =====================================================
+       SECTION 8: HOW TO USE WEBSITE
+  ====================================================== -->
+
+  <div class="official-banner">
+    How to Find Government Job Updates
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      Finding the right recruitment information becomes easier when
+      candidates follow a proper process. SarkariResultess.Com organises
+      updates into different sections to make information easier to find.
+    </p>
+
+    <ol style="padding-left:20px; text-align:left;">
+
+      <li>
+        Visit SarkariResultess.Com and check the latest updates.
+      </li>
+
+      <li>
+        Select the required category such as Latest Jobs, Result,
+        Admit Card or Answer Key.
+      </li>
+
+      <li>
+        Open the recruitment or examination update and read all details.
+      </li>
+
+      <li>
+        Check eligibility, important dates, application fee and vacancy
+        information.
+      </li>
+
+      <li>
+        Before applying, verify the information from the official
+        notification issued by the concerned authority.
+      </li>
+
+    </ol>
+
+  </div>
+
+
+  <!-- =====================================================
+       SECTION 9: WHY USE SARKARIRESULTESS
+  ====================================================== -->
+
+  <div class="official-banner">
+    Why Candidates Use SarkariResultess.Com
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <p>
+      SarkariResultess.Com is designed to provide government job and
+      examination information in a simple and organised format.
+    </p>
+
+    <ul style="padding-left:20px; text-align:left;">
+
+      <li>
+        Latest government recruitment updates
+      </li>
+
+      <li>
+        Sarkari Naukri and vacancy information
+      </li>
+
+      <li>
+        Online application and important date updates
+      </li>
+
+      <li>
+        Sarkari Result and selection updates
+      </li>
+
+      <li>
+        Admit Card and Answer Key information
+      </li>
+
+      <li>
+        Government examination updates
+      </li>
+
+      <li>
+        Easy category-wise navigation
+      </li>
+
+    </ul>
+
+  </div>
+
+
+  <!-- =====================================================
+       SECTION 10: IMPORTANT NOTICE
+  ====================================================== -->
+
+  <div class="official-banner">
+    Important Information for Candidates
+  </div>
+
+  <div class="seo-intro-text" style="text-align:left;">
+
+    <div class="seo-highlight">
+
+      <strong>Please Verify Before Applying:</strong>
+
+      <p style="margin-top:6px;">
+        Recruitment dates, vacancies, eligibility criteria, age limits,
+        application fees, examination schedules and other conditions may
+        change according to the concerned authority.
+      </p>
+
+      <p>
+        Candidates should carefully read the official recruitment
+        notification and verify all important information from the
+        official website of the concerned department before submitting
+        an application or making any payment.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       SECTION 11: DISCLAIMER
+  ====================================================== -->
+
+  <div class="official-banner">
+    Disclaimer
+  </div>
+
+  <div class="disclaimer-text">
+
+    &bull;
+    <strong>SarkariResultess.Com</strong> is an independent
+    informational website and is not a government website.
+
+    The website is not affiliated with or endorsed by any government
+    department, recruitment board or examination authority unless
+    specifically stated on an individual page.
+
+    <br><br>
+
+    Information published on this website is provided for general
+    informational purposes. Candidates should verify recruitment
+    details, eligibility, vacancies, application dates, fees,
+    examination dates and results from the official notification or
+    official website of the concerned authority.
+
+    <br><br>
+
+    If any error or outdated information is found, visitors are
+    encouraged to contact us so that the information can be reviewed
+    and updated.
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     SECTION 12: FAQ SECTION
+     FAQ IS STILL AT THE BOTTOM
+========================================================= -->
+
+<div class="faq-container">
+
+  <div class="faq-title">
+    FAQ – SarkariResultess.Com
+  </div>
+
+
+  <div class="faq-item">
+
+    <div class="faq-question">
+      What is SarkariResultess.Com?
+    </div>
+
+    <div class="faq-answer">
+      SarkariResultess.Com is an independent information portal that
+      provides updates related to government jobs, Sarkari Result,
+      recruitment notifications, online forms, admit cards, answer keys
+      and competitive examinations.
+    </div>
+
+  </div>
+
+
+  <div class="faq-item">
+
+    <div class="faq-question">
+      How can I check the latest government job vacancies?
+    </div>
+
+    <div class="faq-answer">
+      Visit the
+      <a href="/category/latest-jobs" target="_blank">
+        Latest Jobs
+      </a>
+      section of SarkariResultess.Com to find recently published
+      government recruitment and vacancy updates.
+    </div>
+
+  </div>
+
+
+  <div class="faq-item">
+
+    <div class="faq-question">
+      Where can I check Sarkari Result?
+    </div>
+
+    <div class="faq-answer">
+      You can visit the
+      <a href="/category/result" target="_blank">
+        Sarkari Result
+      </a>
+      section to find examination result and selection-related updates.
+    </div>
+
+  </div>
+
+
+  <div class="faq-item">
+
+    <div class="faq-question">
+      Where can I find the latest Admit Card?
+    </div>
+
+    <div class="faq-answer">
+      Latest examination admit card and hall ticket updates can be
+      found in the
+      <a href="/category/admit-card" target="_blank">
+        Admit Card
+      </a>
+      section.
+    </div>
+
+  </div>
+
+
+  <div class="faq-item">
+
+    <div class="faq-question">
+      Where can I find Answer Key updates?
+    </div>
+
+    <div class="faq-answer">
+      Candidates can visit the
+      <a href="/category/answer-key" target="_blank">
+        Answer Key
+      </a>
+      section for examination answer key and related updates.
+    </div>
+
+  </div>
+
+
+  <div class="faq-item">
+
+    <div class="faq-question">
+      Does SarkariResultess.Com conduct government examinations?
+    </div>
+
+    <div class="faq-answer">
+      No. SarkariResultess.Com is an independent information portal.
+      Government examinations and recruitment processes are conducted
+      by their respective departments and examination authorities.
+    </div>
+
+  </div>
+
+
+  <div class="faq-item">
+
+    <div class="faq-question">
+      Should I verify information before applying for a government job?
+    </div>
+
+    <div class="faq-answer">
+      Yes. Candidates should always read the complete official
+      notification and verify important details from the official
+      website of the concerned department before submitting an
+      application.
+    </div>
+
+  </div>
+
+</div>
+
+
+<%- include('../weblayout/layout-bottom') %>
