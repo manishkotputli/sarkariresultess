@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title> Sarkari Resultess</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="Streamline your business with our advanced CRM template. Easily integrate and customize to manage sales, support, and customer interactions efficiently. Perfect for any business size">
+	<meta name="keywords"
+		content="Advanced CRM template, customer relationship management, business CRM, sales optimization, customer support software, CRM integration, customizable CRM, business tools, enterprise CRM solutions">
+	<meta name="author" content="Dreams Technologies">
+	<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="/admin_assets/img/logo.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="/admin_assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="/admin_assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="/admin_assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="/admin_assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="/admin_assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Datatable CSS -->
+	<link rel="stylesheet" href="/admin_assets/plugins/datatables/css3/dataTables.bootstrap5.min.css">
+
+	<!-- Daterangepicker CSS -->
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="/admin_assets/css/style.css" id="app-style">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="/admin_assets/plugins/flatpickr/flatpickr.min.css">
+
+</head>
+
+<body><a href="https://crms.dreamstechnologies.com/cdn-cgi/content?id=dCCm.1n93y33cfEDRqaFqUG43P9Gh4b094qUWDJvGdU-1788772122.6818042-1.2.1.1-22mcxiztfiw4mY50vn1PKXbKETnMo6jbaw2UyrMWALA48IXVsYCwQEiaSoq4uZhI" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu">
+				<div class="d-flex align-items-center gap-2">
+
+					<!-- Logo -->
+					<a href="index.html" class="logo">
+
+						<!-- Logo Normal -->
+						<span class="logo-light">
+							<span class="logo-lg"><img src="/admin_assets/img/logos.png" alt="logo"></span>
+							<span class="logo-sm"><img src="/admin_assets/img/logos.png" alt="small logo"></span>
+						</span>
+
+						<!-- Logo Dark -->
+						<span class="logo-dark">
+							<span class="logo-lg"><img src="/admin_assets/img/logo-white.svg" alt="dark logo"></span>
+						</span>
+					</a>
+
+					<!-- Sidebar Mobile Button -->
+					<a id="mobile_btn" class="mobile-btn" href="index.html#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+
+				<div class="me-auto d-flex align-items-center header-search d-lg-flex d-none">
+    <!-- Premium Welcome Header -->
+    <div class="d-flex align-items-center gap-2 py-1 px-3 rounded-pill shadow-sm border border-light-subtle" 
+         style="background: #fff; backdrop-filter: blur(10px);">
+        
+        <!-- Welcome Label -->
+        <span class="fs-15 text-secondary tracking-wide" style="font-weight: 700;">
+            Welcome,
+        </span>
+
+        <!-- Super Bold Premium Name (Large & Vibrant Gradient) -->
+        <span class="fs-4 tracking-tight" 
+              style="font-weight: 900; background: #000000; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.05));">
+            <%= (typeof currentUser !== 'undefined' && currentUser && currentUser.name)
+                ? currentUser.name
+                : 'Admin' %>
+        </span>
+
+        <!-- Large Wave Emoji -->
+        <span class="fs-4">👋</span>
+
+    </div>
+</div>
+
+				</div>
+
+				<div class="d-flex align-items-center">
+
+					<!-- Search for Mobile -->
+					<!-- <div class="header-item d-flex d-lg-none me-2">
+						<button class="topbar-link btn" data-bs-toggle="modal" data-bs-target="#searchModal"
+							type="button">
+							<i class="ti ti-search fs-16"></i>
+						</button>
+					</div> -->
+
+
+					<!-- Minimize -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i
+									class="ti ti-maximize"></i></a>
+						</div>
+					</div>
+					<!-- Minimize -->
+
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+				
+					
+
+					<div class="header-line"></div>
+
+
+					<!-- Notification Dropdown -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none"
+								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
+								aria-expanded="false">
+								<i class="ti ti-bell-check fs-18 animate-ring"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</button>
+
+							<div class="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg"
+								style="min-height: 300px;">
+
+								<div class="p-2 border-bottom">
+									<div class="row align-items-center">
+										<div class="col">
+											<h6 class="m-0 fs-16 fw-semibold"> Notifications</h6>
+										</div>
+									</div>
+								</div>
+
+								<!-- Notification Body -->
+								<div class="notification-body position-relative z-2 rounded-0" data-simplebar>
+
+									<!-- Item-->
+									<div class="dropdown-item notification-item py-3 text-wrap border-bottom"
+										id="notification-1">
+										<div class="d-flex">
+											<div class="me-2 position-relative flex-shrink-0">
+												<img src="/admin_assets/img/users/user-01.jpg" class="avatar-md rounded-circle"
+													alt="Img">
+											</div>
+											<div class="flex-grow-1">
+												<p class="mb-0 fw-medium text-dark">John Doe</p>
+												<p class="mb-1 text-wrap">
+													left 6 comments on <span class="fw-medium text-dark">Isla Nublar
+														SOC2 compliance report</span>
+												</p>
+												<div class="d-flex justify-content-between align-items-center">
+													<span class="fs-12"><i class="ti ti-clock me-1"></i>4 min ago</span>
+													<div
+														class="notification-action d-flex align-items-center float-end gap-2">
+														<a href="javascript:void(0);"
+															class="notification-read rounded-circle bg-danger"
+															data-bs-toggle="tooltip" title=""
+															data-bs-original-title="Make as Read"
+															aria-label="Make as Read"></a>
+														<button class="btn rounded-circle p-0"
+															data-dismissible="#notification-1">
+															<i class="ti ti-x"></i>
+														</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<!-- Item-->
+									<div class="dropdown-item notification-item py-3 text-wrap border-bottom"
+										id="notification-2">
+										<div class="d-flex">
+											<div class="me-2 position-relative flex-shrink-0">
+												<img src="/admin_assets/img/users/user-12.jpg" class="avatar-md rounded-circle"
+													alt="Img">
+											</div>
+											<div class="flex-grow-1">
+												<p class="mb-0 fw-medium text-dark">Thomas William</p>
+												<p class="mb-1 text-wrap">
+													“Oh, I finished de-bugging the phones, but the system's compiling
+													for eighteen minutes, or twenty...”
+												</p>
+												<div class="d-flex justify-content-between align-items-center">
+													<span class="fs-12"><i class="ti ti-clock me-1"></i>8 min ago</span>
+													<div
+														class="notification-action d-flex align-items-center float-end gap-2">
+														<a href="javascript:void(0);"
+															class="notification-read rounded-circle bg-danger"
+															data-bs-toggle="tooltip" title=""
+															data-bs-original-title="Make as Read"
+															aria-label="Make as Read"></a>
+														<button class="btn rounded-circle p-0"
+															data-dismissible="#notification-2">
+															<i class="ti ti-x"></i>
+														</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<!-- Item-->
+									<div class="dropdown-item notification-item py-3 text-wrap border-bottom"
+										id="notification-3">
+										<div class="d-flex">
+											<div class="me-2 position-relative flex-shrink-0">
+												<img src="/admin_assets/img/profiles/avatar-12.jpg"
+													class="avatar-md rounded-circle" alt="Img">
+											</div>
+											<div class="flex-grow-1">
+												<p class="mb-0 fw-medium text-dark">Sarah Anderson</p>
+												<p class="mb-1 text-wrap">
+													attached a file to <span class="fw-medium text-dark">Isla Nublar
+														SOC2 compliance report</span>
+												</p>
+												<div class="d-flex justify-content-between align-items-center">
+													<span class="fs-12"><i class="ti ti-clock me-1"></i>15 min
+														ago</span>
+													<div
+														class="notification-action d-flex align-items-center float-end gap-2">
+														<a href="javascript:void(0);"
+															class="notification-read rounded-circle bg-danger"
+															data-bs-toggle="tooltip" title=""
+															data-bs-original-title="Make as Read"
+															aria-label="Make as Read"></a>
+														<button class="btn rounded-circle p-0"
+															data-dismissible="#notification-3">
+															<i class="ti ti-x"></i>
+														</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<!-- Item-->
+									<div class="dropdown-item notification-item py-3 text-wrap" id="notification-4">
+										<div class="d-flex">
+											<div class="me-2 position-relative flex-shrink-0">
+												<img src="/admin_assets/img/profiles/avatar-08.jpg"
+													class="avatar-md rounded-circle" alt="Img">
+											</div>
+											<div class="flex-grow-1">
+												<p class="mb-0 fw-medium text-dark">Ann McClure</p>
+												<p class="mb-1 text-wrap">
+													mentioned you in <span class="fw-medium text-dark">Bug Fix Review -
+														Task #432</span>
+												</p>
+												<div class="d-flex justify-content-between align-items-center">
+													<span class="fs-12"><i class="ti ti-clock me-1"></i>20 min
+														ago</span>
+													<div
+														class="notification-action d-flex align-items-center float-end gap-2">
+														<a href="javascript:void(0);"
+															class="notification-read rounded-circle bg-danger"
+															data-bs-toggle="tooltip" title=""
+															data-bs-original-title="Make as Read"
+															aria-label="Make as Read"></a>
+														<button class="btn rounded-circle p-0"
+															data-dismissible="#notification-4">
+															<i class="ti ti-x"></i>
+														</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+
+								</div>
+
+								<!-- View All-->
+								<div class="p-2 rounded-bottom border-top text-center">
+									<a href="notifications.html"
+										class="text-center text-decoration-underline fs-14 mb-0">
+										View All Notifications
+									</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- User Dropdown -->
+<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+    <a href="javascript:void(0);"
+        class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+        data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+        <img src="<%= (typeof currentUser !== 'undefined' && currentUser && currentUser.avatar) || '/admin_assets/img/users/user-40.jpg' %>" 
+             width="38" height="38" class="rounded-1 d-flex object-cover"
+             alt="<%= (typeof currentUser !== 'undefined' && currentUser && currentUser.name) || 'User' %>">
+        <span class="online text-success">
+            <i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i>
+        </span>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+        <!-- User Info Header -->
+        <div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+            <img src="<%= (typeof currentUser !== 'undefined' && currentUser && currentUser.avatar) || '/admin_assets/img/users/user-40.jpg' %>" 
+                 class="rounded-circle object-cover" width="42" height="42"
+                 alt="<%= (typeof currentUser !== 'undefined' && currentUser && currentUser.name) || 'User' %>">
+            <div class="ms-2">
+                <p class="fw-medium text-dark mb-0">
+                    <%= (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : 'User' %>
+                </p>
+                <span class="d-block fs-13 text-muted">
+                    <%= (typeof currentUser !== 'undefined' && currentUser && currentUser.role) ? currentUser.role : 'Installer' %>
+                </span>
+            </div>
+        </div>
+
+        <!-- Profile Settings -->
+        <a href="/admin/settings" class="dropdown-item">
+            <i class="ti ti-user-circle me-1 align-middle"></i>
+            <span class="align-middle">Profile Settings</span>
+        </a>
+
+        <!-- Notifications Toggle Switch -->
+        <div class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+            <label class="form-check-label cursor-pointer" for="notify">
+                <i class="ti ti-bell me-1"></i>Notifications
+            </label>
+            <input class="form-check-input me-0 cursor-pointer" type="checkbox" role="switch" id="notify" <%= (typeof notificationsEnabled === 'undefined' || notificationsEnabled) ? 'checked' : '' %>>
+        </div>
+
+        <!-- Dynamic Content Links -->
+        <a href="/admin/posts?category=job" class="dropdown-item">
+            <i class="ti ti-briefcase me-1 align-middle"></i>
+            <span class="align-middle">Jobs</span>
+        </a>
+
+        <a href="/admin/posts?category=result" class="dropdown-item">
+            <i class="ti ti-file-certificate me-1 align-middle"></i>
+            <span class="align-middle">Results</span>
+        </a>
+
+        <a href="/admin/users" class="dropdown-item">
+            <i class="ti ti-users me-1 align-middle"></i>
+            <span class="align-middle">Users</span>
+        </a>
+
+        <a href="/admin/settings" class="dropdown-item">
+            <i class="ti ti-settings me-1 align-middle"></i>
+            <span class="align-middle">Settings</span>
+        </a>
+
+        <!-- Logout Action -->
+        <div class="pt-2 mt-2 border-top">
+            <form method="POST" action="/logout" class="m-0">
+                <button type="submit" class="dropdown-item text-danger border-0 bg-transparent w-100 text-start">
+                    <i class="ti ti-logout me-1 fs-17 align-middle"></i>
+                    <span class="align-middle">Sign Out</span>
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Search Modal -->
+		<!-- <div class="modal fade" id="searchModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-transparent">
+					<div class="card shadow-none mb-0">
+						<div class="px-3 py-2 d-flex flex-row align-items-center" id="search-top">
+							<i class="ti ti-search fs-22"></i>
+							<input type="search" class="form-control border-0" placeholder="Search">
+							<button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close"><i
+									class="ti ti-x fs-22"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div> -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+
+			<!-- Start Logo -->
+			<div class="sidebar-logo">
+				<div>
+					<!-- Logo Normal -->
+					<a href="index.html" class="logo logo-normal">
+						<img src="/admin_assets/img/logos.png" alt="Logo" width="175px">
+					</a>
+
+					<!-- Logo Small -->
+					<a href="index.html" class="logo-small">
+						<img src="/admin_assets/img/logo.png" alt="Logosss" width="50px">
+					</a>
+
+					<!-- Logo Dark -->
+					<a href="index.html" class="dark-logo">
+						<img src="/admin_assets/img/logo-white.svg" alt="Logo">
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+
+				<!-- Sidebar Menu Close -->
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+			<!-- End Logo -->
+
+			<!-- Sidenav Menu -->
+			<!-- Sidenav Menu -->
+<div class="sidebar-inner" data-simplebar>
+    <div id="sidebar-menu" class="sidebar-menu">
+        <ul>
+
+            <!-- MAIN -->
+            <li class="menu-title">
+                <span>Main</span>
+            </li>
+            <li>
+                <ul>
+                    <li>
+                        <a href="/admin/dashboard">
+                            <i class="ti ti-dashboard"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/tracking-report">
+                            <i class="ti ti-chart-line"></i>
+                            <span>Tracking Report</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- CONTENT MANAGEMENT -->
+            <li class="menu-title">
+                <span>Content Management</span>
+            </li>
+            <li>
+                <ul>
+                    <!-- Posts Module -->
+                    <li class="submenu">
+                        <a href="javascript:void(0);">
+                            <i class="ti ti-news"></i>
+                            <span>Posts</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul>
+                            <li><a href="/admin/posts">All Posts</a></li>
+                            <li><a href="/admin/posts/create">Add New Post</a></li>
+                    
+                        </ul>
+                    </li>
+
+                    <!-- Categories Module -->
+                    <li>
+                        <a href="/admin/categories">
+                            <i class="ti ti-category"></i>
+                            <span>Categories</span>
+                        </a>
+                    </li>
+
+                    <!-- Blog Module -->
+                    <li class="submenu">
+                        <a href="javascript:void(0);">
+                            <i class="ti ti-file-text"></i>
+                            <span>Blog</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul>
+                            <li><a href="/admin/blogs">All Blogs</a></li>
+                            <li><a href="/admin/blogs/create">Add Blog</a></li>
+                            <li><a href="/admin/blog-categories">Blog Categories</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Education & Test Module -->
+                    <li class="submenu">
+                        <a href="javascript:void(0);">
+                            <i class="ti ti-school"></i>
+                            <span>Courses & Tests</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul>
+                            <li><a href="/admin/courses">Courses</a></li>
+                            <li><a href="/admin/test-series">Test Series</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Media & FAQs -->
+                    <li>
+                        <a href="/admin/banners">
+                            <i class="ti ti-photo"></i>
+                            <span>Banners & Ads</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/faqs">
+                            <i class="ti ti-help-circle"></i>
+                            <span>FAQs</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- SCRAPING -->
+            <li class="menu-title">
+                <span>Scraping Engine</span>
+            </li>
+            <li>
+                <ul>
+                    <li class="submenu">
+                        <a href="javascript:void(0);">
+                            <i class="ti ti-spider"></i>
+                            <span>Scraping</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul>
+                            <li><a href="/admin/scraping/dashboard">Scraping Dashboard</a></li>
+                            <li><a href="/admin/scraping/websites">Target Websites</a></li>
+                            <li><a href="/admin/scraping/content">Scraped Content</a></li>
+                            <li><a href="/admin/scraping/logs">Execution Logs</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- MARKETING & GROWTH (ADDED HIGH-VALUE MODULES) -->
+            <li class="menu-title">
+                <span>Marketing & Growth</span>
+            </li>
+            <li>
+                <ul>
+                    <li>
+                        <a href="/admin/notifications">
+                            <i class="ti ti-bell"></i>
+                            <span>Push Notifications</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/seo">
+                            <i class="ti ti-search"></i>
+                            <span>SEO & Schema</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- SALES & FINANCE -->
+            <li class="menu-title">
+                <span>Sales & Finance</span>
+            </li>
+            <li>
+                <ul>
+                    <li class="submenu">
+                        <a href="javascript:void(0);">
+                            <i class="ti ti-currency-dollar"></i>
+                            <span>Finance</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul>
+                            <li><a href="/admin/sales/purchases">Purchases</a></li>
+                            <li><a href="/admin/sales/income-expenses">Income & Expenses</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- USERS & COMMUNITY -->
+            <li class="menu-title">
+                <span>Users & Engagement</span>
+            </li>
+            <li>
+                <ul>
+                    <li>
+                        <a href="/admin/users">
+                            <i class="ti ti-users"></i>
+                            <span>Users</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/comments">
+                            <i class="ti ti-messages"></i>
+                            <span>Comments</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/contact-messages">
+                            <i class="ti ti-mail"></i>
+                            <span>Contact Messages</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- ADMINISTRATION & SECURITY -->
+            <li class="menu-title">
+                <span>Administration</span>
+            </li>
+            <li>
+                <ul>
+                    <li>
+                        <a href="/admin/roles-permissions">
+                            <i class="ti ti-shield-lock"></i>
+                            <span>Roles & Permissions</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- SYSTEM & SETTINGS -->
+            <li class="menu-title">
+                <span>System</span>
+            </li>
+            <li>
+                <ul>
+                    <li class="submenu">
+                        <a href="javascript:void(0);">
+                            <i class="ti ti-settings"></i>
+                            <span>Settings</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul>
+                            <li><a href="/admin/settings">General Settings</a></li>
+                            <li><a href="/admin/profile">Profile</a></li>
+                            <li><a href="/admin/settings/backups">System Backups</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+
+        </ul>
+    </div>
+</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<!-- ========================
+			Start Page Content
+		========================= -->
+

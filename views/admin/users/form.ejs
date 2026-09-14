@@ -1,86 +1,714 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<!-- Title -->
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold"><%= mode === 'edit' ? 'Edit User' : 'Add User' %></h1>
-    <a href="/admin/users" class="text-sm font-medium text-gray-600 hover:text-primary flex items-center gap-1"><i class="icon-arrow-left"></i> Back to Users</a>
+<%
+    /*
+    |--------------------------------------------------------------------------
+    | SAFE LOCALS
+    |--------------------------------------------------------------------------
+    */
+
+    const isEdit = mode === 'edit';
+
+    const userData =
+        typeof user !== 'undefined' && user
+            ? user
+            : {};
+
+    const roleList =
+        typeof roles !== 'undefined' && Array.isArray(roles)
+            ? roles
+            : [];
+
+    const currentName =
+        userData.name || '';
+
+    const currentEmail =
+        userData.email || '';
+
+    const currentUsername =
+        userData.username || '';
+
+    const currentPhone =
+        userData.phone || '';
+
+    const currentAddress =
+        userData.address || '';
+
+    const currentRoleId =
+        userData.role_id != null
+            ? String(userData.role_id)
+            : '';
+
+    const isActive =
+        !isEdit || Boolean(userData.is_active);
+%>
+
+<div class="page-wrapper">
+
+    <!-- Start Content -->
+    <div class="content pb-0">
+
+        <!-- =========================================================
+             PAGE HEADER
+        ========================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    <%= isEdit ? 'Edit User' : 'Add User' %>
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+                            <a href="/admin">
+                                Home
+                            </a>
+                        </li>
+
+                        <li class="breadcrumb-item">
+                            <a href="/admin/users">
+                                Users
+                            </a>
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            <%= isEdit ? 'Edit' : 'Create' %>
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <a href="/admin/users"
+                   class="btn btn-outline-light shadow text-dark">
+
+                    <i class="ti ti-arrow-left me-1"></i>
+
+                    Back to Users
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================================
+             USER FORM
+        ========================================================== -->
+
+        <form method="POST"
+              action="<%= formAction %>"
+              id="userForm">
+
+            <div class="row g-4">
+
+
+                <!-- =================================================
+                     MAIN FORM
+                ================================================== -->
+
+                <div class="col-12 col-xl-8">
+
+
+                    <!-- =================================================
+                         USER DETAILS CARD
+                    ================================================== -->
+
+                    <div class="card border-0 shadow-sm mb-4">
+
+                        <div class="card-header bg-white border-bottom py-3">
+
+                            <h5 class="card-title mb-0 fw-bold">
+                                User Details
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- =================================================
+                                 FULL NAME + EMAIL
+                            ================================================== -->
+
+                            <div class="row">
+
+                                <!-- FULL NAME -->
+                                <div class="col-md-6 mb-4">
+
+                                    <label for="userName"
+                                           class="form-label text-muted fs-7">
+
+                                        Full Name
+
+                                        <span class="text-danger">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <input type="text"
+                                           name="name"
+                                           id="userName"
+                                           required
+                                           value="<%= currentName %>"
+                                           class="form-control"
+                                           placeholder="Enter full name">
+
+                                </div>
+
+
+                                <!-- EMAIL -->
+                                <div class="col-md-6 mb-4">
+
+                                    <label for="userEmail"
+                                           class="form-label text-muted fs-7">
+
+                                        Email
+
+                                        <span class="text-danger">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <input type="email"
+                                           name="email"
+                                           id="userEmail"
+                                           required
+                                           value="<%= currentEmail %>"
+                                           class="form-control"
+                                           placeholder="Enter email address">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 USERNAME + PHONE
+                            ================================================== -->
+
+                            <div class="row">
+
+                                <!-- USERNAME -->
+                                <div class="col-md-6 mb-4">
+
+                                    <label for="userUsername"
+                                           class="form-label text-muted fs-7">
+
+                                        Username
+
+                                        <span class="text-muted">
+                                            (Optional, auto-generated)
+                                        </span>
+
+                                    </label>
+
+                                    <input type="text"
+                                           name="username"
+                                           id="userUsername"
+                                           value="<%= currentUsername %>"
+                                           class="form-control"
+                                           placeholder="Enter username">
+
+                                </div>
+
+
+                                <!-- PHONE -->
+                                <div class="col-md-6 mb-4">
+
+                                    <label for="userPhone"
+                                           class="form-label text-muted fs-7">
+
+                                        Phone
+
+                                    </label>
+
+                                    <input type="text"
+                                           name="phone"
+                                           id="userPhone"
+                                           value="<%= currentPhone %>"
+                                           class="form-control"
+                                           placeholder="Enter phone number">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 PASSWORD + ROLE
+                            ================================================== -->
+
+                            <div class="row">
+
+                                <!-- PASSWORD -->
+                                <div class="col-md-6 mb-4">
+
+                                    <label for="userPassword"
+                                           class="form-label text-muted fs-7">
+
+                                        Password
+
+                                        <% if (!isEdit) { %>
+
+                                            <span class="text-danger">
+                                                *
+                                            </span>
+
+                                        <% } else { %>
+
+                                            <span class="text-muted">
+                                                (Optional)
+                                            </span>
+
+                                        <% } %>
+
+                                    </label>
+
+                                    <input type="password"
+                                           name="password"
+                                           id="userPassword"
+                                           class="form-control"
+                                           <% if (!isEdit) { %>required<% } %>
+                                           placeholder="<%= isEdit ? 'Leave blank to keep current password' : 'Set a password' %>">
+
+                                    <% if (isEdit) { %>
+
+                                        <small class="text-muted">
+                                            Leave blank to keep the current password.
+                                        </small>
+
+                                    <% } %>
+
+                                </div>
+
+
+                                <!-- ROLE -->
+                                <div class="col-md-6 mb-4">
+
+                                    <label for="userRole"
+                                           class="form-label text-muted fs-7">
+
+                                        Role
+
+                                        <span class="text-danger">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <select name="role_id"
+                                            id="userRole"
+                                            required
+                                            class="form-select">
+
+                                        <option value="">
+                                            Select Role
+                                        </option>
+
+                                        <% roleList.forEach(function(role) { %>
+
+                                            <option value="<%= role.id %>"
+                                                <% if (currentRoleId === String(role.id)) { %>
+                                                    selected
+                                                <% } %>>
+
+                                                <%= role.name %>
+
+                                            </option>
+
+                                        <% }); %>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 ADDRESS
+                            ================================================== -->
+
+                            <div class="mb-0">
+
+                                <label for="userAddress"
+                                       class="form-label text-muted fs-7">
+
+                                    Address
+
+                                </label>
+
+                                <textarea name="address"
+                                          id="userAddress"
+                                          rows="4"
+                                          class="form-control"
+                                          placeholder="Enter address"><%= currentAddress %></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PROFILE / ADDITIONAL INFO
+                    ================================================== -->
+
+                    <div class="card border-0 shadow-sm">
+
+                        <div class="card-header bg-white border-bottom py-3">
+
+                            <h5 class="card-title mb-0 fw-bold">
+                                Account Information
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- USER CODE -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label text-muted fs-7">
+                                        User Code
+                                    </label>
+
+                                    <input type="text"
+                                           value="<%= userData.user_code || 'Auto generated' %>"
+                                           class="form-control"
+                                           readonly>
+
+                                    <small class="text-muted">
+                                        User code is generated automatically.
+                                    </small>
+
+                                </div>
+
+
+                                <!-- USER ID -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label text-muted fs-7">
+                                        User ID
+                                    </label>
+
+                                    <input type="text"
+                                           value="<%= isEdit && userData.id ? userData.id : 'Will be generated' %>"
+                                           class="form-control"
+                                           readonly>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SIDEBAR
+                ================================================== -->
+
+                <div class="col-12 col-xl-4">
+
+
+                    <!-- =================================================
+                         STATUS CARD
+                    ================================================== -->
+
+                    <div class="card border-0 shadow-sm mb-4">
+
+                        <div class="card-header bg-white border-bottom py-3">
+
+                            <h5 class="card-title mb-0 fw-bold">
+                                Status
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- ACTIVE STATUS -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+                                <div>
+
+                                    <label for="isActiveCheck"
+                                           class="form-label fw-semibold text-dark mb-1">
+
+                                        Active Status
+
+                                    </label>
+
+                                    <div class="text-muted fs-7">
+
+                                        Enable or disable this user account.
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="form-check form-switch mb-0">
+
+                                    <input type="checkbox"
+                                           id="isActiveCheck"
+                                           name="is_active"
+                                           value="true"
+                                           class="form-check-input"
+                                           <% if (isActive) { %>
+                                               checked
+                                           <% } %>>
+
+                                </div>
+
+                            </div>
+
+
+                            <hr class="my-3 text-border">
+
+
+                            <!-- ROLE SUMMARY -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label fw-semibold text-dark">
+
+                                    Selected Role
+
+                                </label>
+
+                                <div id="selectedRolePreview">
+
+                                    <% if (currentRoleId) { %>
+
+                                        <% 
+                                            const selectedRole =
+                                                roleList.find(function(role) {
+                                                    return String(role.id) === currentRoleId;
+                                                });
+                                        %>
+
+                                        <% if (selectedRole) { %>
+
+                                            <span class="badge bg-soft-primary text-primary">
+
+                                                <i class="ti ti-shield me-1"></i>
+
+                                                <%= selectedRole.name %>
+
+                                            </span>
+
+                                        <% } else { %>
+
+                                            <span class="text-muted">
+                                                Role not selected
+                                            </span>
+
+                                        <% } %>
+
+                                    <% } else { %>
+
+                                        <span class="text-muted">
+                                            Role not selected
+                                        </span>
+
+                                    <% } %>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- SUBMIT -->
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100 py-2 fw-semibold">
+
+                                <i class="ti ti-device-floppy me-1"></i>
+
+                                <%= isEdit
+                                    ? 'Update User'
+                                    : 'Save User' %>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         RECORD INFO
+                    ================================================== -->
+
+                    <% if (isEdit && userData) { %>
+
+                        <div class="card border-0 shadow-sm">
+
+                            <div class="card-header bg-white border-bottom py-3">
+
+                                <h5 class="card-title mb-0 fw-bold">
+                                    Record Info
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body">
+
+                                <div class="text-muted fs-7">
+
+                                    <p class="mb-2">
+
+                                        <span class="fw-semibold text-dark">
+                                            User Code:
+                                        </span>
+
+                                        <%= userData.user_code || '-' %>
+
+                                    </p>
+
+
+                                    <p class="mb-2">
+
+                                        <span class="fw-semibold text-dark">
+                                            User ID:
+                                        </span>
+
+                                        <%= userData.id || '-' %>
+
+                                    </p>
+
+
+                                    <% if (
+                                        typeof formatDate === 'function' &&
+                                        userData.created_at
+                                    ) { %>
+
+                                        <p class="mb-2">
+
+                                            <span class="fw-semibold text-dark">
+                                                Joined:
+                                            </span>
+
+                                            <%= formatDate(userData.created_at) %>
+
+                                        </p>
+
+                                    <% } %>
+
+
+                                    <% if (
+                                        typeof formatDate === 'function' &&
+                                        userData.updated_at
+                                    ) { %>
+
+                                        <p class="mb-0">
+
+                                            <span class="fw-semibold text-dark">
+                                                Last Updated:
+                                            </span>
+
+                                            <%= formatDate(userData.updated_at) %>
+
+                                        </p>
+
+                                    <% } %>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    <% } %>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
 </div>
 
-<form method="POST" action="<%= formAction %>">
-    <div class="grid grid-cols-12 gap-4 lg:gap-6">
 
-        <div class="col-span-12 xxl:col-span-8 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">User Details</h2>
+<!-- =============================================================
+     ROLE PREVIEW
+============================================================== -->
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Full Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" required value="<%= user ? user.name : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Email <span class="text-danger">*</span></label>
-                        <input type="email" name="email" required value="<%= user ? user.email : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Username <span class="text-gray-400 font-normal">(optional, auto-generated)</span></label>
-                        <input type="text" name="username" value="<%= user ? (user.username || '') : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Phone</label>
-                        <input type="text" name="phone" value="<%= user ? (user.phone || '') : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                </div>
+    const roleSelect =
+        document.getElementById('userRole');
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Password <%= mode === 'edit' ? '' : '<span class="text-danger">*</span>' %></label>
-                        <input type="password" name="password" <%= mode === 'edit' ? '' : 'required' %> placeholder="<%= mode === 'edit' ? 'Leave blank to keep current password' : 'Set a password' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Role <span class="text-danger">*</span></label>
-                        <select name="role_id" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                            <option value="">Select Role</option>
-                            <% roles.forEach(function(r) { %>
-                                <option value="<%= r.id %>" <%= user && user.role_id === r.id ? 'selected' : '' %>><%= r.name %></option>
-                            <% }) %>
-                        </select>
-                    </div>
-                </div>
+    const rolePreview =
+        document.getElementById('selectedRolePreview');
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Address</label>
-                    <textarea name="address" rows="3" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= user ? (user.address || '') : '' %></textarea>
-                </div>
-            </div>
-        </div>
+    if (!roleSelect || !rolePreview) {
+        return;
+    }
 
-        <div class="col-span-12 xxl:col-span-4 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Status</h2>
-                <div class="flex items-center justify-between mb-4">
-                    <label for="isActiveCheck" class="text-sm font-medium text-gray-900">Active</label>
-                    <input type="checkbox" id="isActiveCheck" name="is_active" <%= (!user || user.is_active) ? 'checked' : '' %> class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                </div>
-                <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover transition cursor-pointer">
-                    <%= mode === 'edit' ? 'Update User' : 'Save User' %>
-                </button>
-            </div>
+    roleSelect.addEventListener('change', function () {
 
-            <% if (mode === 'edit' && user) { %>
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-3">Record Info</h2>
-                <div class="text-sm text-gray-600 space-y-2">
-                    <p class="mb-0">User Code: <span class="font-medium text-gray-900"><%= user.user_code || '-' %></span></p>
-                    <p class="mb-0">Joined: <%= formatDate(user.created_at) %></p>
-                </div>
-            </div>
-            <% } %>
-        </div>
-    </div>
-</form>
+        const selectedOption =
+            roleSelect.options[
+                roleSelect.selectedIndex
+            ];
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+        if (
+            !selectedOption ||
+            !selectedOption.value
+        ) {
+
+            rolePreview.innerHTML =
+                '<span class="text-muted">Role not selected</span>';
+
+            return;
+        }
+
+        const roleName =
+            selectedOption.textContent.trim();
+
+        rolePreview.innerHTML =
+            '<span class="badge bg-soft-primary text-primary">' +
+                '<i class="ti ti-shield me-1"></i>' +
+                roleName +
+            '</span>';
+
+    });
+
+});
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

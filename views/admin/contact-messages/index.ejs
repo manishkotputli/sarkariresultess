@@ -1,113 +1,1450 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">Contact Messages</h1>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-1">
-    <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden">
-        <form method="GET" action="/admin/contact-messages" class="flex items-center justify-end flex-wrap gap-3 p-4 border-b border-border-color">
-            <select name="status" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                <option value="">All Status</option>
-                <option value="unread" <%= filters.status === 'unread' ? 'selected' : '' %>>Unread</option>
-                <option value="read" <%= filters.status === 'read' ? 'selected' : '' %>>Read</option>
-            </select>
-        </form>
+    <!-- Start Content -->
+    <div class="content pb-0">
 
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[800px]">
-                <thead>
-                    <tr class="bg-light">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">From</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Subject</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Received</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <% if (contactMessages && contactMessages.length) { %>
-                        <% contactMessages.forEach(function(m) { %>
-                        <tr class="<%= !m.is_read ? 'bg-primary/5' : '' %>">
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <p class="text-sm font-semibold text-gray-900 mb-0"><%= m.name %></p>
-                                <p class="text-[13px] text-gray-500 mb-0"><%= m.email %></p>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <button type="button" class="viewMsgBtn text-sm text-gray-700 hover:text-primary text-left cursor-pointer" data-hs-overlay="#viewMsgModal"
-                                    data-name="<%= m.name %>" data-email="<%= m.email %>" data-subject="<%= m.subject || '(No Subject)' %>" data-message="<%= m.message.replace(/"/g, '&quot;') %>" data-date="<%= formatDate(m.created_at) %>">
-                                    <%= m.subject || '(No Subject)' %>
-                                </button>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= formatDate(m.created_at) %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <form method="POST" action="/admin/contact-messages/<%= m.id %>/toggle-read">
-                                    <button type="submit" class="cursor-pointer inline-flex items-center text-xs font-bold rounded-lg px-3 py-1 border <%= m.is_read ? 'text-gray-500 border-gray-300' : 'text-primary border-primary' %>"><%= m.is_read ? 'Read' : 'Unread' %></button>
-                                </form>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                                <form method="POST" action="/admin/contact-messages/<%= m.id %>/delete" onsubmit="return confirm('Delete this message?');">
-                                    <button type="submit" class="size-9 rounded-full hover:bg-gray-100 text-gray-900 hover:text-danger inline-flex items-center justify-center transition-colors cursor-pointer"><i class="icon-trash-2 text-sm"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="5" class="px-6 py-10 text-center text-gray-500 bg-white">No contact messages found.</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
+        <!-- =========================
+             ALERTS
+        ========================== -->
 
-        <% if (pagination.totalPages > 1) { %>
-        <div class="flex items-center justify-between flex-wrap gap-3 p-4 border-t border-border-color">
-            <p class="text-sm text-gray-600 mb-0">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= total %> total messages</p>
-            <div class="flex items-center gap-1">
-                <% if (pagination.hasPrev) { %><a href="/admin/contact-messages?page=<%= pagination.page - 1 %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a><% } %>
-                <% pagination.pages.forEach(function(p) { %><a href="/admin/contact-messages?page=<%= p %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === pagination.page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a><% }) %>
-                <% if (pagination.hasNext) { %><a href="/admin/contact-messages?page=<%= pagination.page + 1 %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a><% } %>
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <%= success %>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
             </div>
-        </div>
         <% } %>
-    </div>
-</div>
 
-<!-- View Message Modal -->
-<div id="viewMsgModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <div class="flex items-center justify-between p-4 border-b border-border-color">
-                    <h3 class="text-lg font-bold text-gray-900" id="viewMsgSubject">Subject</h3>
-                    <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200" aria-label="Close" data-hs-overlay="#viewMsgModal"><i class="icon-x"></i></button>
-                </div>
-                <div class="p-4 space-y-3">
-                    <p class="text-sm text-gray-500 mb-0">From: <span id="viewMsgName" class="font-medium text-gray-900"></span> (<span id="viewMsgEmail" class="text-gray-600"></span>)</p>
-                    <p class="text-sm text-gray-500 mb-0">Received: <span id="viewMsgDate" class="text-gray-700"></span></p>
-                    <div class="pt-3 border-t border-border-color">
-                        <p id="viewMsgBody" class="text-sm text-gray-700 whitespace-pre-line mb-0"></p>
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                    <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#viewMsgModal">Close</button>
-                </div>
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <ul class="mb-0">
+                    <% errors.forEach(function(error) { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
             </div>
+        <% } %>
+
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">Contact Messages</h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+                            <a href="/admin">Home</a>
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+                            Contact Messages
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Export -->
+                <div class="dropdown">
+
+                    <a href="javascript:void(0);"
+                       class="dropdown-toggle btn btn-outline-light px-2 shadow"
+                       data-bs-toggle="dropdown">
+
+                        <i class="ti ti-package-export me-2"></i>
+                        Export
+
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end">
+
+                        <ul>
+
+                            <li>
+
+                                <a href="/admin/contact-messages/export/pdf"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+                                    Export as PDF
+
+                                </a>
+
+                            </li>
+
+                            <li>
+
+                                <a href="/admin/contact-messages/export/excel"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-xls me-1"></i>
+                                    Export as Excel
+
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Refresh -->
+                <a href="javascript:location.reload();"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Refresh"
+                   data-bs-original-title="Refresh">
+
+                    <i class="ti ti-refresh"></i>
+
+                </a>
+
+
+                <!-- Collapse -->
+                <a href="javascript:void(0);"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Collapse"
+                   data-bs-original-title="Collapse"
+                   id="collapse-header">
+
+                    <i class="ti ti-transition-top"></i>
+
+                </a>
+
+            </div>
+
         </div>
+
+
+        <!-- =========================
+             CONTACT MESSAGES CARD
+        ========================== -->
+
+        <div class="card border-0 rounded-0">
+
+
+            <!-- CARD HEADER -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+
+                <!-- SEARCH -->
+
+                <form method="GET"
+                      action="/admin/contact-messages"
+                      class="mb-0">
+
+                    <div class="input-icon input-icon-start position-relative">
+
+                        <span class="input-icon-addon text-dark">
+
+                            <i class="ti ti-search"></i>
+
+                        </span>
+
+                        <input type="text"
+                               name="search"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.search || '') : '' %>"
+                               class="form-control"
+                               id="contactMessageSearch"
+                               placeholder="Search messages...">
+
+                        <input type="hidden"
+                               name="status"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.status || '') : '' %>">
+
+                    </div>
+
+                </form>
+
+
+                <!-- STATUS FILTER -->
+
+                <div class="d-inline-flex align-items-center gap-2">
+
+                    <form method="GET"
+                          action="/admin/contact-messages"
+                          class="mb-0">
+
+                        <input type="hidden"
+                               name="search"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.search || '') : '' %>">
+
+                        <select name="status"
+                                onchange="this.form.submit()"
+                                class="form-select">
+
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="unread"
+                                <%= typeof filters !== 'undefined' &&
+                                    filters &&
+                                    filters.status === 'unread'
+                                    ? 'selected'
+                                    : '' %>>
+                                Unread
+                            </option>
+
+                            <option value="read"
+                                <%= typeof filters !== 'undefined' &&
+                                    filters &&
+                                    filters.status === 'read'
+                                    ? 'selected'
+                                    : '' %>>
+                                Read
+                            </option>
+
+                        </select>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 CARD BODY
+            ========================== -->
+
+            <div class="card-body">
+
+
+                <!-- =========================
+                     TABLE HEADER & TOOLS
+                ========================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+
+                    <!-- SORT -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="dropdown-toggle btn btn-outline-light shadow"
+                               data-bs-toggle="dropdown">
+
+                                <i class="ti ti-sort-ascending-2 me-2"></i>
+                                Sort By
+
+                            </a>
+
+                            <div class="dropdown-menu">
+
+                                <ul>
+
+                                    <li>
+
+                                        <a href="/admin/contact-messages?sort=newest&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>"
+                                           class="dropdown-item">
+
+                                            Newest First
+
+                                        </a>
+
+                                    </li>
+
+                                    <li>
+
+                                        <a href="/admin/contact-messages?sort=oldest&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>"
+                                           class="dropdown-item">
+
+                                            Oldest First
+
+                                        </a>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MANAGE COLUMNS -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn bg-soft-indigo border-0"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-columns-3 me-2"></i>
+                                Manage Columns
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+
+                                <ul class="list-unstyled mb-0">
+
+
+                                    <!-- ID -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span># ID</span>
+
+                                                <input class="form-check-input contact-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="0"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- FROM -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>From</span>
+
+                                                <input class="form-check-input contact-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="1"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- SUBJECT -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Subject</span>
+
+                                                <input class="form-check-input contact-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="2"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- RECEIVED -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Received</span>
+
+                                                <input class="form-check-input contact-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="3"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- STATUS -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Status</span>
+
+                                                <input class="form-check-input contact-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="4"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================
+                     CONTACT TABLE
+                ========================== -->
+
+                <div class="table-responsive custom-table">
+
+                    <table class="table table-nowrap"
+                           id="contact-messages-table">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>#</th>
+
+                                <th>From</th>
+
+                                <th>Subject</th>
+
+                                <th>Received</th>
+
+                                <th>Status</th>
+
+                                <th class="text-end no-sort">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="contactMessagesTableBody">
+
+
+                            <% if (contactMessages && contactMessages.length) { %>
+
+                                <% contactMessages.forEach(function(m) { %>
+
+                                    <tr class="<%= !m.is_read ? 'table-active' : '' %>">
+
+
+                                        <!-- ID -->
+
+                                        <td>
+                                            <%= m.id %>
+                                        </td>
+
+
+                                        <!-- FROM -->
+
+                                        <td>
+
+                                            <div class="d-flex align-items-center">
+
+                                                <div class="avatar avatar-sm bg-soft-primary text-primary me-2">
+
+                                                    <span class="avatar-title rounded-circle">
+
+                                                        <%= m.name
+                                                            ? m.name.charAt(0).toUpperCase()
+                                                            : 'U' %>
+
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <h6 class="mb-0 fw-semibold">
+
+                                                        <%= m.name || 'Unknown' %>
+
+                                                    </h6>
+
+                                                    <span class="text-muted fs-12">
+
+                                                        <%= m.email || '-' %>
+
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- SUBJECT -->
+
+                                        <td>
+
+                                            <button type="button"
+                                                    class="btn btn-link p-0 text-dark text-start text-decoration-none viewMsgBtn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#viewMsgModal"
+                                                    data-name="<%= m.name || '' %>"
+                                                    data-email="<%= m.email || '' %>"
+                                                    data-subject="<%= m.subject || '(No Subject)' %>"
+                                                    data-message="<%= m.message || '' %>"
+                                                    data-date="<%= formatDate(m.created_at) %>">
+
+                                                <span class="fw-medium">
+
+                                                    <%= m.subject || '(No Subject)' %>
+
+                                                </span>
+
+                                            </button>
+
+                                        </td>
+
+
+                                        <!-- RECEIVED -->
+
+                                        <td>
+
+                                            <span class="text-muted">
+
+                                                <%= formatDate(m.created_at) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- STATUS -->
+
+                                        <td>
+
+                                            <form method="POST"
+                                                  action="/admin/contact-messages/<%= m.id %>/toggle-read"
+                                                  class="mb-0">
+
+                                                <% if (m.is_read) { %>
+
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-soft-secondary">
+
+                                                        <i class="ti ti-mail-opened me-1"></i>
+                                                        Read
+
+                                                    </button>
+
+                                                <% } else { %>
+
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-soft-primary">
+
+                                                        <i class="ti ti-mail me-1"></i>
+                                                        Unread
+
+                                                    </button>
+
+                                                <% } %>
+
+                                            </form>
+
+                                        </td>
+
+
+                                        <!-- ACTION -->
+
+                                        <td class="text-end">
+
+                                            <div class="dropdown">
+
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-icon btn-sm"
+                                                   data-bs-toggle="dropdown"
+                                                   aria-expanded="false">
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+
+                                                    <!-- VIEW -->
+
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item viewMsgBtn"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#viewMsgModal"
+                                                           data-name="<%= m.name || '' %>"
+                                                           data-email="<%= m.email || '' %>"
+                                                           data-subject="<%= m.subject || '(No Subject)' %>"
+                                                           data-message="<%= m.message || '' %>"
+                                                           data-date="<%= formatDate(m.created_at) %>">
+
+                                                            <i class="ti ti-eye me-1"></i>
+                                                            View Message
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- READ / UNREAD -->
+
+                                                    <li>
+
+                                                        <form method="POST"
+                                                              action="/admin/contact-messages/<%= m.id %>/toggle-read"
+                                                              class="mb-0">
+
+                                                            <button type="submit"
+                                                                    class="dropdown-item">
+
+                                                                <% if (m.is_read) { %>
+
+                                                                    <i class="ti ti-mail me-1"></i>
+                                                                    Mark as Unread
+
+                                                                <% } else { %>
+
+                                                                    <i class="ti ti-mail-opened me-1"></i>
+                                                                    Mark as Read
+
+                                                                <% } %>
+
+                                                            </button>
+
+                                                        </form>
+
+                                                    </li>
+
+
+                                                    <!-- DELETE -->
+
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item text-danger"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#delete_message_<%= m.id %>">
+
+                                                            <i class="ti ti-trash me-1"></i>
+                                                            Delete
+
+                                                        </a>
+
+                                                    </li>
+
+                                                </ul>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                <% }) %>
+
+
+                            <% } else { %>
+
+
+                                <!-- EMPTY -->
+
+                                <tr id="noContactMessagesRow">
+
+                                    <td colspan="6"
+                                        class="text-center py-5">
+
+                                        <div class="text-muted">
+
+                                            <i class="ti ti-mail-off fs-40 d-block mb-2"></i>
+
+                                            <h5>No Contact Messages Found</h5>
+
+                                            <p class="mb-0">
+
+                                                There are no contact messages available.
+
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+
+                            <% } %>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =========================
+                     PAGINATION
+                ========================== -->
+
+                <% if (
+                    typeof pagination !== 'undefined' &&
+                    pagination &&
+                    pagination.totalPages > 1
+                ) { %>
+
+                    <div class="row align-items-center mt-3">
+
+
+                        <!-- INFO -->
+
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Page
+                                <%= pagination.page %>
+                                of
+                                <%= pagination.totalPages %>
+
+                                &nbsp;·&nbsp;
+
+                                <%= typeof total !== 'undefined'
+                                    ? total
+                                    : (contactMessages
+                                        ? contactMessages.length
+                                        : 0) %>
+
+                                total messages
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PAGINATION -->
+
+                        <div class="col-md-6">
+
+                            <div class="d-flex justify-content-end">
+
+                                <ul class="pagination mb-0">
+
+
+                                    <!-- PREVIOUS -->
+
+                                    <% if (pagination.hasPrev) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/contact-messages?page=<%= pagination.page - 1 %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>">
+
+                                                <i class="ti ti-chevron-left"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                    <!-- PAGES -->
+
+                                    <% if (pagination.pages && pagination.pages.length) { %>
+
+                                        <% pagination.pages.forEach(function(page) { %>
+
+                                            <li class="page-item <%= page === pagination.page ? 'active' : '' %>">
+
+                                                <a class="page-link"
+                                                   href="/admin/contact-messages?page=<%= page %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>">
+
+                                                    <%= page %>
+
+                                                </a>
+
+                                            </li>
+
+                                        <% }) %>
+
+                                    <% } %>
+
+
+                                    <!-- NEXT -->
+
+                                    <% if (pagination.hasNext) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/contact-messages?page=<%= pagination.page + 1 %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>">
+
+                                                <i class="ti ti-chevron-right"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                <% } %>
+
+
+            </div>
+
+        </div>
+
     </div>
+
 </div>
 
-<%
-var pageScripts = `
-document.querySelectorAll('.viewMsgBtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.getElementById('viewMsgSubject').textContent = btn.dataset.subject || '';
-    document.getElementById('viewMsgName').textContent = btn.dataset.name || '';
-    document.getElementById('viewMsgEmail').textContent = btn.dataset.email || '';
-    document.getElementById('viewMsgDate').textContent = btn.dataset.date || '';
-    document.getElementById('viewMsgBody').textContent = btn.dataset.message || '';
-  });
-});
-`;
-%>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+<!-- =====================================================
+     VIEW MESSAGE MODAL
+===================================================== -->
+
+<div class="modal fade"
+     id="viewMsgModal"
+     tabindex="-1"
+     aria-labelledby="viewMsgModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content">
+
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <h5 class="modal-title"
+                    id="viewMsgModalLabel">
+
+                    <i class="ti ti-mail me-2"></i>
+                    <span id="viewMsgSubject">
+                        Message
+                    </span>
+
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <!-- BODY -->
+
+            <div class="modal-body">
+
+
+                <!-- SENDER -->
+
+                <div class="d-flex align-items-center mb-4">
+
+                    <div class="avatar avatar-md bg-soft-primary text-primary me-3">
+
+                        <span class="avatar-title rounded-circle"
+                              id="viewMsgAvatar">
+
+                            U
+
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <h6 class="mb-1"
+                            id="viewMsgName">
+
+                        </h6>
+
+                        <p class="mb-0 text-muted">
+
+                            <i class="ti ti-mail me-1"></i>
+
+                            <span id="viewMsgEmail"></span>
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DATE -->
+
+                <div class="mb-3">
+
+                    <span class="text-muted">
+
+                        <i class="ti ti-calendar me-1"></i>
+                        Received:
+
+                    </span>
+
+                    <span class="text-dark ms-1"
+                          id="viewMsgDate">
+
+                    </span>
+
+                </div>
+
+
+                <!-- MESSAGE -->
+
+                <div class="border rounded p-3 bg-light">
+
+                    <div class="mb-2">
+
+                        <span class="fw-semibold text-dark">
+
+                            Message
+
+                        </span>
+
+                    </div>
+
+                    <div id="viewMsgBody"
+                         class="text-muted"
+                         style="white-space: pre-line; word-break: break-word;">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     DELETE MODALS
+===================================================== -->
+
+<% if (contactMessages && contactMessages.length) { %>
+
+    <% contactMessages.forEach(function(m) { %>
+
+        <div class="modal fade"
+             id="delete_message_<%= m.id %>"
+             tabindex="-1"
+             aria-hidden="true">
+
+            <div class="modal-dialog modal-dialog-centered">
+
+                <div class="modal-content">
+
+
+                    <div class="modal-header">
+
+                        <h5 class="modal-title">
+                            Delete Message
+                        </h5>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+
+                    </div>
+
+
+                    <div class="modal-body">
+
+                        <div class="text-center">
+
+                            <div class="mb-3">
+
+                                <span class="avatar avatar-lg bg-soft-danger text-danger rounded-circle">
+
+                                    <i class="ti ti-trash fs-24"></i>
+
+                                </span>
+
+                            </div>
+
+
+                            <h5 class="mb-2">
+
+                                Delete this message?
+
+                            </h5>
+
+
+                            <p class="text-muted mb-0">
+
+                                This contact message will be permanently deleted.
+                                This action cannot be undone.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="modal-footer">
+
+                        <button type="button"
+                                class="btn btn-light"
+                                data-bs-dismiss="modal">
+
+                            Cancel
+
+                        </button>
+
+
+                        <form method="POST"
+                              action="/admin/contact-messages/<%= m.id %>/delete"
+                              class="mb-0">
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+
+                                <i class="ti ti-trash me-1"></i>
+
+                                Delete Message
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    <% }) %>
+
+<% } %>
+
+
+<!-- =====================================================
+     MANAGE COLUMNS SCRIPT
+===================================================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const toggles =
+        document.querySelectorAll('.contact-column-toggle');
+
+    const table =
+        document.getElementById('contact-messages-table');
+
+    if (!table) return;
+
+
+    function updateColumnVisibility(colIndex, isVisible) {
+
+        const display =
+            isVisible ? '' : 'none';
+
+
+        /*
+         * Header
+         */
+
+        const th =
+            table.querySelector(
+                `thead tr th:nth-child(${colIndex + 1})`
+            );
+
+        if (th) {
+
+            if (display === 'none') {
+
+                th.style.setProperty(
+                    'display',
+                    'none',
+                    'important'
+                );
+
+            } else {
+
+                th.style.removeProperty('display');
+
+            }
+
+        }
+
+
+        /*
+         * Body
+         */
+
+        const rows =
+            table.querySelectorAll('tbody tr');
+
+        rows.forEach(function (row) {
+
+            if (row.id === 'noContactMessagesRow') {
+                return;
+            }
+
+            const td =
+                row.querySelector(
+                    `td:nth-child(${colIndex + 1})`
+                );
+
+            if (!td) return;
+
+
+            if (display === 'none') {
+
+                td.style.setProperty(
+                    'display',
+                    'none',
+                    'important'
+                );
+
+            } else {
+
+                td.style.removeProperty('display');
+
+            }
+
+        });
+
+
+        /*
+         * Empty Row Colspan
+         */
+
+        const emptyTd =
+            table.querySelector(
+                '#noContactMessagesRow td'
+            );
+
+        if (emptyTd) {
+
+            let visibleColumns = 0;
+
+            table
+                .querySelectorAll('thead tr th')
+                .forEach(function (header) {
+
+                    if (
+                        window.getComputedStyle(header).display
+                        !== 'none'
+                    ) {
+
+                        visibleColumns++;
+
+                    }
+
+                });
+
+
+            emptyTd.setAttribute(
+                'colspan',
+                visibleColumns || 1
+            );
+
+        }
+
+    }
+
+
+    /*
+     * Initialize
+     */
+
+    toggles.forEach(function (toggle) {
+
+        const colIndex =
+            parseInt(
+                toggle.getAttribute('data-column'),
+                10
+            );
+
+        if (isNaN(colIndex)) return;
+
+
+        const storageKey =
+            'contact_messages_col_' + colIndex;
+
+
+        /*
+         * Restore Saved State
+         */
+
+        const savedState =
+            localStorage.getItem(storageKey);
+
+        if (savedState !== null) {
+
+            const isChecked =
+                savedState === 'true';
+
+            toggle.checked =
+                isChecked;
+
+            updateColumnVisibility(
+                colIndex,
+                isChecked
+            );
+
+        }
+
+
+        /*
+         * Change Event
+         */
+
+        toggle.addEventListener(
+            'change',
+            function () {
+
+                const isChecked =
+                    this.checked;
+
+                updateColumnVisibility(
+                    colIndex,
+                    isChecked
+                );
+
+                localStorage.setItem(
+                    storageKey,
+                    isChecked
+                );
+
+            }
+        );
+
+    });
+
+});
+
+</script>
+
+
+<!-- =====================================================
+     VIEW MESSAGE SCRIPT
+===================================================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const buttons =
+        document.querySelectorAll('.viewMsgBtn');
+
+
+    buttons.forEach(function (btn) {
+
+        btn.addEventListener('click', function () {
+
+            const subject =
+                btn.getAttribute('data-subject') || '';
+
+            const name =
+                btn.getAttribute('data-name') || '';
+
+            const email =
+                btn.getAttribute('data-email') || '';
+
+            const message =
+                btn.getAttribute('data-message') || '';
+
+            const date =
+                btn.getAttribute('data-date') || '';
+
+
+            const subjectEl =
+                document.getElementById('viewMsgSubject');
+
+            const nameEl =
+                document.getElementById('viewMsgName');
+
+            const emailEl =
+                document.getElementById('viewMsgEmail');
+
+            const bodyEl =
+                document.getElementById('viewMsgBody');
+
+            const dateEl =
+                document.getElementById('viewMsgDate');
+
+            const avatarEl =
+                document.getElementById('viewMsgAvatar');
+
+
+            if (subjectEl) {
+                subjectEl.textContent = subject;
+            }
+
+            if (nameEl) {
+                nameEl.textContent = name;
+            }
+
+            if (emailEl) {
+                emailEl.textContent = email;
+            }
+
+            if (bodyEl) {
+                bodyEl.textContent = message;
+            }
+
+            if (dateEl) {
+                dateEl.textContent = date;
+            }
+
+            if (avatarEl) {
+
+                avatarEl.textContent =
+                    name
+                        ? name.charAt(0).toUpperCase()
+                        : 'U';
+
+            }
+
+        });
+
+    });
+
+});
+
+</script>
+
+
+<!-- =====================================================
+     SEARCH ENTER
+===================================================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const searchInput =
+        document.getElementById('contactMessageSearch');
+
+    if (!searchInput) return;
+
+
+    searchInput.addEventListener(
+        'keydown',
+        function (event) {
+
+            if (event.key !== 'Enter') {
+                return;
+            }
+
+            event.preventDefault();
+
+            this.form.submit();
+
+        }
+    );
+
+});
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

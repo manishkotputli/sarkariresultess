@@ -1,105 +1,460 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<!-- Title -->
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">Blog Posts</h1>
-    <a href="/admin/blogs/create" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-        <span class="flex"><i class="icon-plus"></i></span> Add Blog Post
-    </a>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-1">
-    <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden">
+    <!-- Start Content -->
+    <div class="content pb-0">
 
-        <form method="GET" action="/admin/blogs" class="flex items-center justify-between flex-wrap gap-3 p-4 border-b border-border-color">
-            <div class="relative w-full sm:w-72">
-                <input type="text" name="search" value="<%= filters.search %>" placeholder="Search blog posts..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-                <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0"><i class="icon-search"></i></button>
+        <!-- =========================
+             ALERTS
+        ========================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="flex items-center flex-wrap gap-2 md:gap-3">
-                <select name="category" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                    <option value="">All Categories</option>
-                    <% categories.forEach(function(cat) { %>
-                        <option value="<%= cat.id %>" <%= String(filters.category) === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
-                    <% }) %>
-                </select>
-                <select name="status" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                    <option value="">All Status</option>
-                    <option value="published" <%= filters.status === 'published' ? 'selected' : '' %>>Published</option>
-                    <option value="draft" <%= filters.status === 'draft' ? 'selected' : '' %>>Draft</option>
-                </select>
-                <% if (filters.search || filters.category || filters.status) { %>
-                <a href="/admin/blogs" class="text-sm text-gray-600 hover:text-primary font-medium">Clear</a>
-                <% } %>
-            </div>
-        </form>
-
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[900px]">
-                <thead>
-                    <tr class="bg-light">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Post</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Views</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <% if (blogs && blogs.length) { %>
-                        <% blogs.forEach(function(b) { %>
-                        <tr>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <div class="flex items-center gap-3">
-                                    <img src="<%= b.thumbnail || '/admin-assets/logo-small.svg' %>" class="size-10 rounded-lg object-cover shrink-0 bg-light" alt="">
-                                    <div>
-                                        <a href="/admin/blogs/<%= b.id %>/edit" class="text-sm font-semibold text-gray-900 hover:text-primary transition-colors block"><%= b.title %></a>
-                                        <p class="text-[13px] text-gray-500 mb-0"><%= b.slug %></p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <span class="inline-flex items-center text-xs font-semibold text-primary bg-primary/10 border border-primary/20 rounded-md px-2 py-0.5"><%= b.BlogCategory ? b.BlogCategory.name : '-' %></span>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= b.views %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <span class="inline-flex items-center text-xs font-bold rounded-lg px-3 py-1 border <%= b.status === 'published' ? 'text-success border-success' : 'text-gray-500 border-gray-300' %>">
-                                    <%= b.status === 'published' ? 'Published' : 'Draft' %>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                                <div class="hs-dropdown [--placement:bottom-right] [--auto-close:inside] relative inline-flex">
-                                    <button type="button" class="hs-dropdown-toggle size-9 rounded-full cursor-pointer hover:bg-gray-100 text-gray-900 flex items-center justify-center transition-colors text-base" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown"><i class="icon-ellipsis-vertical"></i></button>
-                                    <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-40 bg-white border border-border-color shadow rounded-lg mt-2 z-1" role="menu" aria-orientation="vertical">
-                                        <div class="p-2 space-y-1">
-                                            <a class="flex items-center hover:bg-primary-50 px-4 py-1.75 rounded-lg text-sm text-default hover:text-primary focus:outline-hidden focus:bg-white" href="/admin/blogs/<%= b.id %>/edit"><i class="icon-pencil-line me-2"></i>Edit</a>
-                                            <form method="POST" action="/admin/blogs/<%= b.id %>/delete" onsubmit="return confirm('Delete this blog post? This cannot be undone.');">
-                                                <button type="submit" class="w-full flex items-center hover:bg-primary-50 px-4 py-1.75 rounded-lg text-sm text-danger hover:text-danger focus:outline-hidden focus:bg-white cursor-pointer"><i class="icon-trash-2 me-2"></i>Delete</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="5" class="px-6 py-10 text-center text-gray-500 bg-white">No blog posts found. <a href="/admin/blogs/create" class="text-primary font-medium">Add your first post</a>.</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-
-        <% if (pagination.totalPages > 1) { %>
-        <div class="flex items-center justify-between flex-wrap gap-3 p-4 border-t border-border-color">
-            <p class="text-sm text-gray-600 mb-0">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= total %> total posts</p>
-            <div class="flex items-center gap-1">
-                <% if (pagination.hasPrev) { %><a href="/admin/blogs?page=<%= pagination.page - 1 %>&search=<%= filters.search %>&category=<%= filters.category %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a><% } %>
-                <% pagination.pages.forEach(function(p) { %><a href="/admin/blogs?page=<%= p %>&search=<%= filters.search %>&category=<%= filters.category %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === pagination.page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a><% }) %>
-                <% if (pagination.hasNext) { %><a href="/admin/blogs?page=<%= pagination.page + 1 %>&search=<%= filters.search %>&category=<%= filters.category %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a><% } %>
-            </div>
-        </div>
         <% } %>
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <ul class="mb-0">
+                    <% errors.forEach(function(error) { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+                <h4 class="mb-1">Blog Posts</h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="/admin">Home</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Blog Posts
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Export -->
+                <div class="dropdown">
+                    <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
+                        <i class="ti ti-package-export me-2"></i> Export
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <ul>
+                            <li>
+                                <a href="/admin/blogs/export/pdf" class="dropdown-item">
+                                    <i class="ti ti-file-type-pdf me-1"></i> Export as PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/admin/blogs/export/excel" class="dropdown-item">
+                                    <i class="ti ti-file-type-xls me-1"></i> Export as Excel
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Refresh -->
+                <a href="javascript:location.reload();" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh">
+                    <i class="ti ti-refresh"></i>
+                </a>
+
+                <!-- Collapse -->
+                <a href="javascript:void(0);" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Collapse" data-bs-original-title="Collapse" id="collapse-header">
+                    <i class="ti ti-transition-top"></i>
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- =========================
+             BLOG CARD
+        ========================== -->
+
+        <div class="card border-0 rounded-0">
+
+            <!-- CARD HEADER & FILTERS -->
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+                <!-- Search & Filters -->
+                <form method="GET" action="/admin/blogs" class="mb-0 d-flex align-items-center gap-2 flex-wrap">
+                    <div class="input-icon input-icon-start position-relative">
+                        <span class="input-icon-addon text-dark">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" name="search" value="<%= filters && filters.search ? filters.search : '' %>" class="form-control" placeholder="Search blog posts...">
+                    </div>
+
+                    <!-- Category Filter -->
+                    <select name="category" onchange="this.form.submit()" class="form-select w-auto">
+                        <option value="">All Categories</option>
+                        <% if (typeof categories !== 'undefined' && categories.length) { %>
+                            <% categories.forEach(function(cat) { %>
+                                <option value="<%= cat.id %>" <%= (filters && String(filters.category) === String(cat.id)) ? 'selected' : '' %>><%= cat.name %></option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+
+                    <!-- Status Filter -->
+                    <select name="status" onchange="this.form.submit()" class="form-select w-auto">
+                        <option value="">All Status</option>
+                        <option value="published" <%= (filters && filters.status === 'published') ? 'selected' : '' %>>Published</option>
+                        <option value="draft" <%= (filters && filters.status === 'draft') ? 'selected' : '' %>>Draft</option>
+                    </select>
+
+                    <% if (filters && (filters.search || filters.category || filters.status)) { %>
+                        <a href="/admin/blogs" class="btn btn-link text-decoration-none text-muted">Clear</a>
+                    <% } %>
+                </form>
+
+                <!-- Add Blog Post Button -->
+                <div class="d-inline-flex align-items-center gap-3">
+                    <a href="/admin/blogs/create" class="btn btn-primary">
+                        <i class="ti ti-square-rounded-plus-filled me-1"></i> Add Blog Post
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- =========================
+                 CARD BODY
+            ========================== -->
+
+            <div class="card-body">
+
+                <!-- =========================
+                     TABLE HEADER & TOOLS
+                ========================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+                    <!-- SORT -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="dropdown">
+                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light shadow" data-bs-toggle="dropdown">
+                                <i class="ti ti-sort-ascending-2 me-2"></i> Sort By
+                            </a>
+                            <div class="dropdown-menu">
+                                <ul>
+                                    <li>
+                                        <a href="/admin/blogs?sort=title_asc&search=<%= encodeURIComponent(filters && filters.search ? filters.search : '') %>&category=<%= filters && filters.category ? filters.category : '' %>&status=<%= filters && filters.status ? filters.status : '' %>" class="dropdown-item">
+                                            Title (A-Z)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/blogs?sort=title_desc&search=<%= encodeURIComponent(filters && filters.search ? filters.search : '') %>&category=<%= filters && filters.category ? filters.category : '' %>&status=<%= filters && filters.status ? filters.status : '' %>" class="dropdown-item">
+                                            Title (Z-A)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/blogs?sort=views_desc&search=<%= encodeURIComponent(filters && filters.search ? filters.search : '') %>&category=<%= filters && filters.category ? filters.category : '' %>&status=<%= filters && filters.status ? filters.status : '' %>" class="dropdown-item">
+                                            Most Viewed
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT TOOLS (MANAGE COLUMNS) -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+                            <a href="javascript:void(0);" class="btn bg-soft-indigo border-0" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                <i class="ti ti-columns-3 me-2"></i> Manage Columns
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+                                <ul class="list-unstyled mb-0">
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Post</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="0" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Category</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="1" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Views</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="2" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Status</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="3" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- =========================
+                     BLOG TABLE
+                ========================== -->
+
+                <div class="table-responsive custom-table">
+                    <table class="table table-nowrap" id="blogs-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Post</th>
+                                <th>Category</th>
+                                <th>Views</th>
+                                <th>Status</th>
+                                <th class="text-end no-sort">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="blogsTableBody">
+                            <% if (blogs && blogs.length) { %>
+                                <% blogs.forEach(function(b) { %>
+                                    <tr>
+                                        <!-- POST TITLE & THUMBNAIL -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img src="<%= b.thumbnail || '/admin-assets/logo-small.svg' %>" class="rounded object-cover flex-shrink-0" width="40" height="40" alt="Thumbnail">
+                                                <div>
+                                                    <h6 class="mb-0 fw-semibold">
+                                                        <a href="/admin/blogs/<%= b.id %>/edit" class="text-dark hover-primary">
+                                                            <%= b.title %>
+                                                        </a>
+                                                    </h6>
+                                                    <small class="text-muted"><%= b.slug %></small>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- CATEGORY -->
+                                        <td>
+                                            <% if (b.BlogCategory) { %>
+                                                <span class="badge bg-soft-primary text-primary">
+                                                    <i class="ti ti-category me-1"></i>
+                                                    <%= b.BlogCategory.name %>
+                                                </span>
+                                            <% } else { %>
+                                                <span class="text-muted">-</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- VIEWS -->
+                                        <td>
+                                            <span class="text-muted"><%= b.views || 0 %></span>
+                                        </td>
+
+                                        <!-- STATUS -->
+                                        <td>
+                                            <% if (b.status === 'published') { %>
+                                                <span class="badge bg-soft-success text-success">
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i> Published
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge bg-soft-secondary text-secondary">
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i> Draft
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- ACTION -->
+                                        <td class="text-end">
+                                            <div class="dropdown">
+                                                <a href="javascript:void(0);" class="btn btn-icon btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="ti ti-dots-vertical"></i>
+                                                </a>
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <!-- Edit -->
+                                                    <li>
+                                                        <a href="/admin/blogs/<%= b.id %>/edit" class="dropdown-item">
+                                                            <i class="ti ti-edit me-1"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <!-- Delete -->
+                                                    <li>
+                                                        <a href="javascript:void(0);" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#delete_blog_<%= b.id %>">
+                                                            <i class="ti ti-trash me-1"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            <!-- DELETE CONFIRMATION MODAL -->
+                                            <div class="modal fade" id="delete_blog_<%= b.id %>" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Delete Blog Post</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body text-start">
+                                                            <p class="mb-0">Are you sure you want to delete <strong>"<%= b.title %>"</strong>? This action cannot be undone.</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                            <form method="POST" action="/admin/blogs/<%= b.id %>/delete" class="d-inline">
+                                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <!-- EMPTY -->
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="ti ti-news fs-40 d-block mb-2"></i>
+                                            <h5>No Blog Posts Found</h5>
+                                            <p class="mb-2">There are no blog posts available.</p>
+                                            <a href="/admin/blogs/create" class="btn btn-primary btn-sm">
+                                                <i class="ti ti-plus me-1"></i> Add Your First Post
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- =========================
+                     PAGINATION / COUNT
+                ========================== -->
+
+                <% if (typeof pagination !== 'undefined' && pagination && pagination.totalPages > 1) { %>
+                    <div class="row align-items-center mt-3">
+
+                        <!-- Info -->
+                        <div class="col-md-6">
+                            <div class="text-muted">
+                                Page <%= pagination.page %> of <%= pagination.totalPages %> &nbsp;·&nbsp; <%= typeof total !== 'undefined' ? total : (blogs ? blogs.length : 0) %> total posts
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-end">
+                                <ul class="pagination mb-0">
+
+                                    <!-- Previous -->
+                                    <% if (pagination.hasPrev) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/blogs?page=<%= pagination.page - 1 %>&search=<%= encodeURIComponent(filters && filters.search ? filters.search : '') %>&category=<%= filters && filters.category ? filters.category : '' %>&status=<%= filters && filters.status ? filters.status : '' %>">
+                                                <i class="ti ti-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    <% } %>
+
+                                    <!-- Pages -->
+                                    <% if (pagination.pages && pagination.pages.length) { %>
+                                        <% pagination.pages.forEach(function(page) { %>
+                                            <li class="page-item <%= page === pagination.page ? 'active' : '' %>">
+                                                <a class="page-link" href="/admin/blogs?page=<%= page %>&search=<%= encodeURIComponent(filters && filters.search ? filters.search : '') %>&category=<%= filters && filters.category ? filters.category : '' %>&status=<%= filters && filters.status ? filters.status : '' %>">
+                                                    <%= page %>
+                                                </a>
+                                            </li>
+                                        <% }) %>
+                                    <% } %>
+
+                                    <!-- Next -->
+                                    <% if (pagination.hasNext) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/blogs?page=<%= pagination.page + 1 %>&search=<%= encodeURIComponent(filters && filters.search ? filters.search : '') %>&category=<%= filters && filters.category ? filters.category : '' %>&status=<%= filters && filters.status ? filters.status : '' %>">
+                                                <i class="ti ti-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    <% } %>
+
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                <% } %>
+
+            </div>
+
+        </div>
+
     </div>
+
 </div>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const table = document.getElementById('blogs-table');
+    const toggles = document.querySelectorAll('.column-toggle');
+
+    if (!table || !toggles.length) return;
+
+    toggles.forEach(toggle => {
+        toggle.addEventListener('change', function () {
+            const columnIndex = parseInt(this.getAttribute('data-column'), 10);
+            const isChecked = this.checked;
+
+            // Toggle table header cell
+            const th = table.querySelector(`thead tr th:nth-child(${columnIndex + 1})`);
+            if (th) {
+                th.style.display = isChecked ? '' : 'none';
+            }
+
+            // Toggle corresponding body cells across all rows
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const td = row.children[columnIndex];
+                if (td && td.tagName === 'TD') {
+                    td.style.display = isChecked ? '' : 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+
+<%- include('../../adminlayout/footer') %>

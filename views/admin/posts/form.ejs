@@ -1,754 +1,2233 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
 <style>
-    .html-css-editor {
-        min-height: 650px;
-        resize: vertical;
-        font-family: "Fira Code", "Courier New", monospace;
-        font-size: 14px;
-        line-height: 1.65;
-        background: #0f172a;
-        color: #e2e8f0;
-        tab-size: 2;
-        outline: none;
+    /*
+    |--------------------------------------------------------------------------
+    | CKEDITOR
+    |--------------------------------------------------------------------------
+    */
+
+    .ck-editor__editable_inline {
+        min-height: 450px;
     }
 
-    .html-css-editor:focus {
-        border-color: var(--primary-color, #6366f1);
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
+    .ck-content {
+        min-height: 450px;
     }
 
-    #htmlPreviewFrame {
-        min-height: 700px;
+    /*
+    |--------------------------------------------------------------------------
+    | Selected Image Visual Feedback
+    |--------------------------------------------------------------------------
+    */
+
+    .ck-content .ck-widget.ck-widget_selected {
+        outline: 3px solid #0d6efd !important;
+        outline-offset: 2px;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Image Width Classes
+    |--------------------------------------------------------------------------
+    */
+
+    .ck-content figure.image {
+        transition: width 0.2s ease-in-out;
+        margin: 1rem auto;
+    }
+
+    .ck-content figure.image.img-25 {
+        width: 25% !important;
+    }
+
+    .ck-content figure.image.img-50 {
+        width: 50% !important;
+    }
+
+    .ck-content figure.image.img-75 {
+        width: 75% !important;
+    }
+
+    .ck-content figure.image.img-100 {
+        width: 100% !important;
+    }
+
+    .ck-content figure.image img {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CKEditor Content
+    |--------------------------------------------------------------------------
+    */
+
+    .ck-editor__editable {
+        min-height: 450px;
+    }
+
+    .ck-editor__editable_inline {
+        padding: 20px !important;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Editor Error State
+    |--------------------------------------------------------------------------
+    */
+
+    .ckeditor-error {
+        display: none;
+        margin-top: 8px;
+        color: #dc3545;
+        font-size: 13px;
     }
 </style>
-<!-- Title -->
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold"><%= mode === 'edit' ? 'Edit Post' : 'Add Post' %></h1>
-    <a href="/admin/posts" class="text-sm font-medium text-gray-600 hover:text-primary flex items-center gap-1"><i class="icon-arrow-left"></i> Back to Posts</a>
-</div>
 
-<form method="POST" action="<%= formAction %>" id="postForm">
 
-    <div class="grid grid-cols-12 gap-4 lg:gap-6">
+<!-- =========================================================
+     PAGE WRAPPER
+========================================================= -->
 
-        <!-- Left Column -->
-        <div class="col-span-12 xxl:col-span-8 space-y-4 lg:space-y-6">
+<div class="page-wrapper">
 
-            <!-- Basic Info -->
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Basic Information</h2>
+    <div class="content pb-0">
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Post Title <span class="text-danger">*</span></label>
-                    <input type="text" name="title" required value="<%= post ? post.title : '' %>" placeholder="e.g. SSC CGL 2026 Notification Out"
-                        class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Category <span class="text-danger">*</span></label>
-                        <select name="category_id" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                            <option value="">Select Category</option>
-                            <% categories.forEach(function(cat) { %>
-                                <option value="<%= cat.id %>" <%= post && post.category_id === cat.id ? 'selected' : '' %>><%= cat.name %></option>
-                            <% }) %>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Slug <span class="text-gray-400 font-normal">(leave blank to auto-generate)</span></label>
-                        <input type="text" name="slug" value="<%= post ? post.slug : '' %>" placeholder="auto-generated-from-title"
-                            class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                </div>
+        <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Short Description</label>
-                    <textarea name="short_description" rows="2" placeholder="One-line summary shown in listings"
-                        class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= post ? (post.short_description || '') : '' %></textarea>
-                </div>
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 
-                <!-- FULL DESCRIPTION WITH CKEDITOR + CODE VIEW TABS -->
-               <!-- FULL DESCRIPTION - HTML + CSS EDITOR -->
-<div class="mb-4">
+            <div>
 
-    <div class="flex items-center justify-between mb-3">
-        <div>
-            <label class="block text-sm font-medium text-gray-900">
-                Full Description
-            </label>
-            <p class="text-xs text-gray-500 mt-1">
-                Paste complete HTML + CSS here. The preview will update automatically.
-            </p>
-        </div>
+                <h4 class="mb-1">
+                    <%= mode === 'edit' ? 'Edit Post' : 'Add Post' %>
+                </h4>
 
-        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
-            <i class="icon-check-circle"></i>
-            HTML + CSS
-        </span>
-    </div>
+                <nav aria-label="breadcrumb">
 
-    <!-- Editor / Preview Tabs -->
-    <div class="flex items-center border-b border-border-color mb-3">
+                    <ol class="breadcrumb mb-0 p-0">
 
-        <button
-            type="button"
-            id="htmlEditorTab"
-            class="px-4 py-2.5 text-sm font-semibold text-primary border-b-2 border-primary">
-            💻 HTML + CSS
-        </button>
+                        <li class="breadcrumb-item">
 
-        <button
-            type="button"
-            id="previewTab"
-            class="px-4 py-2.5 text-sm font-semibold text-gray-500 border-b-2 border-transparent">
-            👁 Live Preview
-        </button>
+                            <a href="/admin">
+                                Home
+                            </a>
 
-    </div>
+                        </li>
 
-    <!-- HTML EDITOR -->
-    <div id="htmlEditorSection">
+                        <li class="breadcrumb-item">
 
-        <textarea
-            name="full_description"
-            id="htmlCssEditor"
-            class="html-css-editor w-full rounded-lg border border-gray-700 p-4"
-            placeholder="Paste your complete HTML + CSS here..."><%= post ? (post.full_description || '') : '' %></textarea>
+                            <a href="/admin/posts">
+                                Posts
+                            </a>
 
-        <div class="flex items-center justify-between mt-2">
-            <p class="text-xs text-gray-400 mb-0">
-                You can paste &lt;style&gt;...&lt;/style&gt; and HTML together.
-            </p>
+                        </li>
 
-            <button
-                type="button"
-                id="formatHtmlBtn"
-                class="text-xs px-3 py-1.5 rounded-md border border-border-color bg-white hover:bg-gray-50">
-                Format
-            </button>
-        </div>
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
 
-    </div>
+                            <%= mode === 'edit' ? 'Edit' : 'Add' %>
 
-    <!-- LIVE PREVIEW -->
-    <div id="previewSection" class="hidden">
+                        </li>
 
-        <div class="border border-border-color rounded-lg overflow-hidden bg-gray-100">
+                    </ol>
 
-            <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-border-color">
-                <span class="text-xs font-semibold text-gray-600">
-                    Live Website Preview
-                </span>
+                </nav>
 
-                <span class="text-xs text-green-600">
-                    ● Live
-                </span>
             </div>
 
-            <iframe
-                id="htmlPreviewFrame"
-                class="w-full bg-white"
-                style="height: 700px; border: 0;"
-                sandbox="allow-same-origin">
-            </iframe>
 
-        </div>
+            <div>
 
-    </div>
+                <a href="/admin/posts"
+                   class="btn btn-outline-light">
 
-</div>
-            </div>
+                    <i class="ti ti-arrow-left me-1"></i>
 
-            <!-- Important Links -->
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-gray-900 text-lg font-bold mb-1">Important Links</h2>
-                        <p class="text-sm text-gray-500 mb-0">e.g. Apply Online, Download Notification, Official Website</p>
-                    </div>
-                    <button type="button" id="addLinkRowBtn" class="btn px-3 py-2 rounded-full bg-white border border-border-color text-gray-900 text-sm font-medium inline-flex items-center gap-2 hover:bg-light cursor-pointer">
-                        <i class="icon-plus"></i> Add Link
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm" id="linksTable">
-                        <thead>
-                            <tr class="text-left text-gray-500 border-b border-border-color">
-                                <th class="py-2 pr-3 font-medium w-1/3">Label</th>
-                                <th class="py-2 pr-3 font-medium">URL</th>
-                                <th class="py-2 pl-3 font-medium w-12"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="linksTableBody">
-                            <% if (post && post.links && post.links.length) { %>
-                                <% post.links.forEach(function(link) { %>
-                                <tr>
-                                    <td class="py-2 pr-3"><input type="text" name="links_label[]" value="<%= link.label %>" placeholder="e.g. Apply Online" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary"></td>
-                                    <td class="py-2 pr-3"><input type="url" name="links_url[]" value="<%= link.url %>" placeholder="https://..." class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary"></td>
-                                    <td class="py-2 pl-3 text-center"><button type="button" class="removeRowBtn text-danger hover:text-danger-hover cursor-pointer"><i class="icon-trash-2"></i></button></td>
-                                </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                    <p class="text-sm text-gray-400 mt-2 mb-0" id="noLinksMsg" style="<%= (post && post.links && post.links.length) ? 'display:none;' : '' %>">No links added yet.</p>
-                </div>
-            </div>
+                    Back to Posts
 
-            <!-- Dynamic Fields -->
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-gray-900 text-lg font-bold mb-1">Dynamic Fields</h2>
-                        <p class="text-sm text-gray-500 mb-0">Custom fields grouped into sections e.g. "Important Dates", "Application Fee", "Age Limit"</p>
-                    </div>
-                    <button type="button" data-hs-overlay="#addFieldModal" class="btn px-3 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover cursor-pointer">
-                        <i class="icon-plus"></i> Add Field
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm" id="fieldsTable">
-                        <thead>
-                            <tr class="text-left text-gray-500 border-b border-border-color">
-                                <th class="py-2 pr-3 font-medium">Group</th>
-                                <th class="py-2 pr-3 font-medium">Label</th>
-                                <th class="py-2 pr-3 font-medium">Type</th>
-                                <th class="py-2 pr-3 font-medium">Value</th>
-                                <th class="py-2 pl-3 font-medium w-12"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="fieldsTableBody">
-                            <% if (typeof fieldGroups !== 'undefined' && fieldGroups && fieldGroups.length) { %>
-                                <% fieldGroups.forEach(function(group) { %>
-                                    <% group.fields.forEach(function(f) { %>
-                                    <tr>
-                                        <td class="py-2 pr-3">
-                                            <input type="text" name="fields_group[]" value="<%= f.group_name %>" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-                                        </td>
-                                        <td class="py-2 pr-3">
-                                            <input type="text" name="fields_label[]" value="<%= f.field_label %>" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-                                        </td>
-                                        <td class="py-2 pr-3">
-                                            <select name="fields_type[]" class="form-select w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-                                                <% ['text','number','date','textarea','richtext','url'].forEach(function(t) { %>
-                                                    <option value="<%= t %>" <%= f.field_type === t ? 'selected' : '' %>><%= t %></option>
-                                                <% }) %>
-                                            </select>
-                                        </td>
-                                        <td class="py-2 pr-3">
-                                            <input type="text" name="fields_value[]" value="<%= (f.field_value || '').replace(/"/g, '&quot;') %>" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-                                        </td>
-                                        <td class="py-2 pl-3 text-center"><button type="button" class="removeRowBtn text-danger hover:text-danger-hover cursor-pointer"><i class="icon-trash-2"></i></button></td>
-                                    </tr>
-                                    <% }) %>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                    <p class="text-sm text-gray-400 mt-2 mb-0" id="noFieldsMsg" style="<%= (typeof fieldGroups !== 'undefined' && fieldGroups && fieldGroups.length) ? 'display:none;' : '' %>">No dynamic fields added yet. Click "Add Field" to create one.</p>
-                </div>
-            </div>
+                </a>
 
-            <!-- SEO Meta -->
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">SEO Meta</h2>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Meta Title</label>
-                    <input type="text" name="meta_title" value="<%= post ? (post.meta_title || '') : '' %>" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Meta Keywords</label>
-                    <input type="text" name="meta_keywords" value="<%= post ? (post.meta_keywords || '') : '' %>" placeholder="comma, separated, keywords" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Meta Description</label>
-                    <textarea name="meta_description" rows="2" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= post ? (post.meta_description || '') : '' %></textarea>
-                </div>
             </div>
 
         </div>
 
-        <!-- Right Column -->
-        <div class="col-span-12 xxl:col-span-4 space-y-4 lg:space-y-6">
 
-            <!-- Publish -->
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Publish</h2>
+        <!-- =====================================================
+             ALERTS
+        ====================================================== -->
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Post Date</label>
-                    <input type="date" name="post_date" value="<%= post && post.post_date ? post.post_date : '' %>" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Updated Date</label>
-                    <input type="date" name="updated_date" value="<%= post && post.updated_date ? post.updated_date : '' %>" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
 
-                <div class="flex items-center justify-between mb-3 pt-2 border-t border-border-color">
-                    <label for="statusCheck" class="text-sm font-medium text-gray-900">Published (Active)</label>
-                    <input type="checkbox" id="statusCheck" name="status" <%= (!post || post.status) ? 'checked' : '' %> class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                </div>
-                <div class="flex items-center justify-between mb-3">
-                    <label for="marqueeCheck" class="text-sm font-medium text-gray-900">Show in Marquee</label>
-                    <input type="checkbox" id="marqueeCheck" name="is_marquee" <%= post && post.is_marquee ? 'checked' : '' %> class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                </div>
-                <div class="flex items-center justify-between mb-4">
-                    <label for="topCheck" class="text-sm font-medium text-gray-900">Show in Top Box</label>
-                    <input type="checkbox" id="topCheck" name="is_top" <%= post && post.is_top ? 'checked' : '' %> class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Highlight Colour</label>
-                    <input type="text" name="highlight_color" value="<%= post ? (post.highlight_color || '') : '' %>" placeholder="e.g. #ff0000 or red" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
+            <div class="alert alert-danger alert-dismissible fade show mb-4">
 
-                <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover transition cursor-pointer">
-                    <%= mode === 'edit' ? 'Update Post' : 'Save Post' %>
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
                 </button>
+
             </div>
 
-            <% if (mode === 'edit' && post) { %>
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-3">Record Info</h2>
-                <div class="text-sm text-gray-600 space-y-2">
-                    <p class="mb-0">Created: <%= typeof formatDate !== 'undefined' ? formatDate(post.created_at) : post.created_at %></p>
-                    <p class="mb-0">Last Updated: <%= typeof formatDate !== 'undefined' ? formatDate(post.updated_at) : post.updated_at %></p>
-                    <p class="mb-0">Views: <%= post.views_count %> &middot; Clicks: <%= post.clicks_count %></p>
-                </div>
+        <% } %>
+
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4">
+
+                <%= success %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                </button>
+
             </div>
-            <% } %>
-        </div>
+
+        <% } %>
+
+
+        <!-- =====================================================
+             POST FORM
+        ====================================================== -->
+
+        <form method="POST"
+              action="<%= formAction %>"
+              enctype="multipart/form-data"
+              id="postForm">
+
+
+            <div class="row">
+
+
+                <!-- =================================================
+                     LEFT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-8">
+
+
+                    <!-- =================================================
+                         BASIC INFORMATION
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Basic Information
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- TITLE -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+
+                                    Post Title
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </label>
+
+                                <input type="text"
+                                       name="title"
+                                       required
+                                       value="<%= post ? post.title : '' %>"
+                                       placeholder="e.g. SSC CGL 2026 Notification Out"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <!-- CATEGORY + SLUG -->
+
+                            <div class="row">
+
+
+                                <!-- CATEGORY -->
+
+                                <div class="col-md-6 mb-4">
+
+                                    <label class="form-label">
+
+                                        Category
+
+                                        <span class="text-danger">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <select name="category_id"
+                                            required
+                                            class="form-select">
+
+                                        <option value="">
+                                            Select Category
+                                        </option>
+
+
+                                        <% if (categories && categories.length) { %>
+
+                                            <% categories.forEach(function(cat) { %>
+
+                                                <option
+                                                    value="<%= cat.id %>"
+                                                    <%= post && Number(post.category_id) === Number(cat.id) ? 'selected' : '' %>>
+
+                                                    <%= cat.name %>
+
+                                                </option>
+
+                                            <% }) %>
+
+                                        <% } %>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- SLUG -->
+
+                                <div class="col-md-6 mb-4">
+
+                                    <label class="form-label">
+
+                                        Slug
+
+                                        <span class="text-muted">
+                                            (leave blank to auto-generate)
+                                        </span>
+
+                                    </label>
+
+                                    <input type="text"
+                                           name="slug"
+                                           value="<%= post ? (post.slug || '') : '' %>"
+                                           placeholder="auto-generated-from-title"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- SHORT DESCRIPTION -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+
+                                    Short Description
+
+                                </label>
+
+                                <textarea name="short_description"
+                                          rows="3"
+                                          placeholder="One-line summary shown in listings"
+                                          class="form-control"><%= post ? (post.short_description || '') : '' %></textarea>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 FULL DESCRIPTION / CKEDITOR
+                            ================================================== -->
+
+                            <div class="mb-4">
+
+
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+
+                                    <label class="form-label mb-0">
+
+                                        Full Description
+
+                                    </label>
+
+
+                                    <span class="badge bg-light text-dark border">
+
+                                        <i class="ti ti-edit me-1"></i>
+
+                                        Rich Text Editor
+
+                                    </span>
+
+                                </div>
+
+
+                                <!-- CKEDITOR TEXTAREA -->
+
+                                <textarea
+                                    name="full_description"
+                                    id="editor"
+                                    class="form-control"
+                                    rows="15"><%= post ? (post.full_description || '') : '' %></textarea>
+
+
+                                <div id="ckeditorError"
+                                     class="ckeditor-error">
+
+                                    Editor could not be loaded. Please refresh the page.
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         IMPORTANT LINKS
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <h5 class="card-title mb-1">
+                                    Important Links
+                                </h5>
+
+                                <p class="text-muted mb-0">
+                                    e.g. Apply Online, Download Notification, Official Website
+                                </p>
+
+                            </div>
+
+
+                            <button type="button"
+                                    id="addLinkRowBtn"
+                                    class="btn btn-outline-light">
+
+                                <i class="ti ti-plus me-1"></i>
+
+                                Add Link
+
+                            </button>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <div class="table-responsive">
+
+                                <table class="table table-nowrap"
+                                       id="linksTable">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+                                                Label
+                                            </th>
+
+                                            <th>
+                                                URL
+                                            </th>
+
+                                            <th class="text-end">
+                                                Action
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+
+                                    <tbody id="linksTableBody">
+
+
+                                        <% if (post && post.links && post.links.length) { %>
+
+                                            <% post.links.forEach(function(link) { %>
+
+                                                <tr>
+
+                                                    <td>
+
+                                                        <input type="text"
+                                                               name="links_label[]"
+                                                               value="<%= link.label || '' %>"
+                                                               placeholder="e.g. Apply Online"
+                                                               class="form-control">
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <input type="url"
+                                                               name="links_url[]"
+                                                               value="<%= link.url || '' %>"
+                                                               placeholder="https://..."
+                                                               class="form-control">
+
+                                                    </td>
+
+
+                                                    <td class="text-end">
+
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-danger removeRowBtn">
+
+                                                            <i class="ti ti-trash"></i>
+
+                                                        </button>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            <% }) %>
+
+                                        <% } %>
+
+
+                                    </tbody>
+
+                                </table>
+
+
+                                <p class="text-muted mb-0"
+                                   id="noLinksMsg"
+                                   style="<%= (post && post.links && post.links.length) ? 'display:none;' : '' %>">
+
+                                    No links added yet.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         DYNAMIC FIELDS
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <h5 class="card-title mb-1">
+                                    Dynamic Fields
+                                </h5>
+
+                                <p class="text-muted mb-0">
+
+                                    Custom fields grouped into sections e.g.
+                                    Important Dates, Application Fee, Age Limit
+
+                                </p>
+
+                            </div>
+
+
+                            <button type="button"
+                                    data-hs-overlay="#addFieldModal"
+                                    class="btn btn-primary">
+
+                                <i class="ti ti-plus me-1"></i>
+
+                                Add Field
+
+                            </button>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <div class="table-responsive">
+
+                                <table class="table table-nowrap"
+                                       id="fieldsTable">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+                                                Group
+                                            </th>
+
+                                            <th>
+                                                Label
+                                            </th>
+
+                                            <th>
+                                                Type
+                                            </th>
+
+                                            <th>
+                                                Value
+                                            </th>
+
+                                            <th class="text-end">
+                                                Action
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+
+                                    <tbody id="fieldsTableBody">
+
+
+                                        <% if (typeof fieldGroups !== 'undefined' && fieldGroups && fieldGroups.length) { %>
+
+
+                                            <% fieldGroups.forEach(function(group) { %>
+
+
+                                                <% group.fields.forEach(function(f) { %>
+
+                                                    <tr>
+
+
+                                                        <td>
+
+                                                            <input type="text"
+                                                                   name="fields_group[]"
+                                                                   value="<%= f.group_name || '' %>"
+                                                                   class="form-control">
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            <input type="text"
+                                                                   name="fields_label[]"
+                                                                   value="<%= f.field_label || '' %>"
+                                                                   class="form-control">
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            <select name="fields_type[]"
+                                                                    class="form-select">
+
+                                                                <% ['text','number','date','textarea','richtext','url'].forEach(function(t) { %>
+
+                                                                    <option value="<%= t %>"
+                                                                        <%= f.field_type === t ? 'selected' : '' %>>
+
+                                                                        <%= t %>
+
+                                                                    </option>
+
+                                                                <% }) %>
+
+                                                            </select>
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            <input type="text"
+                                                                   name="fields_value[]"
+                                                                   value="<%= f.field_value || '' %>"
+                                                                   class="form-control">
+
+                                                        </td>
+
+
+                                                        <td class="text-end">
+
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger removeRowBtn">
+
+                                                                <i class="ti ti-trash"></i>
+
+                                                            </button>
+
+                                                        </td>
+
+
+                                                    </tr>
+
+                                                <% }) %>
+
+
+                                            <% }) %>
+
+
+                                        <% } %>
+
+
+                                    </tbody>
+
+                                </table>
+
+
+                                <p class="text-muted mb-0"
+                                   id="noFieldsMsg"
+                                   style="<%= (typeof fieldGroups !== 'undefined' && fieldGroups && fieldGroups.length) ? 'display:none;' : '' %>">
+
+                                    No dynamic fields added yet.
+                                    Click "Add Field" to create one.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         SEO
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                SEO Meta
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- META TITLE -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Meta Title
+                                </label>
+
+                                <input type="text"
+                                       name="meta_title"
+                                       value="<%= post ? (post.meta_title || '') : '' %>"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <!-- META KEYWORDS -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Meta Keywords
+                                </label>
+
+                                <input type="text"
+                                       name="meta_keywords"
+                                       value="<%= post ? (post.meta_keywords || '') : '' %>"
+                                       placeholder="comma, separated, keywords"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <!-- META DESCRIPTION -->
+
+                            <div>
+
+                                <label class="form-label">
+                                    Meta Description
+                                </label>
+
+                                <textarea name="meta_description"
+                                          rows="3"
+                                          class="form-control"><%= post ? (post.meta_description || '') : '' %></textarea>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     RIGHT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-4">
+
+
+                    <!-- =================================================
+                         PUBLISH
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Publish
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- POST DATE -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Post Date
+                                </label>
+
+                                <input type="date"
+                                       name="post_date"
+                                       value="<%= post && post.post_date ? post.post_date : '' %>"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <!-- UPDATED DATE -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Updated Date
+                                </label>
+
+                                <input type="date"
+                                       name="updated_date"
+                                       value="<%= post && post.updated_date ? post.updated_date : '' %>"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <!-- STATUS -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-3 pt-3 border-top">
+
+                                <label for="statusCheck"
+                                       class="form-label mb-0">
+
+                                    Published (Active)
+
+                                </label>
+
+
+                                <div class="form-check form-switch">
+
+                                    <input type="checkbox"
+                                           id="statusCheck"
+                                           name="status"
+                                           value="true"
+                                           <%= (!post || post.status) ? 'checked' : '' %>
+                                           class="form-check-input">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- MARQUEE -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+
+                                <label for="marqueeCheck"
+                                       class="form-label mb-0">
+
+                                    Show in Marquee
+
+                                </label>
+
+
+                                <div class="form-check form-switch">
+
+                                    <input type="checkbox"
+                                           id="marqueeCheck"
+                                           name="is_marquee"
+                                           value="true"
+                                           <%= post && post.is_marquee ? 'checked' : '' %>
+                                           class="form-check-input">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- TOP BOX -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+                                <label for="topCheck"
+                                       class="form-label mb-0">
+
+                                    Show in Top Box
+
+                                </label>
+
+
+                                <div class="form-check form-switch">
+
+                                    <input type="checkbox"
+                                           id="topCheck"
+                                           name="is_top"
+                                           value="true"
+                                           <%= post && post.is_top ? 'checked' : '' %>
+                                           class="form-check-input">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- HIGHLIGHT COLOR -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+
+                                    Highlight Colour
+
+                                </label>
+
+                                <input type="text"
+                                       name="highlight_color"
+                                       value="<%= post ? (post.highlight_color || '') : '' %>"
+                                       placeholder="e.g. #ff0000 or red"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <!-- SUBMIT -->
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100">
+
+                                <i class="ti ti-device-floppy me-1"></i>
+
+                                <%= mode === 'edit' ? 'Update Post' : 'Save Post' %>
+
+                            </button>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         RECORD INFO
+                    ================================================== -->
+
+                    <% if (mode === 'edit' && post) { %>
+
+                        <div class="card border-0 rounded-0 mb-4">
+
+                            <div class="card-header">
+
+                                <h5 class="card-title mb-0">
+                                    Record Info
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body">
+
+                                <div class="text-muted">
+
+                                    <p class="mb-2">
+
+                                        Created:
+
+                                        <%= typeof formatDate !== 'undefined'
+                                            ? formatDate(post.created_at)
+                                            : post.created_at %>
+
+                                    </p>
+
+
+                                    <p class="mb-2">
+
+                                        Last Updated:
+
+                                        <%= typeof formatDate !== 'undefined'
+                                            ? formatDate(post.updated_at)
+                                            : post.updated_at %>
+
+                                    </p>
+
+
+                                    <p class="mb-0">
+
+                                        Views:
+                                        <%= post.views_count || 0 %>
+
+                                        &middot;
+
+                                        Clicks:
+                                        <%= post.clicks_count || 0 %>
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    <% } %>
+
+
+                </div>
+
+            </div>
+
+
+        </form>
+
+
     </div>
-</form>
 
-<!-- Add Field Modal -->
-<div id="addFieldModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
+</div>
+
+
+
+<!-- =========================================================
+     ADD FIELD MODAL
+========================================================= -->
+
+<div id="addFieldModal"
+     class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
+
+
     <div>
+
         <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
+
+
             <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
+
+
+                <!-- HEADER -->
+
                 <div class="flex items-center justify-between p-4 border-b border-border-color">
-                    <h3 class="text-lg font-bold text-gray-900">Add Dynamic Field</h3>
-                    <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200" aria-label="Close" data-hs-overlay="#addFieldModal">
+
+                    <h3 class="text-lg font-bold text-gray-900">
+
+                        Add Dynamic Field
+
+                    </h3>
+
+
+                    <button type="button"
+                            class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200"
+                            aria-label="Close"
+                            data-hs-overlay="#addFieldModal">
+
                         <i class="icon-x"></i>
+
                     </button>
+
                 </div>
+
+
+                <!-- BODY -->
+
                 <div class="p-4">
+
+
+                    <!-- GROUP -->
+
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Group Name</label>
-                        <input type="text" id="modalFieldGroup" placeholder="e.g. Important Dates" list="fieldGroupSuggestions" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+
+                            Group Name
+
+                        </label>
+
+
+                        <input type="text"
+                               id="modalFieldGroup"
+                               placeholder="e.g. Important Dates"
+                               list="fieldGroupSuggestions"
+                               class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3">
+
+
                         <datalist id="fieldGroupSuggestions">
+
                             <option value="Important Dates">
                             <option value="Application Fee">
                             <option value="Age Limit">
                             <option value="Vacancy Details">
                             <option value="Details">
+
                         </datalist>
+
                     </div>
+
+
+                    <!-- LABEL -->
+
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Field Label <span class="text-danger">*</span></label>
-                        <input type="text" id="modalFieldLabel" placeholder="e.g. Last Date to Apply" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+
+                            Field Label
+
+                            <span class="text-danger">
+                                *
+                            </span>
+
+                        </label>
+
+
+                        <input type="text"
+                               id="modalFieldLabel"
+                               placeholder="e.g. Last Date to Apply"
+                               class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3">
+
                     </div>
+
+
+                    <!-- TYPE -->
+
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Field Type</label>
-                        <select id="modalFieldType" class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                            <option value="text">Text</option>
-                            <option value="number">Number</option>
-                            <option value="date">Date</option>
-                            <option value="textarea">Textarea</option>
-                            <option value="richtext">Rich Text</option>
-                            <option value="url">URL</option>
+
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+
+                            Field Type
+
+                        </label>
+
+
+                        <select id="modalFieldType"
+                                class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3">
+
+                            <option value="text">
+                                Text
+                            </option>
+
+                            <option value="number">
+                                Number
+                            </option>
+
+                            <option value="date">
+                                Date
+                            </option>
+
+                            <option value="textarea">
+                                Textarea
+                            </option>
+
+                            <option value="richtext">
+                                Rich Text
+                            </option>
+
+                            <option value="url">
+                                URL
+                            </option>
+
                         </select>
+
                     </div>
+
+
+                    <!-- VALUE -->
+
                     <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Field Value</label>
-                        <input type="text" id="modalFieldValue" placeholder="e.g. 30 Sept 2026" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+
+                            Field Value
+
+                        </label>
+
+
+                        <input type="text"
+                               id="modalFieldValue"
+                               placeholder="e.g. 30 Sept 2026"
+                               class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3">
+
                     </div>
+
+
                 </div>
+
+
+                <!-- FOOTER -->
+
                 <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                    <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#addFieldModal">Cancel</button>
-                    <button type="button" id="modalAddFieldBtn" class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover cursor-pointer">Add Field</button>
+
+                    <button type="button"
+                            class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50"
+                            data-hs-overlay="#addFieldModal">
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="button"
+                            id="modalAddFieldBtn"
+                            class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg">
+
+                        Add Field
+
+                    </button>
+
                 </div>
+
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Include CKEditor 5 Build -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+
+
+<!-- =========================================================
+     CKEDITOR 5
+========================================================= -->
+
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
 
 <script>
-(function () {
 
-    const editor = document.getElementById('htmlCssEditor');
-    const previewFrame = document.getElementById('htmlPreviewFrame');
+/*
+|--------------------------------------------------------------------------
+| CKEDITOR CUSTOM UPLOAD ADAPTER
+|--------------------------------------------------------------------------
+*/
 
-    const htmlEditorTab = document.getElementById('htmlEditorTab');
-    const previewTab = document.getElementById('previewTab');
+function CustomUploadAdapterPlugin(editor) {
 
-    const htmlEditorSection = document.getElementById('htmlEditorSection');
-    const previewSection = document.getElementById('previewSection');
+    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
 
-    const formatHtmlBtn = document.getElementById('formatHtmlBtn');
+        return {
 
-    if (!editor || !previewFrame) return;
+            upload() {
 
+                return loader.file.then(file => {
 
-    // ==========================================
-    // LIVE PREVIEW
-    // ==========================================
-
-    function updatePreview() {
-
-        const content = editor.value || '';
-
-        previewFrame.srcdoc = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-
-                <meta
-                    name="viewport"
-                    content="width=device-width, initial-scale=1.0"
-                >
-
-                <style>
-
-                    * {
-                        box-sizing: border-box;
-                    }
-
-                    html,
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        background: #ffffff;
-                    }
-
-                    body {
-                        min-height: 100vh;
-                    }
-
-                    img {
-                        max-width: 100%;
-                    }
-
-                </style>
-
-            </head>
-
-            <body>
-                ${content}
-            </body>
-
-            </html>
-        `;
-    }
+                    return new Promise((resolve, reject) => {
 
 
-    // ==========================================
-    // UPDATE PREVIEW WHILE TYPING
-    // ==========================================
-
-    let previewTimer;
-
-    editor.addEventListener('input', function () {
-
-        clearTimeout(previewTimer);
-
-        previewTimer = setTimeout(function () {
-            updatePreview();
-        }, 250);
-
-    });
+                        const data =
+                            new FormData();
 
 
-    // ==========================================
-    // HTML EDITOR TAB
-    // ==========================================
-
-    htmlEditorTab.addEventListener('click', function () {
-
-        htmlEditorSection.classList.remove('hidden');
-        previewSection.classList.add('hidden');
-
-        htmlEditorTab.className =
-            'px-4 py-2.5 text-sm font-semibold text-primary border-b-2 border-primary';
-
-        previewTab.className =
-            'px-4 py-2.5 text-sm font-semibold text-gray-500 border-b-2 border-transparent';
-
-    });
+                        data.append(
+                            'upload',
+                            file
+                        );
 
 
-    // ==========================================
-    // PREVIEW TAB
-    // ==========================================
+                        /*
+                        |--------------------------------------------------------------------------
+                        | CSRF
+                        |--------------------------------------------------------------------------
+                        */
 
-    previewTab.addEventListener('click', function () {
+                        <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
 
-        updatePreview();
+                            data.append(
+                                '_csrf',
+                                '<%= csrfToken %>'
+                            );
 
-        htmlEditorSection.classList.add('hidden');
-        previewSection.classList.remove('hidden');
-
-        previewTab.className =
-            'px-4 py-2.5 text-sm font-semibold text-primary border-b-2 border-primary';
-
-        htmlEditorTab.className =
-            'px-4 py-2.5 text-sm font-semibold text-gray-500 border-b-2 border-transparent';
-
-    });
+                        <% } %>
 
 
-    // ==========================================
-    // SIMPLE HTML FORMATTER
-    // ==========================================
+                        /*
+                        |--------------------------------------------------------------------------
+                        | POST IMAGE UPLOAD
+                        |--------------------------------------------------------------------------
+                        */
 
-    if (formatHtmlBtn) {
+                        fetch(
+                            '/admin/posts/upload-image',
+                            {
+                                method: 'POST',
+                                body: data
+                            }
+                        )
 
-        formatHtmlBtn.addEventListener('click', function () {
+                        .then(response => {
 
-            const html = editor.value.trim();
+                            if (!response.ok) {
 
-            if (!html) return;
+                                throw new Error(
+                                    'Image upload failed'
+                                );
 
-            editor.value = formatHTML(html);
+                            }
 
-            updatePreview();
+                            return response.json();
 
-        });
+                        })
 
-    }
+                        .then(result => {
 
 
-    function formatHTML(html) {
+                            if (result.url) {
 
-        let formatted = '';
-        let indent = 0;
+                                resolve({
+                                    default: result.url
+                                });
 
-        const tokens = html
-            .replace(/>\s*</g, '><')
-            .split(/(<[^>]+>)/g)
-            .filter(Boolean);
+                            }
 
-        tokens.forEach(function (token) {
+                            else if (
+                                result.default
+                            ) {
 
-            if (token.match(/^<\/\w/)) {
+                                resolve({
+                                    default: result.default
+                                });
 
-                indent = Math.max(0, indent - 1);
+                            }
 
-                formatted +=
-                    '  '.repeat(indent) +
-                    token +
-                    '\n';
+                            else {
 
-            } else if (token.match(/^<\w[^>]*[^\/]>$/)) {
+                                reject(
+                                    result.error
+                                    ? (
+                                        result.error.message
+                                        || result.error
+                                    )
+                                    : 'Image upload failed'
+                                );
 
-                formatted +=
-                    '  '.repeat(indent) +
-                    token +
-                    '\n';
+                            }
 
-                if (
-                    !token.match(
-                        /^<(img|input|br|hr|meta|link|source|area|base|embed|param|track|wbr)\b/i
-                    )
-                ) {
-                    indent++;
+                        })
+
+                        .catch(error => {
+
+                            console.error(
+                                'CKEditor Upload Error:',
+                                error
+                            );
+
+                            reject(error);
+
+                        });
+
+
+                    });
+
+                });
+
+            },
+
+
+            abort() {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Optional abort handler
+                |--------------------------------------------------------------------------
+                */
+
+            }
+
+        };
+
+    };
+
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| INITIALIZE CKEDITOR
+|--------------------------------------------------------------------------
+*/
+
+let postEditor = null;
+
+
+const editorElement =
+    document.querySelector('#editor');
+
+
+if (editorElement) {
+
+
+    ClassicEditor
+        .create(
+            editorElement,
+            {
+
+                /*
+                |--------------------------------------------------------------------------
+                | CUSTOM IMAGE UPLOAD
+                |--------------------------------------------------------------------------
+                */
+
+                extraPlugins: [
+                    CustomUploadAdapterPlugin
+                ],
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TOOLBAR
+                |--------------------------------------------------------------------------
+                */
+
+                toolbar: {
+
+                    items: [
+
+                        'heading',
+
+                        '|',
+
+                        'bold',
+                        'italic',
+                        'underline',
+                        'strikethrough',
+
+                        '|',
+
+                        'link',
+
+                        'bulletedList',
+                        'numberedList',
+
+                        '|',
+
+                        'uploadImage',
+
+                        'insertTable',
+
+                        'blockQuote',
+
+                        '|',
+
+                        'undo',
+                        'redo'
+
+                    ]
+
+                },
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | IMAGE TOOLBAR
+                |--------------------------------------------------------------------------
+                */
+
+                image: {
+
+                    toolbar: [
+
+                        'imageStyle:inline',
+                        'imageStyle:block',
+                        'imageStyle:side',
+
+                        '|',
+
+                        'toggleImageCaption',
+
+                        'imageTextAlternative'
+
+                    ]
+
+                },
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | LINK
+                |--------------------------------------------------------------------------
+                */
+
+                link: {
+
+                    addTargetToExternalLinks: true,
+
+                    defaultProtocol: 'https://'
+
                 }
 
-            } else if (token.match(/^<style/i)) {
 
-                formatted +=
-                    '  '.repeat(indent) +
-                    token +
-                    '\n';
+            }
+        )
 
-            } else if (token.trim()) {
 
-                formatted +=
-                    '  '.repeat(indent) +
-                    token.trim() +
-                    '\n';
+        .then(editor => {
+
+
+            postEditor =
+                editor;
+
+
+            console.log(
+                'CKEditor initialized successfully'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Image selection feedback
+            |--------------------------------------------------------------------------
+            */
+
+            editor.model.document.on(
+                'change:data',
+                function () {
+
+                    /*
+                    | CKEditor automatically updates
+                    | the original textarea.
+                    */
+
+                }
+            );
+
+
+        })
+
+
+        .catch(error => {
+
+
+            console.error(
+                'CKEditor initialization error:',
+                error
+            );
+
+
+            const errorElement =
+                document.getElementById(
+                    'ckeditorError'
+                );
+
+
+            if (errorElement) {
+
+                errorElement.style.display =
+                    'block';
+
             }
 
         });
 
-        return formatted.trim();
-    }
+}
 
 
-    // ==========================================
-    // INITIAL PREVIEW
-    // ==========================================
 
-    updatePreview();
+/*
+|--------------------------------------------------------------------------
+| FORM SUBMIT
+|--------------------------------------------------------------------------
+*/
+
+const postForm =
+    document.getElementById(
+        'postForm'
+    );
 
 
-    // ==========================================
-    // FORM SUBMIT
-    // ==========================================
+if (postForm) {
 
-    document.getElementById('postForm').addEventListener('submit', function () {
 
-        // textarea already contains complete HTML + CSS.
-        // Nothing else required.
+    postForm.addEventListener(
+        'submit',
+        function () {
 
-    });
 
-})();
+            /*
+            |--------------------------------------------------------------------------
+            | Force CKEditor data into textarea
+            |--------------------------------------------------------------------------
+            */
+
+            if (postEditor) {
+
+                editorElement.value =
+                    postEditor.getData();
+
+            }
+
+
+        }
+    );
+
+}
+
 </script>
+
+
+
+<!-- =========================================================
+     LINKS + DYNAMIC FIELDS JAVASCRIPT
+========================================================= -->
+
 <script>
+
 (function () {
 
-   
 
-    // ==========================================
-    // ADD LINK ROW
-    // ==========================================
+    /*
+    |--------------------------------------------------------------------------
+    | ADD LINK ROW
+    |--------------------------------------------------------------------------
+    */
+
     function addLinkRow() {
-        const tbody = document.getElementById('linksTableBody');
-        if (!tbody) return;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="py-2 pr-3">
-                <input type="text" name="links_label[]" placeholder="e.g. Apply Online" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-            </td>
-            <td class="py-2 pr-3">
-                <input type="url" name="links_url[]" placeholder="https://..." class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-            </td>
-            <td class="py-2 pl-3 text-center">
-                <button type="button" class="removeRowBtn text-danger hover:text-danger-hover cursor-pointer"><i class="icon-trash-2"></i></button>
-            </td>
-        `;
 
-        tbody.appendChild(tr);
+        const tbody =
+            document.getElementById(
+                'linksTableBody'
+            );
 
-        const noLinksMsg = document.getElementById('noLinksMsg');
-        if (noLinksMsg) noLinksMsg.style.display = 'none';
 
-        const labelInput = tr.querySelector('input[name="links_label[]"]');
-        if (labelInput) labelInput.focus();
-    }
-
-    // ==========================================
-    // ADD DYNAMIC FIELD
-    // ==========================================
-    function addFieldRow() {
-        const groupEl = document.getElementById('modalFieldGroup');
-        const labelEl = document.getElementById('modalFieldLabel');
-        const typeEl = document.getElementById('modalFieldType');
-        const valueEl = document.getElementById('modalFieldValue');
-        const tbody = document.getElementById('fieldsTableBody');
-
-        if (!tbody || !labelEl) return;
-
-        const label = labelEl.value.trim();
-        if (!label) {
-            alert('Field Label is required.');
-            labelEl.focus();
+        if (!tbody) {
             return;
         }
 
-        const group = groupEl && groupEl.value.trim() ? groupEl.value.trim() : 'Details';
-        const type = typeEl ? typeEl.value : 'text';
-        const value = valueEl ? valueEl.value.trim() : '';
 
-        const tr = document.createElement('tr');
+        const tr =
+            document.createElement(
+                'tr'
+            );
+
+
         tr.innerHTML = `
-            <td class="py-2 pr-3">
-                <input type="text" name="fields_group[]" value="${escapeHtml(group)}" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
+
+            <td>
+
+                <input
+                    type="text"
+                    name="links_label[]"
+                    placeholder="e.g. Apply Online"
+                    class="form-control">
+
             </td>
-            <td class="py-2 pr-3">
-                <input type="text" name="fields_label[]" value="${escapeHtml(label)}" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
+
+
+            <td>
+
+                <input
+                    type="url"
+                    name="links_url[]"
+                    placeholder="https://..."
+                    class="form-control">
+
             </td>
-            <td class="py-2 pr-3">
-                <select name="fields_type[]" class="form-select w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-                    <option value="text" ${type === 'text' ? 'selected' : ''}>Text</option>
-                    <option value="number" ${type === 'number' ? 'selected' : ''}>Number</option>
-                    <option value="date" ${type === 'date' ? 'selected' : ''}>Date</option>
-                    <option value="textarea" ${type === 'textarea' ? 'selected' : ''}>Textarea</option>
-                    <option value="richtext" ${type === 'richtext' ? 'selected' : ''}>Rich Text</option>
-                    <option value="url" ${type === 'url' ? 'selected' : ''}>URL</option>
-                </select>
+
+
+            <td class="text-end">
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger removeRowBtn">
+
+                    <i class="ti ti-trash"></i>
+
+                </button>
+
             </td>
-            <td class="py-2 pr-3">
-                <input type="text" name="fields_value[]" value="${escapeHtml(value)}" class="form-input w-full bg-white border border-border-color text-sm rounded-lg py-1.5 px-2.5 focus:ring-0 focus:border-primary">
-            </td>
-            <td class="py-2 pl-3 text-center">
-                <button type="button" class="removeRowBtn text-danger hover:text-danger-hover cursor-pointer"><i class="icon-trash-2"></i></button>
-            </td>
+
         `;
+
 
         tbody.appendChild(tr);
 
-        const noFieldsMsg = document.getElementById('noFieldsMsg');
-        if (noFieldsMsg) noFieldsMsg.style.display = 'none';
 
-        if (groupEl) groupEl.value = '';
-        labelEl.value = '';
-        if (valueEl) valueEl.value = '';
-        if (typeEl) typeEl.value = 'text';
+        const noLinksMsg =
+            document.getElementById(
+                'noLinksMsg'
+            );
 
-        const modalEl = document.getElementById('addFieldModal');
-        if (window.HSOverlay && modalEl) {
-            try {
-                window.HSOverlay.close(modalEl);
-            } catch (error) {
-                modalEl.classList.add('hidden');
-            }
-        } else if (modalEl) {
-            modalEl.classList.add('hidden');
+
+        if (noLinksMsg) {
+
+            noLinksMsg.style.display =
+                'none';
+
         }
+
+
+        const labelInput =
+            tr.querySelector(
+                'input[name="links_label[]"]'
+            );
+
+
+        if (labelInput) {
+
+            labelInput.focus();
+
+        }
+
     }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADD DYNAMIC FIELD
+    |--------------------------------------------------------------------------
+    */
+
+    function addFieldRow() {
+
+
+        const groupEl =
+            document.getElementById(
+                'modalFieldGroup'
+            );
+
+
+        const labelEl =
+            document.getElementById(
+                'modalFieldLabel'
+            );
+
+
+        const typeEl =
+            document.getElementById(
+                'modalFieldType'
+            );
+
+
+        const valueEl =
+            document.getElementById(
+                'modalFieldValue'
+            );
+
+
+        const tbody =
+            document.getElementById(
+                'fieldsTableBody'
+            );
+
+
+        if (!tbody || !labelEl) {
+
+            return;
+
+        }
+
+
+        const label =
+            labelEl.value.trim();
+
+
+        if (!label) {
+
+            alert(
+                'Field Label is required.'
+            );
+
+            labelEl.focus();
+
+            return;
+
+        }
+
+
+        const group =
+            groupEl &&
+            groupEl.value.trim()
+                ? groupEl.value.trim()
+                : 'Details';
+
+
+        const type =
+            typeEl
+                ? typeEl.value
+                : 'text';
+
+
+        const value =
+            valueEl
+                ? valueEl.value.trim()
+                : '';
+
+
+        const tr =
+            document.createElement(
+                'tr'
+            );
+
+
+        tr.innerHTML = `
+
+            <td>
+
+                <input
+                    type="text"
+                    name="fields_group[]"
+                    value="${escapeHtml(group)}"
+                    class="form-control">
+
+            </td>
+
+
+            <td>
+
+                <input
+                    type="text"
+                    name="fields_label[]"
+                    value="${escapeHtml(label)}"
+                    class="form-control">
+
+            </td>
+
+
+            <td>
+
+                <select
+                    name="fields_type[]"
+                    class="form-select">
+
+                    <option
+                        value="text"
+                        ${type === 'text' ? 'selected' : ''}>
+
+                        Text
+
+                    </option>
+
+                    <option
+                        value="number"
+                        ${type === 'number' ? 'selected' : ''}>
+
+                        Number
+
+                    </option>
+
+                    <option
+                        value="date"
+                        ${type === 'date' ? 'selected' : ''}>
+
+                        Date
+
+                    </option>
+
+                    <option
+                        value="textarea"
+                        ${type === 'textarea' ? 'selected' : ''}>
+
+                        Textarea
+
+                    </option>
+
+                    <option
+                        value="richtext"
+                        ${type === 'richtext' ? 'selected' : ''}>
+
+                        Rich Text
+
+                    </option>
+
+                    <option
+                        value="url"
+                        ${type === 'url' ? 'selected' : ''}>
+
+                        URL
+
+                    </option>
+
+                </select>
+
+            </td>
+
+
+            <td>
+
+                <input
+                    type="text"
+                    name="fields_value[]"
+                    value="${escapeHtml(value)}"
+                    class="form-control">
+
+            </td>
+
+
+            <td class="text-end">
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger removeRowBtn">
+
+                    <i class="ti ti-trash"></i>
+
+                </button>
+
+            </td>
+
+        `;
+
+
+        tbody.appendChild(tr);
+
+
+        const noFieldsMsg =
+            document.getElementById(
+                'noFieldsMsg'
+            );
+
+
+        if (noFieldsMsg) {
+
+            noFieldsMsg.style.display =
+                'none';
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESET MODAL
+        |--------------------------------------------------------------------------
+        */
+
+        if (groupEl) {
+
+            groupEl.value = '';
+
+        }
+
+
+        labelEl.value = '';
+
+
+        if (valueEl) {
+
+            valueEl.value = '';
+
+        }
+
+
+        if (typeEl) {
+
+            typeEl.value = 'text';
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLOSE HS OVERLAY
+        |--------------------------------------------------------------------------
+        */
+
+        const modalEl =
+            document.getElementById(
+                'addFieldModal'
+            );
+
+
+        if (
+            window.HSOverlay &&
+            modalEl
+        ) {
+
+            try {
+
+                window.HSOverlay.close(
+                    modalEl
+                );
+
+            }
+
+            catch (error) {
+
+                modalEl.classList.add(
+                    'hidden'
+                );
+
+            }
+
+        }
+
+        else if (modalEl) {
+
+            modalEl.classList.add(
+                'hidden'
+            );
+
+        }
+
+    }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ESCAPE HTML
+    |--------------------------------------------------------------------------
+    */
 
     function escapeHtml(value) {
+
         return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+
+            .replace(
+                /&/g,
+                '&amp;'
+            )
+
+            .replace(
+                /</g,
+                '&lt;'
+            )
+
+            .replace(
+                />/g,
+                '&gt;'
+            )
+
+            .replace(
+                /"/g,
+                '&quot;'
+            )
+
+            .replace(
+                /'/g,
+                '&#039;'
+            );
+
     }
 
-    // Event Delegations
-    document.addEventListener('click', function (e) {
-        if (e.target.closest('#addLinkRowBtn')) {
-            e.preventDefault();
-            addLinkRow();
-            return;
-        }
 
-        if (e.target.closest('#modalAddFieldBtn')) {
-            e.preventDefault();
-            addFieldRow();
-            return;
-        }
 
-        const removeBtn = e.target.closest('.removeRowBtn');
-        if (removeBtn) {
-            e.preventDefault();
-            const row = removeBtn.closest('tr');
-            if (!row) return;
+    /*
+    |--------------------------------------------------------------------------
+    | EVENT DELEGATION
+    |--------------------------------------------------------------------------
+    */
 
-            const tbody = row.parentElement;
+    document.addEventListener(
+        'click',
+        function (e) {
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADD LINK
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                e.target.closest(
+                    '#addLinkRowBtn'
+                )
+            ) {
+
+                e.preventDefault();
+
+                addLinkRow();
+
+                return;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADD FIELD
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                e.target.closest(
+                    '#modalAddFieldBtn'
+                )
+            ) {
+
+                e.preventDefault();
+
+                addFieldRow();
+
+                return;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMOVE ROW
+            |--------------------------------------------------------------------------
+            */
+
+            const removeBtn =
+                e.target.closest(
+                    '.removeRowBtn'
+                );
+
+
+            if (!removeBtn) {
+
+                return;
+
+            }
+
+
+            e.preventDefault();
+
+
+            const row =
+                removeBtn.closest(
+                    'tr'
+                );
+
+
+            if (!row) {
+
+                return;
+
+            }
+
+
+            const tbody =
+                row.parentElement;
+
+
             row.remove();
 
-            if (tbody && tbody.id === 'linksTableBody') {
-                const msg = document.getElementById('noLinksMsg');
-                if (msg) msg.style.display = tbody.children.length > 0 ? 'none' : '';
+
+            /*
+            |--------------------------------------------------------------------------
+            | LINKS MESSAGE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                tbody &&
+                tbody.id ===
+                    'linksTableBody'
+            ) {
+
+                const msg =
+                    document.getElementById(
+                        'noLinksMsg'
+                    );
+
+
+                if (msg) {
+
+                    msg.style.display =
+                        tbody.children.length > 0
+                            ? 'none'
+                            : '';
+
+                }
+
             }
 
-            if (tbody && tbody.id === 'fieldsTableBody') {
-                const msg = document.getElementById('noFieldsMsg');
-                if (msg) msg.style.display = tbody.children.length > 0 ? 'none' : '';
+
+            /*
+            |--------------------------------------------------------------------------
+            | FIELDS MESSAGE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                tbody &&
+                tbody.id ===
+                    'fieldsTableBody'
+            ) {
+
+                const msg =
+                    document.getElementById(
+                        'noFieldsMsg'
+                    );
+
+
+                if (msg) {
+
+                    msg.style.display =
+                        tbody.children.length > 0
+                            ? 'none'
+                            : '';
+
+                }
+
             }
+
         }
-    });
+    );
+
 
 })();
+
 </script>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+<%- include('../../adminlayout/footer') %>

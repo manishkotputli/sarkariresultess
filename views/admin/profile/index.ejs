@@ -1,112 +1,852 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">My Profile</h1>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-12 gap-4 lg:gap-6">
+    <!-- Start Content -->
+    <div class="content pb-0">
 
-    <!-- Profile Info -->
-    <div class="col-span-12 lg:col-span-7">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-            <h2 class="text-gray-900 text-lg font-bold mb-4">Profile Information</h2>
-            <form method="POST" action="/admin/profile" enctype="multipart/form-data">
-                
-                <!-- Profile Photo with Instant Preview -->
-                <div class="flex items-center gap-4 mb-5">
-                    <div class="relative w-16 h-16 flex-shrink-0">
-                        <% 
-                          var currentPhoto = profileUser.profile_photo 
-                            ? (profileUser.profile_photo.startsWith('/') ? profileUser.profile_photo : '/uploads/users/' + profileUser.profile_photo)
-                            : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(profileUser.name) + '&background=0f172a&color=fff';
-                        %>
-                        <img id="avatar-preview" 
-                             src="<%= currentPhoto %>" 
-                             class="w-16 h-16 rounded-full object-cover border-2 border-border-color shadow-sm" 
-                             alt="<%= profileUser.name %>"
-                             onerror="this.src='https://ui-avatars.com/api/?name=User&background=0f172a&color=fff'">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Profile Photo</label>
-                        <input type="file" 
-                               id="profile_photo_input" 
-                               name="profile_photo" 
-                               accept="image/*" 
-                               onchange="previewImage(event)" 
-                               class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                </div>
+        <!-- =========================
+             ALERTS
+        ========================== -->
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Full Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" required value="<%= profileUser.name %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Email <span class="text-danger">*</span></label>
-                        <input type="email" name="email" required value="<%= profileUser.email %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    </div>
-                </div>
+        <% if (typeof success !== 'undefined' && success) { %>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Phone</label>
-                    <input type="text" name="phone" value="<%= profileUser.phone || '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
+            <div class="alert alert-success alert-dismissible fade show mb-4"
+                 role="alert">
 
-                <div class="mb-5">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Address</label>
-                    <textarea name="address" rows="2" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= profileUser.address || '' %></textarea>
-                </div>
+                <%= success %>
 
-                <button type="submit" class="py-2.5 px-6 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover transition cursor-pointer">Save Changes</button>
-            </form>
-        </div>
-    </div>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
 
-    <!-- Sidebar Info + Password -->
-    <div class="col-span-12 lg:col-span-5 space-y-4 lg:space-y-6">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-            <h2 class="text-gray-900 text-lg font-bold mb-3">Account Info</h2>
-            <div class="text-sm text-gray-600 space-y-2">
-                <p class="mb-0">User Code: <span class="font-medium text-gray-900"><%= profileUser.user_code || '-' %></span></p>
-                <p class="mb-0">Role: <span class="font-medium text-gray-900"><%= profileUser.Role ? profileUser.Role.name : (profileUser.role_name || '-') %></span></p>
-                <p class="mb-0">Joined: <%= typeof formatDate === 'function' ? formatDate(profileUser.created_at) : (profileUser.created_at || '-') %></p>
             </div>
+
+        <% } %>
+
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li><%= error %></li>
+
+                    <% }) %>
+
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">My Profile</h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            My Profile
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Refresh -->
+
+                <a href="javascript:location.reload();"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Refresh"
+                   data-bs-original-title="Refresh">
+
+                    <i class="ti ti-refresh"></i>
+
+                </a>
+
+
+                <!-- Collapse -->
+
+                <a href="javascript:void(0);"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Collapse"
+                   data-bs-original-title="Collapse"
+                   id="collapse-header">
+
+                    <i class="ti ti-transition-top"></i>
+
+                </a>
+
+            </div>
+
         </div>
 
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-            <h2 class="text-gray-900 text-lg font-bold mb-4">Change Password</h2>
-            <form method="POST" action="/admin/profile/change-password">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Current Password <span class="text-danger">*</span></label>
-                    <input type="password" name="current_password" required class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+        <!-- =========================
+             PROFILE CONTENT
+        ========================== -->
+
+        <div class="row">
+
+
+            <!-- =========================================
+                 PROFILE INFORMATION
+            ========================================== -->
+
+            <div class="col-xl-7 col-lg-7 mb-4">
+
+                <div class="card border-0 rounded-0">
+
+                    <div class="card-header">
+
+                        <h5 class="card-title mb-0">
+
+                            <i class="ti ti-user-circle me-2"></i>
+
+                            Profile Information
+
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        <form method="POST"
+                              action="/admin/profile"
+                              enctype="multipart/form-data">
+
+
+                            <!-- =========================
+                                 PROFILE PHOTO
+                            ========================== -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Profile Photo
+                                </label>
+
+
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+
+
+                                    <%
+                                        var currentPhoto =
+                                            profileUser.profile_photo
+                                                ? (
+                                                    profileUser.profile_photo.startsWith('/')
+                                                        ? profileUser.profile_photo
+                                                        : '/uploads/users/' + profileUser.profile_photo
+                                                  )
+                                                : 'https://ui-avatars.com/api/?name=' +
+                                                  encodeURIComponent(profileUser.name || 'User') +
+                                                  '&background=0f172a&color=fff';
+                                    %>
+
+
+                                    <!-- Avatar -->
+
+                                    <div class="avatar avatar-xl flex-shrink-0">
+
+                                        <img id="avatar-preview"
+                                             src="<%= currentPhoto %>"
+                                             class="rounded-circle object-fit-cover"
+                                             alt="<%= profileUser.name || 'User' %>"
+                                             style="width:80px;height:80px;object-fit:cover;"
+                                             onerror="this.src='https://ui-avatars.com/api/?name=User&background=0f172a&color=fff'">
+
+                                    </div>
+
+
+                                    <!-- Upload -->
+
+                                    <div class="flex-grow-1">
+
+                                        <input type="file"
+                                               id="profile_photo_input"
+                                               name="profile_photo"
+                                               accept="image/*"
+                                               onchange="previewImage(event)"
+                                               class="form-control">
+
+                                        <small class="text-muted d-block mt-2">
+
+                                            Upload a JPG, JPEG, PNG or WEBP image.
+
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =========================
+                                 NAME + EMAIL
+                            ========================== -->
+
+                            <div class="row">
+
+
+                                <!-- FULL NAME -->
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+
+                                        Full Name
+
+                                        <span class="text-danger">*</span>
+
+                                    </label>
+
+                                    <input type="text"
+                                           name="name"
+                                           required
+                                           value="<%= profileUser.name || '' %>"
+                                           class="form-control">
+
+                                </div>
+
+
+                                <!-- EMAIL -->
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+
+                                        Email
+
+                                        <span class="text-danger">*</span>
+
+                                    </label>
+
+                                    <input type="email"
+                                           name="email"
+                                           required
+                                           value="<%= profileUser.email || '' %>"
+                                           class="form-control">
+
+                                </div>
+
+
+                                <!-- PHONE -->
+
+                                <div class="col-md-12 mb-3">
+
+                                    <label class="form-label">
+                                        Phone
+                                    </label>
+
+                                    <input type="text"
+                                           name="phone"
+                                           value="<%= profileUser.phone || '' %>"
+                                           class="form-control">
+
+                                </div>
+
+
+                                <!-- ADDRESS -->
+
+                                <div class="col-md-12 mb-4">
+
+                                    <label class="form-label">
+                                        Address
+                                    </label>
+
+                                    <textarea name="address"
+                                              rows="3"
+                                              class="form-control"><%= profileUser.address || '' %></textarea>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- SAVE -->
+
+                            <div class="d-flex justify-content-end">
+
+                                <button type="submit"
+                                        class="btn btn-primary">
+
+                                    <i class="ti ti-device-floppy me-1"></i>
+
+                                    Save Changes
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">New Password <span class="text-danger">*</span></label>
-                    <input type="password" name="new_password" required minlength="6" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+            </div>
+
+
+            <!-- =========================================
+                 RIGHT SIDEBAR
+            ========================================== -->
+
+            <div class="col-xl-5 col-lg-5">
+
+
+                <!-- =========================
+                     ACCOUNT INFO
+                ========================== -->
+
+                <div class="card border-0 rounded-0 mb-4">
+
+                    <div class="card-header">
+
+                        <h5 class="card-title mb-0">
+
+                            <i class="ti ti-id me-2"></i>
+
+                            Account Information
+
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        <div class="d-flex align-items-center mb-4">
+
+
+                            <%
+                                var accountPhoto =
+                                    profileUser.profile_photo
+                                        ? (
+                                            profileUser.profile_photo.startsWith('/')
+                                                ? profileUser.profile_photo
+                                                : '/uploads/users/' + profileUser.profile_photo
+                                          )
+                                        : 'https://ui-avatars.com/api/?name=' +
+                                          encodeURIComponent(profileUser.name || 'User') +
+                                          '&background=0f172a&color=fff';
+                            %>
+
+
+                            <div class="avatar avatar-lg me-3">
+
+                                <img src="<%= accountPhoto %>"
+                                     class="rounded-circle"
+                                     style="width:56px;height:56px;object-fit:cover;"
+                                     alt="<%= profileUser.name || 'User' %>"
+                                     onerror="this.src='https://ui-avatars.com/api/?name=User&background=0f172a&color=fff'">
+
+                            </div>
+
+
+                            <div>
+
+                                <h6 class="mb-1 fw-semibold">
+
+                                    <%= profileUser.name || 'User' %>
+
+                                </h6>
+
+                                <span class="text-muted fs-12">
+
+                                    <%= profileUser.email || '-' %>
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="border-top pt-3">
+
+
+                            <!-- USER CODE -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+
+                                <span class="text-muted">
+                                    User Code
+                                </span>
+
+                                <span class="fw-medium text-dark">
+
+                                    <%= profileUser.user_code || '-' %>
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- ROLE -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+
+                                <span class="text-muted">
+                                    Role
+                                </span>
+
+                                <span class="badge bg-soft-primary text-primary">
+
+                                    <%= profileUser.Role
+                                        ? profileUser.Role.name
+                                        : (profileUser.role_name || '-') %>
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- JOINED -->
+
+                            <div class="d-flex align-items-center justify-content-between">
+
+                                <span class="text-muted">
+                                    Joined
+                                </span>
+
+                                <span class="fw-medium text-dark">
+
+                                    <%= typeof formatDate === 'function'
+                                        ? formatDate(profileUser.created_at)
+                                        : (profileUser.created_at || '-') %>
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
-                <div class="mb-5">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Confirm New Password <span class="text-danger">*</span></label>
-                    <input type="password" name="confirm_password" required minlength="6" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+
+                <!-- =========================
+                     CHANGE PASSWORD
+                ========================== -->
+
+                <div class="card border-0 rounded-0">
+
+                    <div class="card-header">
+
+                        <h5 class="card-title mb-0">
+
+                            <i class="ti ti-lock me-2"></i>
+
+                            Change Password
+
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        <form method="POST"
+                              action="/admin/profile/change-password">
+
+
+                            <!-- CURRENT PASSWORD -->
+
+                            <div class="mb-3">
+
+                                <label class="form-label">
+
+                                    Current Password
+
+                                    <span class="text-danger">*</span>
+
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input type="password"
+                                           name="current_password"
+                                           id="currentPassword"
+                                           required
+                                           class="form-control">
+
+                                    <button type="button"
+                                            class="btn btn-outline-light password-toggle"
+                                            data-target="currentPassword">
+
+                                        <i class="ti ti-eye"></i>
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- NEW PASSWORD -->
+
+                            <div class="mb-3">
+
+                                <label class="form-label">
+
+                                    New Password
+
+                                    <span class="text-danger">*</span>
+
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input type="password"
+                                           name="new_password"
+                                           id="newPassword"
+                                           required
+                                           minlength="6"
+                                           class="form-control">
+
+                                    <button type="button"
+                                            class="btn btn-outline-light password-toggle"
+                                            data-target="newPassword">
+
+                                        <i class="ti ti-eye"></i>
+
+                                    </button>
+
+                                </div>
+
+                                <small class="text-muted">
+                                    Minimum 6 characters.
+                                </small>
+
+                            </div>
+
+
+                            <!-- CONFIRM PASSWORD -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+
+                                    Confirm New Password
+
+                                    <span class="text-danger">*</span>
+
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input type="password"
+                                           name="confirm_password"
+                                           id="confirmPassword"
+                                           required
+                                           minlength="6"
+                                           class="form-control">
+
+                                    <button type="button"
+                                            class="btn btn-outline-light password-toggle"
+                                            data-target="confirmPassword">
+
+                                        <i class="ti ti-eye"></i>
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- UPDATE -->
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100">
+
+                                <i class="ti ti-key me-1"></i>
+
+                                Update Password
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
                 </div>
-                <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover transition cursor-pointer">Update Password</button>
-            </form>
+
+            </div>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Instant Image Preview Script -->
+
+<!-- =====================================================
+     IMAGE PREVIEW
+===================================================== -->
+
 <script>
-  function previewImage(event) {
-    const reader = new FileReader();
-    reader.onload = function() {
-      const output = document.getElementById('avatar-preview');
-      output.src = reader.result;
-    };
-    if(event.target.files && event.target.files[0]){
-      reader.readAsDataURL(event.target.files[0]);
+
+function previewImage(event) {
+
+    const file =
+        event.target.files &&
+        event.target.files[0];
+
+    if (!file) return;
+
+
+    /*
+     * Validate image
+     */
+
+    if (!file.type.startsWith('image/')) {
+
+        event.target.value = '';
+
+        return;
+
     }
-  }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload = function () {
+
+        const output =
+            document.getElementById('avatar-preview');
+
+        if (output) {
+
+            output.src =
+                reader.result;
+
+        }
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+}
+
 </script>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+<!-- =====================================================
+     PASSWORD TOGGLE
+===================================================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    document
+        .querySelectorAll('.password-toggle')
+        .forEach(function (button) {
+
+            button.addEventListener(
+                'click',
+                function () {
+
+                    const targetId =
+                        button.getAttribute('data-target');
+
+                    const input =
+                        document.getElementById(targetId);
+
+                    if (!input) return;
+
+
+                    const icon =
+                        button.querySelector('i');
+
+
+                    if (input.type === 'password') {
+
+                        input.type = 'text';
+
+                        if (icon) {
+
+                            icon.classList.remove(
+                                'ti-eye'
+                            );
+
+                            icon.classList.add(
+                                'ti-eye-off'
+                            );
+
+                        }
+
+                    } else {
+
+                        input.type = 'password';
+
+                        if (icon) {
+
+                            icon.classList.remove(
+                                'ti-eye-off'
+                            );
+
+                            icon.classList.add(
+                                'ti-eye'
+                            );
+
+                        }
+
+                    }
+
+                }
+            );
+
+        });
+
+});
+
+</script>
+
+
+<!-- =====================================================
+     PASSWORD MATCH VALIDATION
+===================================================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const passwordForm =
+        document.querySelector(
+            'form[action="/admin/profile/change-password"]'
+        );
+
+    if (!passwordForm) return;
+
+
+    passwordForm.addEventListener(
+        'submit',
+        function (event) {
+
+            const newPassword =
+                document.getElementById('newPassword');
+
+            const confirmPassword =
+                document.getElementById('confirmPassword');
+
+
+            if (
+                newPassword &&
+                confirmPassword &&
+                newPassword.value !== confirmPassword.value
+            ) {
+
+                event.preventDefault();
+
+                confirmPassword.focus();
+
+                confirmPassword.setCustomValidity(
+                    'Passwords do not match.'
+                );
+
+                confirmPassword.reportValidity();
+
+            } else if (confirmPassword) {
+
+                confirmPassword.setCustomValidity('');
+
+            }
+
+        }
+    );
+
+
+    const confirmPassword =
+        document.getElementById('confirmPassword');
+
+
+    if (confirmPassword) {
+
+        confirmPassword.addEventListener(
+            'input',
+            function () {
+
+                const newPassword =
+                    document.getElementById('newPassword');
+
+
+                if (
+                    newPassword &&
+                    confirmPassword.value &&
+                    newPassword.value !== confirmPassword.value
+                ) {
+
+                    confirmPassword.setCustomValidity(
+                        'Passwords do not match.'
+                    );
+
+                } else {
+
+                    confirmPassword.setCustomValidity('');
+
+                }
+
+            }
+        );
+
+    }
+
+});
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

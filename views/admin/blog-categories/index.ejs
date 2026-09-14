@@ -1,166 +1,463 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<!-- Title -->
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">Blog Categories</h1>
-    <button data-hs-overlay="#addBlogCatModal" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-        <span class="flex"><i class="icon-plus"></i></span> Add Blog Category
-    </button>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-1">
-    <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden">
-        <div class="flex items-center justify-between p-4 border-b border-border-color gap-2 flex-wrap">
-            <h2 class="text-gray-900 text-lg font-bold mb-0">All Blog Categories</h2>
-            <form method="GET" action="/admin/blog-categories" class="relative w-full md:w-64">
-                <input type="text" name="search" value="<%= search %>" placeholder="Search category..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-                <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0"><i class="icon-search"></i></button>
-            </form>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[500px]">
-                <thead>
-                    <tr class="border-b border-border-color bg-gray-50/50">
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Category</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Slug</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Blog Posts</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-end text-[13px] font-semibold uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <% if (categories && categories.length) { %>
-                        <% categories.forEach(function(cat) { %>
-                        <tr>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <div class="flex items-center gap-3">
-                                    <span class="size-10 shrink-0 flex items-center justify-center rounded-full bg-orange text-white text-lg"><i class="icon-newspaper"></i></span>
-                                    <span class="text-sm font-semibold text-gray-900"><%= cat.name %></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-500">/<%= cat.slug %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= cat.get('blogCount') %> posts</span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                                <div class="flex items-center justify-end gap-2">
-                                    <button type="button" class="editBlogCatBtn size-9 rounded-full hover:bg-gray-100 text-gray-900 flex items-center justify-center transition-colors" aria-label="Edit" data-hs-overlay="#editBlogCatModal" data-id="<%= cat.id %>" data-name="<%= cat.name %>" data-slug="<%= cat.slug %>">
-                                        <i class="icon-pencil-line text-sm"></i>
-                                    </button>
-                                    <button type="button" class="deleteBlogCatBtn size-9 rounded-full hover:bg-gray-100 text-gray-900 hover:text-danger flex items-center justify-center transition-colors" aria-label="Delete" data-hs-overlay="#deleteBlogCatModal" data-id="<%= cat.id %>" data-name="<%= cat.name %>">
-                                        <i class="icon-trash-2 text-sm"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="4" class="px-6 py-10 text-center text-gray-500 bg-white">No blog categories found.</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+    <!-- Start Content -->
+    <div class="content pb-0">
 
-<!-- Add Modal -->
-<div id="addBlogCatModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" action="/admin/blog-categories">
-                    <div class="flex items-center justify-between p-4 border-b border-border-color">
-                        <h3 class="text-lg font-bold text-gray-900">Add Blog Category</h3>
-                        <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200" aria-label="Close" data-hs-overlay="#addBlogCatModal"><i class="icon-x"></i></button>
+        <!-- =========================
+             ALERTS
+        ========================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <ul class="mb-0">
+                    <% errors.forEach(function(error) { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+                <h4 class="mb-1">Blog Categories</h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="/admin">Home</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Blog Categories
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Export -->
+                <div class="dropdown">
+                    <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
+                        <i class="ti ti-package-export me-2"></i> Export
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <ul>
+                            <li>
+                                <a href="/admin/blog-categories/export/pdf" class="dropdown-item">
+                                    <i class="ti ti-file-type-pdf me-1"></i> Export as PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/admin/blog-categories/export/excel" class="dropdown-item">
+                                    <i class="ti ti-file-type-xls me-1"></i> Export as Excel
+                                </a>
+                            </li>
+                        </ul>
                     </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Category Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" required placeholder="e.g. Exam Tips" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Slug <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <input type="text" name="slug" placeholder="exam-tips" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#addBlogCatModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover cursor-pointer">Add Category</button>
+                </div>
+
+                <!-- Refresh -->
+                <a href="javascript:location.reload();" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh">
+                    <i class="ti ti-refresh"></i>
+                </a>
+
+                <!-- Collapse -->
+                <a href="javascript:void(0);" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Collapse" data-bs-original-title="Collapse" id="collapse-header">
+                    <i class="ti ti-transition-top"></i>
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- =========================
+             BLOG CATEGORIES CARD
+        ========================== -->
+
+        <div class="card border-0 rounded-0">
+
+            <!-- CARD HEADER -->
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+                <!-- Search -->
+                <form method="GET" action="/admin/blog-categories" class="mb-0">
+                    <div class="input-icon input-icon-start position-relative">
+                        <span class="input-icon-addon text-dark">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" class="form-control" id="categorySearch" placeholder="Search Categories...">
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Edit Modal -->
-<div id="editBlogCatModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" id="editBlogCatForm" action="">
-                    <div class="flex items-center justify-between p-4 border-b border-border-color">
-                        <h3 class="text-lg font-bold text-gray-900">Edit Blog Category</h3>
-                        <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200" aria-label="Close" data-hs-overlay="#editBlogCatModal"><i class="icon-x"></i></button>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Category Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="editBlogCatName" required class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Slug</label>
-                            <input type="text" name="slug" id="editBlogCatSlug" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#editBlogCatModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover cursor-pointer">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+                <!-- Add Category -->
+                <div class="d-inline-flex align-items-center gap-3">
+                    <a href="/admin/blog-categories/create" class="btn btn-primary">
+                        <i class="ti ti-square-rounded-plus-filled me-1"></i> Add Category
+                    </a>
+                </div>
 
-<!-- Delete Modal -->
-<div id="deleteBlogCatModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" id="deleteBlogCatForm" action="">
-                    <div class="p-4 sm:p-7">
-                        <div class="text-center">
-                            <div class="flex justify-center mb-4">
-                                <div class="flex items-center justify-center size-14 rounded-full bg-danger/10"><i class="icon-trash-2 text-danger text-2xl!"></i></div>
+            </div>
+
+            <!-- =========================
+                 CARD BODY
+            ========================== -->
+
+            <div class="card-body">
+
+                <!-- =========================
+                     TABLE HEADER & TOOLS
+                ========================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+                    <!-- SORT -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="dropdown">
+                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light shadow" data-bs-toggle="dropdown">
+                                <i class="ti ti-sort-ascending-2 me-2"></i> Sort By
+                            </a>
+                            <div class="dropdown-menu">
+                                <ul>
+                                    <li>
+                                        <a href="/admin/blog-categories?sort=name_asc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Name (A-Z)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/blog-categories?sort=name_desc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Name (Z-A)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/blog-categories?sort=order_asc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Order (Low to High)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/blog-categories?sort=order_desc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Order (High to Low)
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Blog Category</h3>
-                            <p class="text-sm text-gray-600 mb-0">Delete "<span id="deleteBlogCatName" class="font-semibold"></span>"? Categories with existing blog posts cannot be deleted.</p>
                         </div>
                     </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#deleteBlogCatModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-danger rounded-lg hover:bg-danger-hover cursor-pointer">Delete</button>
+
+                    <!-- RIGHT TOOLS -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <!-- Manage Columns Dropdown -->
+                        <div class="dropdown">
+                            <a href="javascript:void(0);" class="btn bg-soft-indigo border-0" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                <i class="ti ti-columns-3 me-2"></i> Manage Columns
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+                                <ul class="list-unstyled mb-0">
+
+                                    <!-- ID Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span># ID</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="0" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Category Name Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Category Name</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="1" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Slug Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Slug</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="2" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Order Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Order</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="3" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Status Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Status</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="4" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+
                     </div>
-                </form>
+
+                </div>
+
+                <!-- =========================
+                     BLOG CATEGORY TABLE
+                ========================== -->
+
+                <div class="table-responsive custom-table">
+                    <table class="table table-nowrap" id="categories-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Category Name</th>
+                                <th>Slug</th>
+                                <th>Order</th>
+                                <th>Status</th>
+                                <th class="text-end no-sort">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="categoriesTableBody">
+                            <% if (categories && categories.length) { %>
+                                <% categories.forEach(function(category, index) { %>
+                                    <tr data-status="<%= category.status ? 'active' : 'inactive' %>">
+
+                                        <!-- ID -->
+                                        <td><%= category.id %></td>
+
+                                        <!-- NAME -->
+                                        <td>
+                                            <h6 class="mb-0 fw-semibold">
+                                                <a href="/admin/blog-categories/<%= category.id %>/edit" class="text-dark">
+                                                    <%= category.name %>
+                                                </a>
+                                            </h6>
+                                        </td>
+
+                                        <!-- SLUG -->
+                                        <td>
+                                            <span class="badge bg-soft-primary text-primary">
+                                                <i class="ti ti-link me-1"></i>
+                                                <%= category.slug %>
+                                            </span>
+                                        </td>
+
+                                        <!-- ORDER -->
+                                        <td>
+                                            <span class="text-muted">
+                                                <%= category.ordering ?? 0 %>
+                                            </span>
+                                        </td>
+
+                                        <!-- STATUS -->
+                                        <td>
+                                            <% if (category.status) { %>
+                                                <span class="badge bg-soft-success text-success">
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i> Active
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge bg-soft-danger text-danger">
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i> Inactive
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- ACTION -->
+                                        <td class="text-end">
+                                            <div class="dropdown">
+                                                <a href="javascript:void(0);" class="btn btn-icon btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="ti ti-dots-vertical"></i>
+                                                </a>
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <!-- Edit -->
+                                                    <li>
+                                                        <a href="/admin/blog-categories/<%= category.id %>/edit" class="dropdown-item">
+                                                            <i class="ti ti-edit me-1"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <!-- Delete -->
+                                                    <li>
+                                                        <a href="javascript:void(0);" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#delete_category_<%= category.id %>">
+                                                            <i class="ti ti-trash me-1"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <!-- EMPTY -->
+                                <tr id="noCategoriesRow">
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="ti ti-category fs-40 d-block mb-2"></i>
+                                            <h5>No Categories Found</h5>
+                                            <p class="mb-2">There are no blog categories available.</p>
+                                            <a href="/admin/blog-categories/create" class="btn btn-primary btn-sm">
+                                                <i class="ti ti-plus me-1"></i> Add Your First Category
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- =========================
+                     PAGINATION / COUNT
+                ========================== -->
+
+                <% if (typeof pagination !== 'undefined' && pagination && pagination.totalPages > 1) { %>
+                    <div class="row align-items-center mt-3">
+
+                        <!-- Info -->
+                        <div class="col-md-6">
+                            <div class="text-muted">
+                                Page <%= pagination.page %> of <%= pagination.totalPages %> &nbsp;·&nbsp; <%= typeof total !== 'undefined' ? total : (categories ? categories.length : 0) %> total Categories
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-end">
+                                <ul class="pagination mb-0">
+
+                                    <!-- Previous -->
+                                    <% if (pagination.hasPrev) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/blog-categories?page=<%= pagination.page - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>">
+                                                <i class="ti ti-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    <% } %>
+
+                                    <!-- Pages -->
+                                    <% if (pagination.pages && pagination.pages.length) { %>
+                                        <% pagination.pages.forEach(function(page) { %>
+                                            <li class="page-item <%= page === pagination.page ? 'active' : '' %>">
+                                                <a class="page-link" href="/admin/blog-categories?page=<%= page %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>">
+                                                    <%= page %>
+                                                </a>
+                                            </li>
+                                        <% }) %>
+                                    <% } %>
+
+                                    <!-- Next -->
+                                    <% if (pagination.hasNext) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/blog-categories?page=<%= pagination.page + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>">
+                                                <i class="ti ti-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    <% } %>
+
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                <% } %>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
-<%
-var pageScripts = `
-document.querySelectorAll('.editBlogCatBtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.getElementById('editBlogCatForm').action = '/admin/blog-categories/' + btn.dataset.id + '/update';
-    document.getElementById('editBlogCatName').value = btn.dataset.name || '';
-    document.getElementById('editBlogCatSlug').value = btn.dataset.slug || '';
-  });
-});
-document.querySelectorAll('.deleteBlogCatBtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.getElementById('deleteBlogCatForm').action = '/admin/blog-categories/' + btn.dataset.id + '/delete';
-    document.getElementById('deleteBlogCatName').textContent = btn.dataset.name || '';
-  });
-});
-`;
-%>
+<!-- Manage Columns Toggle Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggles = document.querySelectorAll('.column-toggle');
+        const table = document.getElementById('categories-table');
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+        if (!table) return;
+
+        function updateColumnVisibility(colIndex, isVisible) {
+            // Header cell hide/show
+            const th = table.querySelector(`thead tr th:nth-child(${colIndex + 1})`);
+            if (th) {
+                th.classList.toggle('d-none', !isVisible);
+            }
+
+            // Body cells hide/show
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                // Ignore "No Categories Found" full width row
+                if (row.id === 'noCategoriesRow') return;
+
+                const td = row.querySelector(`td:nth-child(${colIndex + 1})`);
+                if (td) {
+                    td.classList.toggle('d-none', !isVisible);
+                }
+            });
+
+            // Update empty row colspan
+            const noCategoriesTd = table.querySelector('#noCategoriesRow td');
+            if (noCategoriesTd) {
+                const visibleThs = table.querySelectorAll('thead tr th:not(.d-none)').length;
+                noCategoriesTd.setAttribute('colspan', visibleThs || 1);
+            }
+        }
+
+        // Initialize toggle listeners & load saved preferences
+        toggles.forEach(toggle => {
+            const colIndex = parseInt(toggle.getAttribute('data-column'), 10);
+            const storageKey = 'blog_cat_col_' + colIndex;
+
+            // Restore from localStorage if saved
+            const savedState = localStorage.getItem(storageKey);
+            if (savedState !== null) {
+                const isChecked = savedState === 'true';
+                toggle.checked = isChecked;
+                updateColumnVisibility(colIndex, isChecked);
+            }
+
+            // Event listener for toggle click
+            toggle.addEventListener('change', function () {
+                const isChecked = this.checked;
+                updateColumnVisibility(colIndex, isChecked);
+                localStorage.setItem(storageKey, isChecked);
+            });
+        });
+    });
+</script>
+
+<%- include('../../adminlayout/footer') %>

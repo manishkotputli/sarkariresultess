@@ -1,68 +1,1232 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">Comments</h1>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-1">
-    <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden">
-        <form method="GET" action="/admin/comments" class="flex items-center justify-end flex-wrap gap-3 p-4 border-b border-border-color">
-            <select name="type" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                <option value="">All Types</option>
-                <option value="post" <%= filters.type === 'post' ? 'selected' : '' %>>Post Comments</option>
-                <option value="blog" <%= filters.type === 'blog' ? 'selected' : '' %>>Blog Comments</option>
-            </select>
-            <select name="status" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                <option value="">All Status</option>
-                <option value="approved" <%= filters.status === 'approved' ? 'selected' : '' %>>Approved</option>
-                <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Pending</option>
-            </select>
-        </form>
+    <!-- Start Content -->
+    <div class="content pb-0">
 
-        <div class="divide-y">
-            <% if (comments && comments.length) { %>
-                <% comments.forEach(function(c) { %>
-                <div class="p-4 flex items-start justify-between gap-4">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap mb-1">
-                            <span class="text-sm font-semibold text-gray-900"><%= c.User ? c.User.name : 'Unknown User' %></span>
-                            <span class="inline-flex items-center text-xs font-semibold text-primary bg-primary/10 border border-primary/20 rounded-md px-2 py-0.5"><%= c.commentable_type === 'blog' ? 'Blog' : 'Post' %></span>
-                            <span class="inline-flex items-center text-xs font-bold rounded-lg px-2 py-0.5 border <%= c.is_approved ? 'text-success border-success' : 'text-orange border-orange' %>"><%= c.is_approved ? 'Approved' : 'Pending' %></span>
-                        </div>
-                        <p class="text-sm text-gray-700 mb-1"><%= c.content %></p>
-                        <p class="text-xs text-gray-400 mb-0">
-                            On: <% if (c.parent) { %><span class="font-medium text-gray-600"><%= c.parent.title %></span><% } else { %><span class="italic">deleted content</span><% } %>
-                            &middot; <%= formatDate(c.created_at) %>
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <form method="POST" action="/admin/comments/<%= c.id %>/toggle-approval">
-                            <button type="submit" class="size-9 rounded-full hover:bg-gray-100 text-gray-900 flex items-center justify-center transition-colors cursor-pointer" aria-label="Toggle approval" title="<%= c.is_approved ? 'Unapprove' : 'Approve' %>">
-                                <i class="<%= c.is_approved ? 'icon-eye-off' : 'icon-check' %> text-sm"></i>
-                            </button>
-                        </form>
-                        <form method="POST" action="/admin/comments/<%= c.id %>/delete" onsubmit="return confirm('Delete this comment (and its replies)?');">
-                            <button type="submit" class="size-9 rounded-full hover:bg-gray-100 text-gray-900 hover:text-danger flex items-center justify-center transition-colors cursor-pointer" aria-label="Delete"><i class="icon-trash-2 text-sm"></i></button>
-                        </form>
+        <!-- =========================
+             ALERTS
+        ========================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <ul class="mb-0">
+                    <% errors.forEach(function(error) { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+                <h4 class="mb-1">Comments</h4>
+
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="/admin">Home</a>
+                        </li>
+
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Comments
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Export -->
+                <div class="dropdown">
+                    <a href="javascript:void(0);"
+                       class="dropdown-toggle btn btn-outline-light px-2 shadow"
+                       data-bs-toggle="dropdown">
+
+                        <i class="ti ti-package-export me-2"></i>
+                        Export
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <ul>
+
+                            <li>
+                                <a href="/admin/comments/export/pdf"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+                                    Export as PDF
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="/admin/comments/export/excel"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-xls me-1"></i>
+                                    Export as Excel
+                                </a>
+                            </li>
+
+                        </ul>
                     </div>
                 </div>
-                <% }) %>
-            <% } else { %>
-                <div class="p-10 text-center text-gray-500">No comments found.</div>
-            <% } %>
+
+                <!-- Refresh -->
+                <a href="javascript:location.reload();"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Refresh"
+                   data-bs-original-title="Refresh">
+
+                    <i class="ti ti-refresh"></i>
+                </a>
+
+                <!-- Collapse -->
+                <a href="javascript:void(0);"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Collapse"
+                   data-bs-original-title="Collapse"
+                   id="collapse-header">
+
+                    <i class="ti ti-transition-top"></i>
+                </a>
+
+            </div>
+
         </div>
 
-        <% if (pagination.totalPages > 1) { %>
-        <div class="flex items-center justify-between flex-wrap gap-3 p-4 border-t border-border-color">
-            <p class="text-sm text-gray-600 mb-0">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= total %> total comments</p>
-            <div class="flex items-center gap-1">
-                <% if (pagination.hasPrev) { %><a href="/admin/comments?page=<%= pagination.page - 1 %>&type=<%= filters.type %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a><% } %>
-                <% pagination.pages.forEach(function(p) { %><a href="/admin/comments?page=<%= p %>&type=<%= filters.type %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === pagination.page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a><% }) %>
-                <% if (pagination.hasNext) { %><a href="/admin/comments?page=<%= pagination.page + 1 %>&type=<%= filters.type %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a><% } %>
+        <!-- =========================
+             COMMENTS CARD
+        ========================== -->
+
+        <div class="card border-0 rounded-0">
+
+            <!-- CARD HEADER -->
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+                <!-- Search -->
+                <form method="GET"
+                      action="/admin/comments"
+                      class="mb-0">
+
+                    <div class="input-icon input-icon-start position-relative">
+
+                        <span class="input-icon-addon text-dark">
+                            <i class="ti ti-search"></i>
+                        </span>
+
+                        <input type="text"
+                               name="search"
+                               value="<%= typeof filters !== 'undefined' && filters && typeof filters.search !== 'undefined' ? filters.search : '' %>"
+                               class="form-control"
+                               id="commentSearch"
+                               placeholder="Search comments...">
+
+                        <!-- Preserve Type Filter -->
+                        <input type="hidden"
+                               name="type"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.type || '') : '' %>">
+
+                        <!-- Preserve Status Filter -->
+                        <input type="hidden"
+                               name="status"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.status || '') : '' %>">
+
+                    </div>
+
+                </form>
+
+                <!-- Filters -->
+                <div class="d-inline-flex align-items-center gap-2 flex-wrap">
+
+                    <!-- Type Filter -->
+                    <form method="GET"
+                          action="/admin/comments"
+                          class="mb-0">
+
+                        <input type="hidden"
+                               name="search"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.search || '') : '' %>">
+
+                        <input type="hidden"
+                               name="status"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.status || '') : '' %>">
+
+                        <select name="type"
+                                onchange="this.form.submit()"
+                                class="form-select">
+
+                            <option value="">All Types</option>
+
+                            <option value="post"
+                                <%= typeof filters !== 'undefined' &&
+                                    filters &&
+                                    filters.type === 'post'
+                                    ? 'selected'
+                                    : '' %>>
+                                Post Comments
+                            </option>
+
+                            <option value="blog"
+                                <%= typeof filters !== 'undefined' &&
+                                    filters &&
+                                    filters.type === 'blog'
+                                    ? 'selected'
+                                    : '' %>>
+                                Blog Comments
+                            </option>
+
+                        </select>
+
+                    </form>
+
+                    <!-- Status Filter -->
+                    <form method="GET"
+                          action="/admin/comments"
+                          class="mb-0">
+
+                        <input type="hidden"
+                               name="search"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.search || '') : '' %>">
+
+                        <input type="hidden"
+                               name="type"
+                               value="<%= typeof filters !== 'undefined' && filters ? (filters.type || '') : '' %>">
+
+                        <select name="status"
+                                onchange="this.form.submit()"
+                                class="form-select">
+
+                            <option value="">All Status</option>
+
+                            <option value="approved"
+                                <%= typeof filters !== 'undefined' &&
+                                    filters &&
+                                    filters.status === 'approved'
+                                    ? 'selected'
+                                    : '' %>>
+                                Approved
+                            </option>
+
+                            <option value="pending"
+                                <%= typeof filters !== 'undefined' &&
+                                    filters &&
+                                    filters.status === 'pending'
+                                    ? 'selected'
+                                    : '' %>>
+                                Pending
+                            </option>
+
+                        </select>
+
+                    </form>
+
+                </div>
+
             </div>
+
+
+            <!-- =========================
+                 CARD BODY
+            ========================== -->
+
+            <div class="card-body">
+
+                <!-- =========================
+                     TABLE HEADER & TOOLS
+                ========================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+                    <!-- SORT -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="dropdown-toggle btn btn-outline-light shadow"
+                               data-bs-toggle="dropdown">
+
+                                <i class="ti ti-sort-ascending-2 me-2"></i>
+                                Sort By
+                            </a>
+
+                            <div class="dropdown-menu">
+
+                                <ul>
+
+                                    <li>
+                                        <a href="/admin/comments?sort=newest&type=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.type || '') : '') %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>"
+                                           class="dropdown-item">
+
+                                            Newest First
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a href="/admin/comments?sort=oldest&type=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.type || '') : '') %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>"
+                                           class="dropdown-item">
+
+                                            Oldest First
+                                        </a>
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RIGHT TOOLS -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <!-- Manage Columns -->
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn bg-soft-indigo border-0"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-columns-3 me-2"></i>
+                                Manage Columns
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+
+                                <ul class="list-unstyled mb-0">
+
+                                    <!-- ID -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span># ID</span>
+
+                                                <input class="form-check-input comment-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="0"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- User -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>User</span>
+
+                                                <input class="form-check-input comment-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="1"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Comment -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Comment</span>
+
+                                                <input class="form-check-input comment-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="2"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Type -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Type</span>
+
+                                                <input class="form-check-input comment-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="3"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Content -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>On Content</span>
+
+                                                <input class="form-check-input comment-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="4"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Date -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Date</span>
+
+                                                <input class="form-check-input comment-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="5"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Status -->
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Status</span>
+
+                                                <input class="form-check-input comment-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="6"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================
+                     COMMENTS TABLE
+                ========================== -->
+
+                <div class="table-responsive custom-table">
+
+                    <table class="table table-nowrap"
+                           id="comments-table">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>#</th>
+
+                                <th>User</th>
+
+                                <th>Comment</th>
+
+                                <th>Type</th>
+
+                                <th>On Content</th>
+
+                                <th>Date</th>
+
+                                <th>Status</th>
+
+                                <th class="text-end no-sort">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="commentsTableBody">
+
+                            <% if (comments && comments.length) { %>
+
+                                <% comments.forEach(function(c, index) { %>
+
+                                    <tr data-status="<%= c.is_approved ? 'approved' : 'pending' %>">
+
+                                        <!-- ID -->
+                                        <td>
+                                            <%= c.id %>
+                                        </td>
+
+
+                                        <!-- USER -->
+                                        <td>
+
+                                            <div class="d-flex align-items-center">
+
+                                                <div class="avatar avatar-sm me-2">
+
+                                                    <% if (c.User && c.User.profile_photo) { %>
+
+                                                        <img src="<%= c.User.profile_photo %>"
+                                                             alt="<%= c.User.name || 'User' %>"
+                                                             class="rounded-circle">
+
+                                                    <% } else { %>
+
+                                                        <span class="avatar-title rounded-circle bg-soft-primary text-primary">
+                                                            <%= c.User && c.User.name
+                                                                ? c.User.name.charAt(0).toUpperCase()
+                                                                : 'U' %>
+                                                        </span>
+
+                                                    <% } %>
+
+                                                </div>
+
+                                                <div>
+
+                                                    <h6 class="mb-0 fw-semibold">
+
+                                                        <%= c.User
+                                                            ? c.User.name
+                                                            : 'Unknown User' %>
+
+                                                    </h6>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- COMMENT -->
+                                        <td>
+
+                                            <div style="max-width: 380px;">
+
+                                                <p class="mb-0 text-wrap">
+
+                                                    <%= c.content %>
+
+                                                </p>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- TYPE -->
+                                        <td>
+
+                                            <% if (c.commentable_type === 'blog') { %>
+
+                                                <span class="badge bg-soft-info text-info">
+
+                                                    <i class="ti ti-news me-1"></i>
+                                                    Blog
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="badge bg-soft-primary text-primary">
+
+                                                    <i class="ti ti-file-text me-1"></i>
+                                                    Post
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- ON CONTENT -->
+                                        <td>
+
+                                            <% if (c.parent) { %>
+
+                                                <div style="max-width: 250px;">
+
+                                                    <span class="fw-medium text-dark text-wrap">
+
+                                                        <%= c.parent.title %>
+
+                                                    </span>
+
+                                                </div>
+
+                                            <% } else { %>
+
+                                                <span class="text-muted fst-italic">
+
+                                                    Deleted content
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- DATE -->
+                                        <td>
+
+                                            <span class="text-muted">
+
+                                                <%= formatDate(c.created_at) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- STATUS -->
+                                        <td>
+
+                                            <% if (c.is_approved) { %>
+
+                                                <span class="badge bg-soft-success text-success">
+
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i>
+                                                    Approved
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="badge bg-soft-warning text-warning">
+
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i>
+                                                    Pending
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- ACTION -->
+                                        <td class="text-end">
+
+                                            <div class="dropdown">
+
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-icon btn-sm"
+                                                   data-bs-toggle="dropdown"
+                                                   aria-expanded="false">
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+                                                    <!-- Approve / Unapprove -->
+                                                    <li>
+
+                                                        <form method="POST"
+                                                              action="/admin/comments/<%= c.id %>/toggle-approval"
+                                                              class="mb-0">
+
+                                                            <button type="submit"
+                                                                    class="dropdown-item">
+
+                                                                <% if (c.is_approved) { %>
+
+                                                                    <i class="ti ti-eye-off me-1"></i>
+                                                                    Unapprove
+
+                                                                <% } else { %>
+
+                                                                    <i class="ti ti-check me-1"></i>
+                                                                    Approve
+
+                                                                <% } %>
+
+                                                            </button>
+
+                                                        </form>
+
+                                                    </li>
+
+
+                                                    <!-- Delete -->
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item text-danger"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#delete_comment_<%= c.id %>">
+
+                                                            <i class="ti ti-trash me-1"></i>
+                                                            Delete
+
+                                                        </a>
+
+                                                    </li>
+
+                                                </ul>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                <% }) %>
+
+                            <% } else { %>
+
+                                <!-- EMPTY -->
+                                <tr id="noCommentsRow">
+
+                                    <td colspan="8"
+                                        class="text-center py-5">
+
+                                        <div class="text-muted">
+
+                                            <i class="ti ti-message-circle fs-40 d-block mb-2"></i>
+
+                                            <h5>No Comments Found</h5>
+
+                                            <p class="mb-0">
+                                                There are no comments available.
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            <% } %>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =========================
+                     PAGINATION
+                ========================== -->
+
+                <% if (
+                    typeof pagination !== 'undefined' &&
+                    pagination &&
+                    pagination.totalPages > 1
+                ) { %>
+
+                    <div class="row align-items-center mt-3">
+
+                        <!-- INFO -->
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Page
+                                <%= pagination.page %>
+                                of
+                                <%= pagination.totalPages %>
+
+                                &nbsp;·&nbsp;
+
+                                <%= typeof total !== 'undefined'
+                                    ? total
+                                    : (comments ? comments.length : 0) %>
+
+                                total comments
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PAGINATION -->
+                        <div class="col-md-6">
+
+                            <div class="d-flex justify-content-end">
+
+                                <ul class="pagination mb-0">
+
+                                    <!-- PREVIOUS -->
+                                    <% if (pagination.hasPrev) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/comments?page=<%= pagination.page - 1 %>&type=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.type || '') : '') %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>">
+
+                                                <i class="ti ti-chevron-left"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                    <!-- PAGES -->
+                                    <% if (pagination.pages && pagination.pages.length) { %>
+
+                                        <% pagination.pages.forEach(function(page) { %>
+
+                                            <li class="page-item <%= page === pagination.page ? 'active' : '' %>">
+
+                                                <a class="page-link"
+                                                   href="/admin/comments?page=<%= page %>&type=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.type || '') : '') %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>">
+
+                                                    <%= page %>
+
+                                                </a>
+
+                                            </li>
+
+                                        <% }) %>
+
+                                    <% } %>
+
+
+                                    <!-- NEXT -->
+                                    <% if (pagination.hasNext) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/comments?page=<%= pagination.page + 1 %>&type=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.type || '') : '') %>&status=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.status || '') : '') %>&search=<%= encodeURIComponent(typeof filters !== 'undefined' && filters ? (filters.search || '') : '') %>">
+
+                                                <i class="ti ti-chevron-right"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                <% } %>
+
+
+            </div>
+
         </div>
-        <% } %>
+
     </div>
+
 </div>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+<!-- =========================
+     DELETE MODALS
+========================== -->
+
+<% if (comments && comments.length) { %>
+
+    <% comments.forEach(function(c) { %>
+
+        <div class="modal fade"
+             id="delete_comment_<%= c.id %>"
+             tabindex="-1"
+             aria-hidden="true">
+
+            <div class="modal-dialog modal-dialog-centered">
+
+                <div class="modal-content">
+
+                    <div class="modal-header">
+
+                        <h5 class="modal-title">
+                            Delete Comment
+                        </h5>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="text-center">
+
+                            <div class="mb-3">
+
+                                <span class="avatar avatar-lg bg-soft-danger text-danger rounded-circle">
+
+                                    <i class="ti ti-trash fs-24"></i>
+
+                                </span>
+
+                            </div>
+
+                            <h5 class="mb-2">
+                                Delete this comment?
+                            </h5>
+
+                            <p class="text-muted mb-0">
+
+                                This comment and its replies will be deleted.
+                                This action cannot be undone.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button"
+                                class="btn btn-light"
+                                data-bs-dismiss="modal">
+
+                            Cancel
+
+                        </button>
+
+                        <form method="POST"
+                              action="/admin/comments/<%= c.id %>/delete"
+                              class="mb-0">
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+
+                                <i class="ti ti-trash me-1"></i>
+                                Delete Comment
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    <% }) %>
+
+<% } %>
+
+
+<!-- =========================
+     MANAGE COLUMNS SCRIPT
+========================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const toggles =
+        document.querySelectorAll('.comment-column-toggle');
+
+    const table =
+        document.getElementById('comments-table');
+
+    if (!table) return;
+
+
+    function updateColumnVisibility(colIndex, isVisible) {
+
+        const display =
+            isVisible ? '' : 'none';
+
+
+        /*
+         * Header
+         */
+        const th =
+            table.querySelector(
+                `thead tr th:nth-child(${colIndex + 1})`
+            );
+
+        if (th) {
+
+            if (display === 'none') {
+
+                th.style.setProperty(
+                    'display',
+                    'none',
+                    'important'
+                );
+
+            } else {
+
+                th.style.removeProperty('display');
+
+            }
+
+        }
+
+
+        /*
+         * Body
+         */
+        const rows =
+            table.querySelectorAll('tbody tr');
+
+        rows.forEach(function (row) {
+
+            if (row.id === 'noCommentsRow') {
+                return;
+            }
+
+            const td =
+                row.querySelector(
+                    `td:nth-child(${colIndex + 1})`
+                );
+
+            if (!td) return;
+
+            if (display === 'none') {
+
+                td.style.setProperty(
+                    'display',
+                    'none',
+                    'important'
+                );
+
+            } else {
+
+                td.style.removeProperty('display');
+
+            }
+
+        });
+
+
+        /*
+         * Empty row colspan
+         */
+        const emptyTd =
+            table.querySelector(
+                '#noCommentsRow td'
+            );
+
+        if (emptyTd) {
+
+            let visibleColumns = 0;
+
+            table
+                .querySelectorAll('thead tr th')
+                .forEach(function (header) {
+
+                    const computed =
+                        window.getComputedStyle(header);
+
+                    if (computed.display !== 'none') {
+                        visibleColumns++;
+                    }
+
+                });
+
+            emptyTd.setAttribute(
+                'colspan',
+                visibleColumns || 1
+            );
+
+        }
+
+    }
+
+
+    /*
+     * Initialize toggles
+     */
+    toggles.forEach(function (toggle) {
+
+        const colIndex =
+            parseInt(
+                toggle.getAttribute('data-column'),
+                10
+            );
+
+        if (isNaN(colIndex)) return;
+
+
+        const storageKey =
+            'comments_col_' + colIndex;
+
+
+        /*
+         * Restore saved state
+         */
+        const savedState =
+            localStorage.getItem(storageKey);
+
+        if (savedState !== null) {
+
+            const isChecked =
+                savedState === 'true';
+
+            toggle.checked =
+                isChecked;
+
+            updateColumnVisibility(
+                colIndex,
+                isChecked
+            );
+
+        }
+
+
+        /*
+         * Change event
+         */
+        toggle.addEventListener(
+            'change',
+            function () {
+
+                const isChecked =
+                    this.checked;
+
+                updateColumnVisibility(
+                    colIndex,
+                    isChecked
+                );
+
+                localStorage.setItem(
+                    storageKey,
+                    isChecked
+                );
+
+            }
+        );
+
+    });
+
+});
+
+</script>
+
+
+<!-- =========================
+     SEARCH SUBMIT
+========================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const searchInput =
+        document.getElementById('commentSearch');
+
+    if (!searchInput) return;
+
+
+    searchInput.addEventListener(
+        'keydown',
+        function (event) {
+
+            if (event.key !== 'Enter') {
+                return;
+            }
+
+            event.preventDefault();
+
+            this.form.submit();
+
+        }
+    );
+
+});
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

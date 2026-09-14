@@ -1,117 +1,1189 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<!-- Title -->
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">Posts</h1>
-    <a href="/admin/posts/create" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-        <span class="flex"><i class="icon-plus"></i></span> Add Post
-    </a>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-1">
-    <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden">
+    <!-- Start Content -->
+    <div class="content pb-0">
 
-        <!-- Toolbar / Filters -->
-        <form method="GET" action="/admin/posts" class="flex items-center justify-between flex-wrap gap-3 p-4 border-b border-border-color">
-            <div class="relative w-full sm:w-72">
-                <input type="text" name="search" value="<%= filters.search %>" placeholder="Search posts by title..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-                <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0">
-                    <i class="icon-search"></i>
-                </button>
+        <!-- =========================
+             ALERTS
+        ========================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <%= success %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
             </div>
-            <div class="flex items-center flex-wrap gap-2 md:gap-3">
-                <select name="category" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                    <option value="">All Categories</option>
-                    <% categories.forEach(function(cat) { %>
-                        <option value="<%= cat.slug %>" <%= filters.category === cat.slug ? 'selected' : '' %>><%= cat.name %></option>
-                    <% }) %>
-                </select>
-                <select name="status" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                    <option value="">All Status</option>
-                    <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
-                    <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
-                </select>
-                <% if (filters.search || filters.category || filters.status) { %>
-                <a href="/admin/posts" class="text-sm text-gray-600 hover:text-primary font-medium">Clear</a>
-                <% } %>
-            </div>
-        </form>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[900px]">
-                <thead>
-                    <tr class="bg-light">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Title</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Post Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <% if (posts && posts.length) { %>
-                        <% posts.forEach(function(post) { %>
-                        <tr>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <a href="/admin/posts/<%= post.id %>/edit" class="text-sm font-semibold text-gray-900 hover:text-primary transition-colors block"><%= post.title %></a>
-                                <p class="text-[13px] text-gray-500 mb-0"><%= post.slug %></p>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <span class="inline-flex items-center text-xs font-semibold text-primary bg-primary/10 border border-primary/20 rounded-md px-2 py-0.5">
-                                    <%= post.Category ? post.Category.name : '-' %>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <span class="text-sm text-gray-600"><%= formatDate(post.post_date || post.created_at) %></span>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <form method="POST" action="/admin/posts/<%= post.id %>/toggle-status">
-                                    <button type="submit" class="cursor-pointer inline-flex items-center text-xs font-bold rounded-lg px-3 py-1 border <%= post.status ? 'text-success border-success' : 'text-gray-500 border-gray-300' %>">
-                                        <%= post.status ? 'Active' : 'Inactive' %>
-                                    </button>
-                                </form>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                                <div class="hs-dropdown [--placement:bottom-right] [--auto-close:inside] relative inline-flex">
-                                    <button type="button" class="hs-dropdown-toggle size-9 rounded-full cursor-pointer hover:bg-gray-100 text-gray-900 flex items-center justify-center transition-colors text-base" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown"><i class="icon-ellipsis-vertical"></i></button>
-                                    <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-40 bg-white border border-border-color shadow rounded-lg mt-2 z-1" role="menu" aria-orientation="vertical">
-                                        <div class="p-2 space-y-1">
-                                            <a class="flex items-center hover:bg-primary-50 px-4 py-1.75 rounded-lg text-sm text-default hover:text-primary focus:outline-hidden focus:bg-white" href="/admin/posts/<%= post.id %>/edit"><i class="icon-pencil-line me-2"></i>Edit</a>
-                                            <form method="POST" action="/admin/posts/<%= post.id %>/delete" onsubmit="return confirm('Delete this post? This cannot be undone.');">
-                                                <button type="submit" class="w-full flex items-center hover:bg-primary-50 px-4 py-1.75 rounded-lg text-sm text-danger hover:text-danger focus:outline-hidden focus:bg-white cursor-pointer"><i class="icon-trash-2 me-2"></i>Delete</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="5" class="px-6 py-10 text-center text-gray-500 bg-white">No posts found. <a href="/admin/posts/create" class="text-primary font-medium">Add your first post</a>.</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <% if (pagination.totalPages > 1) { %>
-        <div class="flex items-center justify-between flex-wrap gap-3 p-4 border-t border-border-color">
-            <p class="text-sm text-gray-600 mb-0">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= total %> total posts</p>
-            <div class="flex items-center gap-1">
-                <% if (pagination.hasPrev) { %>
-                    <a href="/admin/posts?page=<%= pagination.page - 1 %>&search=<%= filters.search %>&category=<%= filters.category %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a>
-                <% } %>
-                <% pagination.pages.forEach(function(p) { %>
-                    <a href="/admin/posts?page=<%= p %>&search=<%= filters.search %>&category=<%= filters.category %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === pagination.page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a>
-                <% }) %>
-                <% if (pagination.hasNext) { %>
-                    <a href="/admin/posts?page=<%= pagination.page + 1 %>&search=<%= filters.search %>&category=<%= filters.category %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a>
-                <% } %>
-            </div>
-        </div>
         <% } %>
+
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+
+                <ul class="mb-0">
+                    <% errors.forEach(function(error) { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    Posts
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+                            <a href="/admin">
+                                Home
+                            </a>
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            Posts
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Export -->
+                <div class="dropdown">
+
+                    <a href="javascript:void(0);"
+                       class="dropdown-toggle btn btn-outline-light px-2 shadow"
+                       data-bs-toggle="dropdown">
+
+                        <i class="ti ti-package-export me-2"></i>
+                        Export
+
+                    </a>
+
+
+                    <div class="dropdown-menu dropdown-menu-end">
+
+                        <ul>
+
+                            <li>
+                                <a href="/admin/posts/export/pdf"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+                                    Export as PDF
+
+                                </a>
+                            </li>
+
+
+                            <li>
+                                <a href="/admin/posts/export/excel"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-xls me-1"></i>
+                                    Export as Excel
+
+                                </a>
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Refresh -->
+                <a href="javascript:location.reload();"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Refresh"
+                   data-bs-original-title="Refresh">
+
+                    <i class="ti ti-refresh"></i>
+
+                </a>
+
+
+                <!-- Collapse -->
+                <a href="javascript:void(0);"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Collapse"
+                   data-bs-original-title="Collapse"
+                   id="collapse-header">
+
+                    <i class="ti ti-transition-top"></i>
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             POSTS CARD
+        ========================== -->
+
+        <div class="card border-0 rounded-0">
+
+
+            <!-- =========================
+                 CARD HEADER
+            ========================== -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+
+                <!-- Search -->
+                <form method="GET"
+                      action="/admin/posts"
+                      class="mb-0">
+
+                    <!-- Preserve Filters -->
+                    <input type="hidden"
+                           name="category"
+                           value="<%= filters?.category || '' %>">
+
+                    <input type="hidden"
+                           name="status"
+                           value="<%= filters?.status || '' %>">
+
+                    <div class="input-icon input-icon-start position-relative">
+
+                        <span class="input-icon-addon text-dark">
+                            <i class="ti ti-search"></i>
+                        </span>
+
+                        <input type="text"
+                               name="search"
+                               value="<%= filters?.search || '' %>"
+                               class="form-control"
+                               id="postSearch"
+                               placeholder="Search Posts...">
+
+                    </div>
+
+                </form>
+
+
+                <!-- Add Post -->
+                <div class="d-inline-flex align-items-center gap-3">
+
+                    <a href="/admin/posts/create"
+                       class="btn btn-primary">
+
+                        <i class="ti ti-square-rounded-plus-filled me-1"></i>
+                        Add Post
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 CARD BODY
+            ========================== -->
+
+            <div class="card-body">
+
+
+                <!-- =========================
+                     TABLE HEADER
+                ========================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+
+                    <!-- SORT -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="dropdown-toggle btn btn-outline-light shadow"
+                               data-bs-toggle="dropdown">
+
+                                <i class="ti ti-sort-ascending-2 me-2"></i>
+                                Sort By
+
+                            </a>
+
+
+                            <div class="dropdown-menu">
+
+                                <ul>
+
+                                    <li>
+                                        <a href="/admin/posts?sort=title_asc&search=<%= encodeURIComponent(filters?.search || '') %>&category=<%= encodeURIComponent(filters?.category || '') %>&status=<%= encodeURIComponent(filters?.status || '') %>"
+                                           class="dropdown-item">
+
+                                            Title (A-Z)
+
+                                        </a>
+                                    </li>
+
+
+                                    <li>
+                                        <a href="/admin/posts?sort=title_desc&search=<%= encodeURIComponent(filters?.search || '') %>&category=<%= encodeURIComponent(filters?.category || '') %>&status=<%= encodeURIComponent(filters?.status || '') %>"
+                                           class="dropdown-item">
+
+                                            Title (Z-A)
+
+                                        </a>
+                                    </li>
+
+
+                                    <li>
+                                        <a href="/admin/posts?sort=newest&search=<%= encodeURIComponent(filters?.search || '') %>&category=<%= encodeURIComponent(filters?.category || '') %>&status=<%= encodeURIComponent(filters?.status || '') %>"
+                                           class="dropdown-item">
+
+                                            Newest First
+
+                                        </a>
+                                    </li>
+
+
+                                    <li>
+                                        <a href="/admin/posts?sort=oldest&search=<%= encodeURIComponent(filters?.search || '') %>&category=<%= encodeURIComponent(filters?.category || '') %>&status=<%= encodeURIComponent(filters?.status || '') %>"
+                                           class="dropdown-item">
+
+                                            Oldest First
+
+                                        </a>
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FILTERS -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+
+                        <!-- Filter -->
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn btn-outline-light shadow px-2"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-filter me-2"></i>
+                                Filter
+                                <i class="ti ti-chevron-down ms-2"></i>
+
+                            </a>
+
+
+                            <div class="filter-dropdown-menu dropdown-menu dropdown-menu-lg p-0">
+
+
+                                <!-- Filter Header -->
+                                <div class="filter-header d-flex align-items-center justify-content-between border-bottom p-3">
+
+                                    <h4 class="mb-0 fs-16">
+
+                                        <i class="ti ti-filter me-1"></i>
+                                        Filter
+
+                                    </h4>
+
+
+                                    <button type="button"
+                                            class="btn-close close-filter-btn"
+                                            data-bs-dismiss="dropdown"
+                                            aria-label="Close">
+
+                                    </button>
+
+                                </div>
+
+
+                                <!-- Filter Body -->
+                                <form method="GET"
+                                      action="/admin/posts">
+
+                                    <div class="filter-set-view p-3">
+
+
+                                        <!-- Search -->
+                                        <div class="mb-3">
+
+                                            <label class="form-label">
+                                                Search
+                                            </label>
+
+                                            <input type="text"
+                                                   name="search"
+                                                   class="form-control"
+                                                   value="<%= filters?.search || '' %>"
+                                                   placeholder="Search post...">
+
+                                        </div>
+
+
+                                        <!-- Category -->
+                                        <div class="mb-3">
+
+                                            <label class="form-label">
+                                                Category
+                                            </label>
+
+                                            <select name="category"
+                                                    class="form-select">
+
+                                                <option value="">
+                                                    All Categories
+                                                </option>
+
+
+                                                <% if (categories && categories.length) { %>
+
+                                                    <% categories.forEach(function(cat) { %>
+
+                                                        <option value="<%= cat.slug %>"
+                                                            <%= filters?.category === cat.slug ? 'selected' : '' %>>
+
+                                                            <%= cat.name %>
+
+                                                        </option>
+
+                                                    <% }) %>
+
+                                                <% } %>
+
+                                            </select>
+
+                                        </div>
+
+
+                                        <!-- Status -->
+                                        <div class="mb-3">
+
+                                            <label class="form-label">
+                                                Status
+                                            </label>
+
+                                            <select name="status"
+                                                    class="form-select">
+
+                                                <option value="">
+                                                    All Status
+                                                </option>
+
+                                                <option value="active"
+                                                    <%= filters?.status === 'active' ? 'selected' : '' %>>
+
+                                                    Active
+
+                                                </option>
+
+                                                <option value="inactive"
+                                                    <%= filters?.status === 'inactive' ? 'selected' : '' %>>
+
+                                                    Inactive
+
+                                                </option>
+
+                                            </select>
+
+                                        </div>
+
+
+                                        <!-- Buttons -->
+                                        <div class="d-flex align-items-center gap-2">
+
+                                            <a href="/admin/posts"
+                                               class="btn btn-outline-light w-100">
+
+                                                Reset
+
+                                            </a>
+
+
+                                            <button type="submit"
+                                                    class="btn btn-primary w-100">
+
+                                                Filter
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Manage Columns -->
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn bg-soft-indigo border-0"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-columns-3 me-2"></i>
+                                Manage Columns
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+
+                                <ul>
+
+
+                                    <!-- Title -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Post Title
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="1"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Category -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Category
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="2"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Date -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Post Date
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="3"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Status -->
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Status
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="4"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================
+                     POSTS TABLE
+                ========================== -->
+
+                <div class="table-responsive custom-table">
+
+                    <table class="table table-nowrap"
+                           id="posts-table">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>
+                                    #
+                                </th>
+
+                                <th>
+                                    Post Title
+                                </th>
+
+                                <th>
+                                    Category
+                                </th>
+
+                                <th>
+                                    Post Date
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th class="text-end no-sort">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="postsTableBody">
+
+
+                            <% if (posts && posts.length) { %>
+
+
+                                <% posts.forEach(function(post, index) { %>
+
+                                    <tr data-status="<%= post.status ? 'active' : 'inactive' %>">
+
+
+                                        <!-- ID -->
+                                        <td>
+
+                                            <%= post.id %>
+
+                                        </td>
+
+
+                                        <!-- TITLE -->
+                                        <td>
+
+                                            <h6 class="mb-0 fw-semibold">
+
+                                                <a href="/admin/posts/<%= post.id %>/edit"
+                                                   class="text-dark">
+
+                                                    <%= post.title %>
+
+                                                </a>
+
+                                            </h6>
+
+
+                                            <% if (post.slug) { %>
+
+                                                <small class="text-muted">
+
+                                                    <%= post.slug %>
+
+                                                </small>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- CATEGORY -->
+                                        <td>
+
+                                            <% if (post.Category) { %>
+
+                                                <span class="badge bg-soft-primary text-primary">
+
+                                                    <i class="ti ti-category me-1"></i>
+
+                                                    <%= post.Category.name %>
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="text-muted">
+                                                    -
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- POST DATE -->
+                                        <td>
+
+                                            <span class="text-muted">
+
+                                                <%= formatDate(post.post_date || post.created_at) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- STATUS -->
+                                        <td>
+
+                                            <form method="POST"
+                                                  action="/admin/posts/<%= post.id %>/toggle-status"
+                                                  class="d-inline">
+
+                                                <button type="submit"
+                                                        class="btn p-0 border-0 bg-transparent">
+
+                                                    <% if (post.status) { %>
+
+                                                        <span class="badge bg-soft-success text-success">
+
+                                                            <i class="ti ti-circle-filled fs-7 me-1"></i>
+                                                            Active
+
+                                                        </span>
+
+                                                    <% } else { %>
+
+                                                        <span class="badge bg-soft-danger text-danger">
+
+                                                            <i class="ti ti-circle-filled fs-7 me-1"></i>
+                                                            Inactive
+
+                                                        </span>
+
+                                                    <% } %>
+
+                                                </button>
+
+                                            </form>
+
+                                        </td>
+
+
+                                        <!-- ACTION -->
+                                        <td class="text-end">
+
+                                            <div class="dropdown">
+
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-icon btn-sm"
+                                                   data-bs-toggle="dropdown"
+                                                   aria-expanded="false">
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+
+                                                    <!-- Edit -->
+                                                    <li>
+
+                                                        <a href="/admin/posts/<%= post.id %>/edit"
+                                                           class="dropdown-item">
+
+                                                            <i class="ti ti-edit me-1"></i>
+                                                            Edit
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- View -->
+                                                    <li>
+
+                                                        <a href="/post/<%= post.slug %>"
+                                                           target="_blank"
+                                                           class="dropdown-item">
+
+                                                            <i class="ti ti-eye me-1"></i>
+                                                            View
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- Delete -->
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item text-danger"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#delete_post_<%= post.id %>">
+
+                                                            <i class="ti ti-trash me-1"></i>
+                                                            Delete
+
+                                                        </a>
+
+                                                    </li>
+
+                                                </ul>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+
+                                <% }) %>
+
+
+                            <% } else { %>
+
+
+                                <!-- EMPTY -->
+                                <tr>
+
+                                    <td colspan="6"
+                                        class="text-center py-5">
+
+                                        <div class="text-muted">
+
+                                            <i class="ti ti-file-text fs-40 d-block mb-2"></i>
+
+                                            <h5>
+                                                No Posts Found
+                                            </h5>
+
+                                            <p class="mb-2">
+                                                There are no posts available.
+                                            </p>
+
+                                            <a href="/admin/posts/create"
+                                               class="btn btn-primary btn-sm">
+
+                                                <i class="ti ti-plus me-1"></i>
+                                                Add Your First Post
+
+                                            </a>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+
+                            <% } %>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =========================
+                     PAGINATION
+                ========================== -->
+
+                <% if (pagination && pagination.totalPages > 1) { %>
+
+
+                    <div class="row align-items-center mt-3">
+
+
+                        <!-- Info -->
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Page
+                                <%= pagination.page %>
+                                of
+                                <%= pagination.totalPages %>
+
+                                &nbsp;·&nbsp;
+
+                                <%= total || 0 %>
+                                total posts
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Pagination -->
+                        <div class="col-md-6">
+
+                            <div class="d-flex justify-content-end">
+
+                                <ul class="pagination mb-0">
+
+
+                                    <!-- Previous -->
+                                    <% if (pagination.hasPrev) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/posts?page=<%= pagination.page - 1 %>&search=<%= encodeURIComponent(filters?.search || '') %>&category=<%= encodeURIComponent(filters?.category || '') %>&status=<%= encodeURIComponent(filters?.status || '') %>">
+
+                                                <i class="ti ti-chevron-left"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                    <!-- Pages -->
+                                    <% if (pagination.pages && pagination.pages.length) { %>
+
+                                        <% pagination.pages.forEach(function(p) { %>
+
+                                            <li class="page-item <%= p === pagination.page ? 'active' : '' %>">
+
+                                                <a class="page-link"
+                                                   href="/admin/posts?page=<%= p %>&search=<%= encodeURIComponent(filters?.search || '') %>&category=<%= encodeURIComponent(filters?.category || '') %>&status=<%= encodeURIComponent(filters?.status || '') %>">
+
+                                                    <%= p %>
+
+                                                </a>
+
+                                            </li>
+
+                                        <% }) %>
+
+                                    <% } %>
+
+
+                                    <!-- Next -->
+                                    <% if (pagination.hasNext) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/posts?page=<%= pagination.page + 1 %>&search=<%= encodeURIComponent(filters?.search || '') %>&category=<%= encodeURIComponent(filters?.category || '') %>&status=<%= encodeURIComponent(filters?.status || '') %>">
+
+                                                <i class="ti ti-chevron-right"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                <% } else { %>
+
+
+                    <!-- Simple Count -->
+                    <div class="row align-items-center mt-3">
+
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Showing
+                                <%= posts ? posts.length : 0 %>
+                                Post(s)
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                <% } %>
+
+            </div>
+
+        </div>
+
     </div>
+
 </div>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+<!-- =========================================================
+     DELETE MODALS
+========================================================= -->
+
+<% if (posts && posts.length) { %>
+
+
+    <% posts.forEach(function(post) { %>
+
+
+        <div class="modal fade"
+             id="delete_post_<%= post.id %>"
+             tabindex="-1"
+             aria-hidden="true">
+
+
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+
+
+                <div class="modal-content">
+
+
+                    <div class="modal-body text-center p-4">
+
+
+                        <i class="ti ti-alert-triangle text-danger fs-1 mb-2"></i>
+
+
+                        <h5>
+                            Delete Post?
+                        </h5>
+
+
+                        <p class="text-muted mb-3">
+
+                            Are you sure you want to delete this post?
+                            This action cannot be undone.
+
+                        </p>
+
+
+                        <div class="d-flex justify-content-center gap-2">
+
+
+                            <!-- Cancel -->
+                            <button type="button"
+                                    class="btn btn-outline-light"
+                                    data-bs-dismiss="modal">
+
+                                Cancel
+
+                            </button>
+
+
+                            <!-- Delete -->
+                            <form method="POST"
+                                  action="/admin/posts/<%= post.id %>/delete">
+
+                                <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+
+                                    <input type="hidden"
+                                           name="_csrf"
+                                           value="<%= csrfToken %>">
+
+                                <% } %>
+
+
+                                <button type="submit"
+                                        class="btn btn-danger">
+
+                                    Delete
+
+                                </button>
+
+                            </form>
+
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    <% }) %>
+
+
+<% } %>
+
+
+<!-- =========================================================
+     POSTS SEARCH / COLUMN SCRIPT
+========================================================= -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    const searchInput =
+        document.getElementById('postSearch');
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener('keyup', function (event) {
+
+            /*
+             * Search is server-side.
+             * Submit when Enter is pressed.
+             */
+
+            if (event.key === 'Enter') {
+
+                const form =
+                    searchInput.closest('form');
+
+                if (form) {
+                    form.submit();
+                }
+
+            }
+
+        });
+
+    }
+
+
+    /* =====================================================
+       MANAGE COLUMNS
+    ===================================================== */
+
+    document
+        .querySelectorAll('[data-column]')
+        .forEach(function (checkbox) {
+
+
+            checkbox.addEventListener('change', function () {
+
+
+                const columnIndex =
+                    parseInt(this.dataset.column);
+
+
+                const display =
+                    this.checked ? '' : 'none';
+
+
+                document
+                    .querySelectorAll('#posts-table tr')
+                    .forEach(function (row) {
+
+
+                        if (row.children[columnIndex]) {
+
+                            row.children[columnIndex]
+                                .style.display = display;
+
+                        }
+
+                    });
+
+            });
+
+        });
+
+
+});
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

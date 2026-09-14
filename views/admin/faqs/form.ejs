@@ -1,88 +1,192 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold"><%= mode === 'edit' ? 'Edit FAQ' : 'Add FAQ' %></h1>
-    <a href="/admin/faqs" class="text-sm font-medium text-gray-600 hover:text-primary flex items-center gap-1"><i class="icon-arrow-left"></i> Back to FAQs</a>
+<div class="page-wrapper">
+
+    <!-- Start Content -->
+    <div class="content pb-0">
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+            <div>
+                <h4 class="mb-1"><%= mode === 'edit' ? 'Edit FAQ' : 'Add FAQ' %></h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="/admin">Home</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="/admin/faqs">FAQs</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <%= mode === 'edit' ? 'Edit' : 'Create' %>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+                <a href="/admin/faqs" class="btn btn-outline-light shadow text-dark">
+                    <i class="ti ti-arrow-left me-1"></i> Back to FAQs
+                </a>
+            </div>
+        </div>
+
+        <!-- =========================
+             FORM
+        ========================== -->
+        <form method="POST" action="<%= formAction %>">
+            <div class="row g-4">
+
+                <!-- MAIN FORM SECTION -->
+                <div class="col-12 col-xl-8">
+                    
+                    <!-- Question Card -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="card-title mb-0 fw-bold">Question</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-0">
+                                <label for="faqQuestion" class="form-label text-muted fs-7">Enter FAQ Question <span class="text-danger">*</span></label>
+                                <textarea name="question" id="faqQuestion" rows="3" required placeholder="e.g. How do I download my admit card?" class="form-control"><%= faq ? faq.question : '' %></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Answers Card -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                            <h5 class="card-title mb-0 fw-bold">Answer Paragraph(s)</h5>
+                            <button type="button" id="addAnswerBtn" class="btn btn-sm btn-outline-primary rounded-pill">
+                                <i class="ti ti-plus me-1"></i> Add Paragraph
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="answersList" class="d-flex flex-column gap-3">
+                                <% if (faq && faq.answers && faq.answers.length) { %>
+                                    <% faq.answers.forEach(function(a, index) { %>
+                                        <div class="d-flex align-items-start gap-2 answer-row">
+                                            <textarea name="answers_text" rows="3" class="form-control" placeholder="Enter paragraph details..."><%= typeof a === 'object' ? a.answer : a %></textarea>
+                                            <button type="button" class="btn btn-icon btn-outline-danger removeAnswerBtn shrink-0 mt-1" data-bs-toggle="tooltip" title="Remove Paragraph">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+
+                            <p class="text-muted text-center py-4 mb-0" id="noAnswersMsg" style="<%= (faq && faq.answers && faq.answers.length) ? 'display:none;' : '' %>">
+                                <i class="ti ti-notes fs-3 d-block mb-1 text-secondary"></i>
+                                No answer paragraphs added yet. Click <strong>"Add Paragraph"</strong> above.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SETTINGS SIDEBAR SECTION -->
+                <div class="col-12 col-xl-4">
+                    <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="card-title mb-0 fw-bold">Settings</h5>
+                        </div>
+
+                        <div class="card-body">
+                            
+                            <!-- Category Dropdown -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-dark">Category <span class="text-muted fw-normal">(Optional)</span></label>
+                                <select name="category_id" class="form-select">
+                                    <option value="">General</option>
+                                    <% if (typeof categories !== 'undefined' && categories.length) { %>
+                                        <% categories.forEach(function(cat) { %>
+                                            <option value="<%= cat.id %>" <%= (faq && faq.category_id == cat.id) ? 'selected' : '' %>>
+                                                <%= cat.name %>
+                                            </option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+
+                            <!-- Display Order -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-dark">Display Order</label>
+                                <input type="number" name="ordering" value="<%= faq ? (faq.ordering ?? 0) : 0 %>" min="0" class="form-control" placeholder="0">
+                                <small class="text-muted fs-7">Controls sorting priority (lower numbers appear first).</small>
+                            </div>
+
+                            <hr class="my-3 text-border">
+
+                            <!-- Active Switch Status -->
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <label class="form-check-label fw-semibold text-dark mb-0" for="faqStatusSwitch">
+                                    Active Status
+                                </label>
+                                <div class="form-check form-switch mb-0 ps-0">
+                                    <input type="checkbox" name="status" id="faqStatusSwitch" class="form-check-input ms-0" <%= (!faq || faq.status) ? 'checked' : '' %>>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                                <i class="ti ti-device-floppy me-1"></i> <%= mode === 'edit' ? 'Update FAQ' : 'Save FAQ' %>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+
 </div>
 
-<form method="POST" action="<%= formAction %>">
-    <div class="grid grid-cols-12 gap-4 lg:gap-6">
-        <div class="col-span-12 xxl:col-span-8 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Question</h2>
-                <textarea name="question" rows="2" required placeholder="e.g. How do I download my admit card?" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= faq ? faq.question : '' %></textarea>
-            </div>
+<!-- Dynamic Answer Paragraph Add/Remove Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addBtn = document.getElementById('addAnswerBtn');
+        const list = document.getElementById('answersList');
+        const noMsg = document.getElementById('noAnswersMsg');
 
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-gray-900 text-lg font-bold mb-0">Answer(s)</h2>
-                    <button type="button" id="addAnswerBtn" class="btn px-3 py-2 rounded-full bg-white border border-border-color text-gray-900 text-sm font-medium inline-flex items-center gap-2 hover:bg-light">
-                        <i class="icon-plus"></i> Add Paragraph
-                    </button>
-                </div>
-                <div id="answersList" class="space-y-3">
-                    <% if (faq && faq.answers && faq.answers.length) { %>
-                        <% faq.answers.forEach(function(a) { %>
-                        <div class="flex items-start gap-2">
-                            <textarea name="answers_text" rows="3" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= a.answer %></textarea>
-                            <button type="button" class="removeAnswerBtn shrink-0 mt-1 text-danger hover:text-danger-hover cursor-pointer"><i class="icon-trash-2"></i></button>
-                        </div>
-                        <% }) %>
-                    <% } %>
-                </div>
-                <p class="text-sm text-gray-400 mt-2 mb-0" id="noAnswersMsg" style="<%= (faq && faq.answers && faq.answers.length) ? 'display:none;' : '' %>">No answer paragraphs yet. Click "Add Paragraph".</p>
-            </div>
-        </div>
-
-        <div class="col-span-12 xxl:col-span-4 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Settings</h2>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Category <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <select name="category_id" class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        <option value="">General</option>
-                        <% categories.forEach(function(cat) { %>
-                            <option value="<%= cat.id %>" <%= faq && faq.category_id === cat.id ? 'selected' : '' %>><%= cat.name %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Display Order</label>
-                    <input type="number" name="ordering" value="<%= faq ? faq.ordering : 0 %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="flex items-center justify-between mb-4">
-                    <label class="text-sm font-medium text-gray-900">Active</label>
-                    <input type="checkbox" name="status" <%= (!faq || faq.status) ? 'checked' : '' %> class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                </div>
-                <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover transition cursor-pointer">
-                    <%= mode === 'edit' ? 'Update FAQ' : 'Save FAQ' %>
+        // Add New Paragraph Row
+        addBtn.addEventListener('click', function () {
+            const row = document.createElement('div');
+            row.className = 'd-flex align-items-start gap-2 answer-row';
+            row.innerHTML = `
+                <textarea name="answers_text" rows="3" class="form-control" placeholder="Enter paragraph details..."></textarea>
+                <button type="button" class="btn btn-icon btn-outline-danger removeAnswerBtn shrink-0 mt-1" title="Remove Paragraph">
+                    <i class="ti ti-trash"></i>
                 </button>
-            </div>
-        </div>
-    </div>
-</form>
+            `;
+            list.appendChild(row);
+            checkEmptyState();
+        });
 
-<%
-var pageScripts = `
-document.getElementById('addAnswerBtn').addEventListener('click', function () {
-  var list = document.getElementById('answersList');
-  var row = document.createElement('div');
-  row.className = 'flex items-start gap-2';
-  row.innerHTML =
-    '<textarea name="answers_text" rows="3" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"></textarea>' +
-    '<button type="button" class="removeAnswerBtn shrink-0 mt-1 text-danger hover:text-danger-hover cursor-pointer"><i class="icon-trash-2"></i></button>';
-  list.appendChild(row);
-  document.getElementById('noAnswersMsg').style.display = 'none';
-});
+        // Remove Paragraph Row (Event Delegation)
+        document.addEventListener('click', function (e) {
+            const removeBtn = e.target.closest('.removeAnswerBtn');
+            if (!removeBtn) return;
 
-document.addEventListener('click', function (e) {
-  var btn = e.target.closest('.removeAnswerBtn');
-  if (!btn) return;
-  var list = document.getElementById('answersList');
-  btn.closest('div').remove();
-  if (!list.children.length) document.getElementById('noAnswersMsg').style.display = '';
-});
-`;
-%>
+            const row = removeBtn.closest('.answer-row');
+            if (row) {
+                row.remove();
+                checkEmptyState();
+            }
+        });
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+        // Helper Function for Empty State Message
+        function checkEmptyState() {
+            if (list.querySelectorAll('.answer-row').length === 0) {
+                noMsg.style.display = 'block';
+            } else {
+                noMsg.style.display = 'none';
+            }
+        }
+    });
+</script>
+
+<%- include('../../adminlayout/footer') %>

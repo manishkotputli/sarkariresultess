@@ -1,281 +1,1957 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-4 mb-6">
-    <h1 class="text-gray-900 text-2xl lg:text-3xl font-bold">Banners</h1>
-    <button type="button" data-hs-overlay="#addBannerModal" class="px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition-all shadow-sm">
-        <i class="icon-plus text-base"></i> Add Banner
-    </button>
-</div>
+<div class="page-wrapper">
 
-<!-- Search & Banner Table (Styled exactly like Blog List) -->
-<div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-    <!-- Card Header -->
-    <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 gap-4 flex-wrap bg-white">
-        <h2 class="text-gray-900 text-lg font-bold">All Banners</h2>
-        <form method="GET" action="/admin/banners" class="relative w-full sm:w-72">
-            <input type="text" name="search" value="<%= search %>" placeholder="Search banner text..." class="w-full bg-gray-50/70 border border-gray-200 text-sm text-gray-900 rounded-xl py-2 pl-4 pr-10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-            <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 hover:text-gray-600 border-0 bg-transparent p-1 cursor-pointer">
-                <i class="icon-search text-base"></i>
-            </button>
-        </form>
-    </div>
+    <div class="content pb-0">
 
-    <!-- Table Container -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[650px]">
-            <thead>
-                <tr class="bg-gray-100/80 border-b border-gray-200/70">
-                    <th class="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-600">Banner</th>
-                    <th class="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-600">Colour</th>
-                    <th class="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-600 text-center">Status</th>
-                    <th class="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-600 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 bg-white">
-                <% if (banners && banners.length) { %>
-                    <% banners.forEach(function(b) { %>
-                    <tr class="hover:bg-gray-50/60 transition-colors">
-                        <!-- Banner Image + Text + URL Column (Matching Blog Layout) -->
-                        <td class="px-6 py-4 align-middle">
-                            <div class="flex items-center gap-3.5">
-                                <div class="w-16 h-11 rounded-lg border border-gray-200 bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                                    <% if (b.image) { %>
-                                        <img src="<%= b.image %>" alt="Banner Image" class="w-full h-full object-cover">
-                                    <% } else { %>
-                                        <i class="icon-image text-gray-300 text-xl"></i>
-                                    <% } %>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-sm font-semibold text-gray-900 truncate"><%= b.text || 'Untitled Banner' %></div>
-                                    <div class="text-xs text-gray-400 truncate max-w-xs mt-0.5"><%= b.url || 'No URL attached' %></div>
-                                </div>
-                            </div>
-                        </td>
-                        <!-- Colour Code Column -->
-                        <td class="px-6 py-4 align-middle">
-                            <% if (b.color) { %>
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
-                                    <span class="w-3 h-3 rounded-full border border-black/10 shrink-0" style="background-color: <%= b.color %>"></span>
-                                    <%= b.color %>
-                                </span>
-                            <% } else { %>
-                                <span class="text-xs text-gray-400 italic">None</span>
-                            <% } %>
-                        </td>
-                        <!-- Status Badge Column -->
-                        <td class="px-6 py-4 align-middle text-center">
-                            <form method="POST" action="/admin/banners/<%= b.id %>/toggle-status" class="inline-block">
-                                <button type="submit" class="cursor-pointer inline-flex items-center text-xs font-semibold rounded-full px-3 py-1 border transition-all <%= b.status ? 'text-emerald-700 bg-emerald-50 border-emerald-300 hover:bg-emerald-100' : 'text-gray-500 bg-gray-50 border-gray-300 hover:bg-gray-100' %>">
-                                    <%= b.status ? 'Active' : 'Inactive' %>
-                                </button>
-                            </form>
-                        </td>
-                        <!-- Actions Column -->
-                        <td class="px-6 py-4 align-middle text-right">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <button type="button" class="editBannerBtn p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors" aria-label="Edit" data-hs-overlay="#editBannerModal" data-id="<%= b.id %>" data-text="<%= b.text || '' %>" data-url="<%= b.url || '' %>" data-color="<%= b.color || '' %>" data-image="<%= b.image || '' %>">
-                                    <i class="icon-pencil-line text-lg"></i>
-                                </button>
-                                <button type="button" class="deleteBannerBtn p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors" aria-label="Delete" data-hs-overlay="#deleteBannerModal" data-id="<%= b.id %>" data-text="<%= b.text || 'this banner' %>">
-                                    <i class="icon-trash-2 text-lg"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+        <%
+            /*
+             * Safe query variables.
+             * Controller does not have to send status/sort.
+             */
+            const currentSearch =
+                typeof search !== 'undefined' ? search : '';
+
+            const currentStatus =
+                typeof status !== 'undefined' ? status : '';
+
+            const currentSort =
+                typeof sort !== 'undefined' ? sort : '';
+        %>
+
+        <!-- =========================================================
+             ALERTS
+        ========================================================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+
+                <%= success %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+
+            </div>
+
+        <% } %>
+
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
                     <% }) %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-gray-500 bg-white">
-                            <div class="flex flex-col items-center justify-center gap-2">
-                                <i class="icon-image text-4xl text-gray-300"></i>
-                                <p class="text-sm font-medium">No banners found.</p>
-                            </div>
-                        </td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
-    </div>
-</div>
 
-<!-- Add Modal -->
-<div id="addBannerModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/60 overflow-x-hidden overflow-y-auto">
-    <div class="p-4 sm:max-w-lg sm:w-full sm:mx-auto min-h-[calc(100vh-3.5rem)] flex items-center justify-center">
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-xl w-full overflow-hidden">
-            <form method="POST" action="/admin/banners" enctype="multipart/form-data">
-                <div class="flex items-center justify-between p-4 sm:px-6 border-b border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-900">Add New Banner</h3>
-                    <button type="button" class="w-8 h-8 inline-flex justify-center items-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" data-hs-overlay="#addBannerModal">
-                        <i class="icon-x text-lg"></i>
-                    </button>
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =========================================================
+             PAGE HEADER
+        ========================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    Banners
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+                            <a href="/admin">
+                                Home
+                            </a>
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            Banners
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Export -->
+                <div class="dropdown">
+
+                    <a href="javascript:void(0);"
+                       class="dropdown-toggle btn btn-outline-light px-2 shadow"
+                       data-bs-toggle="dropdown">
+
+                        <i class="ti ti-package-export me-2"></i>
+                        Export
+
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end">
+
+                        <ul>
+
+                            <li>
+                                <a href="/admin/banners/export/pdf"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+                                    Export as PDF
+
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="/admin/banners/export/excel"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-xls me-1"></i>
+                                    Export as Excel
+
+                                </a>
+                            </li>
+
+                        </ul>
+
+                    </div>
+
                 </div>
-                <div class="p-4 sm:p-6 space-y-4">
-                    <!-- Image Input with Preview Box -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Banner Image</label>
-                        <div id="addBannerImagePreviewWrapper" class="mb-3 hidden">
-                            <div class="relative w-full h-36 rounded-xl border border-gray-200 overflow-hidden bg-gray-50">
-                                <img id="addBannerImagePreview" src="" alt="Preview" class="w-full h-full object-cover">
-                            </div>
-                        </div>
-                        <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50/50 hover:bg-gray-100/50 hover:border-primary/50 transition-all">
-                            <div class="flex flex-col items-center justify-center pt-2 pb-2 text-center px-4">
-                                <i class="icon-image text-xl text-gray-400 mb-1"></i>
-                                <p class="text-xs font-semibold text-gray-700">Click to upload banner image</p>
-                                <p class="text-[11px] text-gray-400 mt-0.5">PNG, JPG, WEBP formats</p>
-                            </div>
-                            <input type="file" name="image" class="hidden" accept="image/*" onchange="previewSelectedImage(this, 'addBannerImagePreview', 'addBannerImagePreviewWrapper')">
-                        </label>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Banner Text</label>
-                        <input type="text" name="text" placeholder="e.g. SSC CGL 2026 Notification Out" class="w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-xl p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Link URL</label>
-                        <input type="text" name="url" placeholder="/post/ssc-cgl-2026" class="w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-xl p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Color Code</label>
-                        <input type="text" name="color" placeholder="#ff0000 or red" class="w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-xl p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                    </div>
-                    <div class="flex items-center justify-between pt-2">
-                        <span class="text-sm font-medium text-gray-700">Active Status</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="status" value="true" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                </div>
-                <div class="flex justify-end gap-3 p-4 sm:px-6 border-t border-gray-100 bg-gray-50/50">
-                    <button type="button" class="py-2.5 px-5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all" data-hs-overlay="#addBannerModal">Cancel</button>
-                    <button type="submit" class="py-2.5 px-5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary-hover transition-all shadow-sm">Save Banner</button>
-                </div>
-            </form>
+
+
+                <!-- Refresh -->
+                <a href="javascript:location.reload();"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Refresh"
+                   data-bs-original-title="Refresh">
+
+                    <i class="ti ti-refresh"></i>
+
+                </a>
+
+
+                <!-- Collapse -->
+                <a href="javascript:void(0);"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Collapse"
+                   data-bs-original-title="Collapse"
+                   id="collapse-header">
+
+                    <i class="ti ti-transition-top"></i>
+
+                </a>
+
+            </div>
+
         </div>
-    </div>
-</div>
 
-<!-- Edit Modal -->
-<div id="editBannerModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/60 overflow-x-hidden overflow-y-auto">
-    <div class="p-4 sm:max-w-lg sm:w-full sm:mx-auto min-h-[calc(100vh-3.5rem)] flex items-center justify-center">
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-xl w-full overflow-hidden">
-            <form method="POST" id="editBannerForm" action="" enctype="multipart/form-data">
-                <div class="flex items-center justify-between p-4 sm:px-6 border-b border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-900">Edit Banner</h3>
-                    <button type="button" class="w-8 h-8 inline-flex justify-center items-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" data-hs-overlay="#editBannerModal">
-                        <i class="icon-x text-lg"></i>
+
+        <!-- =========================================================
+             BANNERS CARD
+        ========================================================== -->
+
+        <div class="card border-0 rounded-0">
+
+
+            <!-- =====================================================
+                 CARD HEADER
+            ====================================================== -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+
+                <!-- SEARCH -->
+                <form method="GET"
+                      action="/admin/banners"
+                      class="mb-0">
+
+                    <!-- Preserve status -->
+                    <input type="hidden"
+                           name="status"
+                           value="<%= currentStatus %>">
+
+                    <!-- Preserve sort -->
+                    <input type="hidden"
+                           name="sort"
+                           value="<%= currentSort %>">
+
+
+                    <div class="input-icon input-icon-start position-relative">
+
+                        <span class="input-icon-addon text-dark">
+
+                            <i class="ti ti-search"></i>
+
+                        </span>
+
+                        <input type="text"
+                               name="search"
+                               value="<%= currentSearch %>"
+                               class="form-control"
+                               id="bannerSearch"
+                               placeholder="Search Banners...">
+
+                    </div>
+
+                </form>
+
+
+                <!-- ADD BANNER -->
+                <div class="d-inline-flex align-items-center gap-3">
+
+                    <button type="button"
+                            class="btn btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addBannerModal">
+
+                        <i class="ti ti-square-rounded-plus-filled me-1"></i>
+
+                        Add Banner
+
                     </button>
+
                 </div>
-                <div class="p-4 sm:p-6 space-y-4">
-                    <!-- Image Input with Live Preview Box -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Banner Image</label>
-                        <div id="editBannerImagePreviewWrapper" class="mb-3 hidden">
-                            <div class="relative w-full h-36 rounded-xl border border-gray-200 overflow-hidden bg-gray-50 group">
-                                <img id="editBannerImagePreview" src="" alt="Current Image" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
-                                    Current Preview
+
+            </div>
+
+
+            <!-- =====================================================
+                 CARD BODY
+            ====================================================== -->
+
+            <div class="card-body">
+
+
+                <!-- =================================================
+                     TOOLBAR
+                ================================================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+
+                    <!-- =================================================
+                         SORT
+                    ================================================== -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="dropdown-toggle btn btn-outline-light shadow"
+                               data-bs-toggle="dropdown">
+
+                                <i class="ti ti-sort-ascending-2 me-2"></i>
+
+                                Sort By
+
+                            </a>
+
+
+                            <div class="dropdown-menu">
+
+                                <ul>
+
+                                    <!-- A-Z -->
+                                    <li>
+
+                                        <a href="/admin/banners?sort=text_asc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-ascending-letters me-2"></i>
+
+                                            Text (A-Z)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- Z-A -->
+                                    <li>
+
+                                        <a href="/admin/banners?sort=text_desc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-descending-letters me-2"></i>
+
+                                            Text (Z-A)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- NEWEST -->
+                                    <li>
+
+                                        <a href="/admin/banners?sort=newest&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-descending-numbers me-2"></i>
+
+                                            Newest First
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- OLDEST -->
+                                    <li>
+
+                                        <a href="/admin/banners?sort=oldest&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-ascending-numbers me-2"></i>
+
+                                            Oldest First
+
+                                        </a>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         FILTER + MANAGE COLUMNS
+                    ================================================== -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+
+                        <!-- =================================================
+                             FILTER
+                        ================================================== -->
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn btn-outline-light shadow px-2"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-filter me-2"></i>
+
+                                Filter
+
+                                <i class="ti ti-chevron-down ms-2"></i>
+
+                            </a>
+
+
+                            <div class="filter-dropdown-menu dropdown-menu dropdown-menu-lg p-0">
+
+
+                                <!-- FILTER HEADER -->
+
+                                <div class="filter-header d-flex align-items-center justify-content-between border-bottom p-3">
+
+                                    <h4 class="mb-0 fs-16">
+
+                                        <i class="ti ti-filter me-1"></i>
+
+                                        Filter
+
+                                    </h4>
+
+
+                                    <button type="button"
+                                            class="btn-close close-filter-btn"
+                                            data-bs-dismiss="dropdown"
+                                            aria-label="Close">
+
+                                    </button>
+
                                 </div>
+
+
+                                <!-- FILTER FORM -->
+
+                                <form method="GET"
+                                      action="/admin/banners">
+
+                                    <div class="filter-set-view p-3">
+
+
+                                        <!-- SEARCH -->
+
+                                        <div class="mb-3">
+
+                                            <label class="form-label">
+                                                Search
+                                            </label>
+
+                                            <input type="text"
+                                                   name="search"
+                                                   class="form-control"
+                                                   value="<%= currentSearch %>"
+                                                   placeholder="Search banner...">
+
+                                        </div>
+
+
+                                        <!-- STATUS -->
+
+                                        <div class="mb-3">
+
+                                            <label class="form-label">
+                                                Status
+                                            </label>
+
+                                            <select name="status"
+                                                    class="form-select">
+
+                                                <option value=""
+                                                    <%= (!currentStatus) ? 'selected' : '' %>>
+
+                                                    All Status
+
+                                                </option>
+
+                                                <option value="active"
+                                                    <%= currentStatus === 'active' ? 'selected' : '' %>>
+
+                                                    Active
+
+                                                </option>
+
+                                                <option value="inactive"
+                                                    <%= currentStatus === 'inactive' ? 'selected' : '' %>>
+
+                                                    Inactive
+
+                                                </option>
+
+                                            </select>
+
+                                        </div>
+
+
+                                        <!-- PRESERVE SORT -->
+
+                                        <input type="hidden"
+                                               name="sort"
+                                               value="<%= currentSort %>">
+
+
+                                        <!-- BUTTONS -->
+
+                                        <div class="d-flex align-items-center gap-2">
+
+                                            <a href="/admin/banners"
+                                               class="btn btn-outline-light w-100">
+
+                                                <i class="ti ti-refresh me-1"></i>
+
+                                                Reset
+
+                                            </a>
+
+
+                                            <button type="submit"
+                                                    class="btn btn-primary w-100">
+
+                                                <i class="ti ti-filter me-1"></i>
+
+                                                Filter
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </form>
+
                             </div>
+
                         </div>
-                        <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50/50 hover:bg-gray-100/50 hover:border-primary/50 transition-all">
-                            <div class="flex flex-col items-center justify-center pt-2 pb-2 text-center px-4">
-                                <i class="icon-image text-xl text-gray-400 mb-1"></i>
-                                <p class="text-xs font-semibold text-gray-700">Click to replace banner image</p>
-                                <p class="text-[11px] text-gray-400 mt-0.5">Leave empty to keep existing image</p>
+
+
+                        <!-- =================================================
+                             MANAGE COLUMNS
+                        ================================================== -->
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn bg-soft-indigo border-0"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-columns-3 me-2"></i>
+
+                                Manage Columns
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+
+                                <ul class="mb-0">
+
+
+                                    <!-- BANNER -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Banner
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="1"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- COLOUR -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Colour
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="2"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- STATUS -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Status
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="3"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- ACTION -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Action
+                                                </span>
+
+                                                <input class="form-check-input ms-auto"
+                                                       type="checkbox"
+                                                       data-column="4"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+                                </ul>
+
                             </div>
-                            <input type="file" name="image" class="hidden" accept="image/*" onchange="previewSelectedImage(this, 'editBannerImagePreview', 'editBannerImagePreviewWrapper')">
-                        </label>
+
+                        </div>
+
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Banner Text</label>
-                        <input type="text" name="text" id="editBannerText" class="w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-xl p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Link URL</label>
-                        <input type="text" name="url" id="editBannerUrl" class="w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-xl p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Color Code</label>
-                        <input type="text" name="color" id="editBannerColor" class="w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-xl p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                    </div>
+
                 </div>
-                <div class="flex justify-end gap-3 p-4 sm:px-6 border-t border-gray-100 bg-gray-50/50">
-                    <button type="button" class="py-2.5 px-5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all" data-hs-overlay="#editBannerModal">Cancel</button>
-                    <button type="submit" class="py-2.5 px-5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary-hover transition-all shadow-sm">Save Changes</button>
+
+
+                <!-- =================================================
+                     TABLE
+                ================================================== -->
+
+                <div class="table-responsive custom-table">
+
+                    <table class="table table-nowrap"
+                           id="banners-table">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <!-- COLUMN 0 -->
+
+                                <th>
+                                    #
+                                </th>
+
+
+                                <!-- COLUMN 1 -->
+
+                                <th data-column-index="1">
+                                    Banner
+                                </th>
+
+
+                                <!-- COLUMN 2 -->
+
+                                <th data-column-index="2">
+                                    Colour
+                                </th>
+
+
+                                <!-- COLUMN 3 -->
+
+                                <th data-column-index="3">
+                                    Status
+                                </th>
+
+
+                                <!-- COLUMN 4 -->
+
+                                <th data-column-index="4"
+                                    class="text-end no-sort">
+
+                                    Action
+
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="bannersTableBody">
+
+
+                            <% if (banners && banners.length) { %>
+
+
+                                <% banners.forEach(function(banner) { %>
+
+                                    <tr>
+
+
+                                        <!-- =================================================
+                                             ID
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <%= banner.id %>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             BANNER
+                                        ================================================== -->
+
+                                        <td data-column-index="1">
+
+                                            <div class="d-flex align-items-center">
+
+
+                                                <div class="avatar avatar-md flex-shrink-0 me-2">
+
+                                                    <% if (banner.image) { %>
+
+                                                        <img src="<%= banner.image %>"
+                                                             alt="<%= banner.text || 'Banner' %>"
+                                                             class="rounded"
+                                                             style="width:40px;height:40px;object-fit:cover;">
+
+                                                    <% } else { %>
+
+                                                        <div class="avatar avatar-md bg-light d-flex align-items-center justify-content-center">
+
+                                                            <i class="ti ti-photo text-muted fs-20"></i>
+
+                                                        </div>
+
+                                                    <% } %>
+
+                                                </div>
+
+
+                                                <div class="text-truncate">
+
+                                                    <h6 class="mb-0 fw-semibold text-truncate"
+                                                        style="max-width:300px;">
+
+                                                        <%= banner.text || 'Untitled Banner' %>
+
+                                                    </h6>
+
+
+                                                    <% if (banner.url) { %>
+
+                                                        <small class="text-muted d-block text-truncate"
+                                                               style="max-width:300px;">
+
+                                                            <%= banner.url %>
+
+                                                        </small>
+
+                                                    <% } else { %>
+
+                                                        <small class="text-muted">
+                                                            No URL attached
+                                                        </small>
+
+                                                    <% } %>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             COLOUR
+                                        ================================================== -->
+
+                                        <td data-column-index="2">
+
+                                            <% if (banner.color) { %>
+
+                                                <span class="badge bg-light text-dark border">
+
+                                                    <span class="d-inline-block rounded-circle me-1"
+                                                          style="width:10px;height:10px;background-color:<%= banner.color %>;border:1px solid rgba(0,0,0,.15);">
+                                                    </span>
+
+                                                    <%= banner.color %>
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="text-muted">
+                                                    -
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             STATUS
+                                        ================================================== -->
+
+                                        <td data-column-index="3">
+
+                                            <form method="POST"
+                                                  action="/admin/banners/<%= banner.id %>/toggle-status"
+                                                  class="d-inline">
+
+                                                <button type="submit"
+                                                        class="btn p-0 border-0 bg-transparent">
+
+                                                    <% if (banner.status) { %>
+
+                                                        <span class="badge bg-soft-success text-success">
+
+                                                            <i class="ti ti-circle-filled fs-7 me-1"></i>
+
+                                                            Active
+
+                                                        </span>
+
+                                                    <% } else { %>
+
+                                                        <span class="badge bg-soft-danger text-danger">
+
+                                                            <i class="ti ti-circle-filled fs-7 me-1"></i>
+
+                                                            Inactive
+
+                                                        </span>
+
+                                                    <% } %>
+
+                                                </button>
+
+                                            </form>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             ACTION
+                                        ================================================== -->
+
+                                        <td data-column-index="4"
+                                            class="text-end">
+
+                                            <div class="dropdown">
+
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-icon btn-sm"
+                                                   data-bs-toggle="dropdown"
+                                                   aria-expanded="false">
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+
+                                                    <!-- EDIT -->
+
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item editBannerBtn"
+
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#editBannerModal"
+
+                                                           data-id="<%= banner.id %>"
+                                                           data-text="<%= banner.text || '' %>"
+                                                           data-url="<%= banner.url || '' %>"
+                                                           data-color="<%= banner.color || '' %>"
+                                                           data-image="<%= banner.image || '' %>">
+
+                                                            <i class="ti ti-edit me-1"></i>
+
+                                                            Edit
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- VIEW -->
+
+                                                    <% if (banner.url) { %>
+
+                                                        <li>
+
+                                                            <a href="<%= banner.url %>"
+                                                               target="_blank"
+                                                               rel="noopener noreferrer"
+                                                               class="dropdown-item">
+
+                                                                <i class="ti ti-eye me-1"></i>
+
+                                                                View
+
+                                                            </a>
+
+                                                        </li>
+
+                                                    <% } %>
+
+
+                                                    <!-- DELETE -->
+
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item text-danger deleteBannerBtn"
+
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#deleteBannerModal"
+
+                                                           data-id="<%= banner.id %>"
+                                                           data-text="<%= banner.text || 'this banner' %>">
+
+                                                            <i class="ti ti-trash me-1"></i>
+
+                                                            Delete
+
+                                                        </a>
+
+                                                    </li>
+
+                                                </ul>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                <% }) %>
+
+
+                            <% } else { %>
+
+
+                                <tr>
+
+                                    <td colspan="5"
+                                        class="text-center py-5">
+
+                                        <div class="text-muted">
+
+                                            <i class="ti ti-photo fs-40 d-block mb-2"></i>
+
+                                            <h5>
+                                                No Banners Found
+                                            </h5>
+
+                                            <p class="mb-2">
+
+                                                <% if (currentSearch || currentStatus) { %>
+
+                                                    No banners match your search/filter.
+
+                                                <% } else { %>
+
+                                                    There are no banners available.
+
+                                                <% } %>
+
+                                            </p>
+
+
+                                            <% if (currentSearch || currentStatus) { %>
+
+                                                <a href="/admin/banners"
+                                                   class="btn btn-outline-light btn-sm">
+
+                                                    <i class="ti ti-refresh me-1"></i>
+
+                                                    Clear Filters
+
+                                                </a>
+
+                                            <% } else { %>
+
+                                                <button type="button"
+                                                        class="btn btn-primary btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#addBannerModal">
+
+                                                    <i class="ti ti-plus me-1"></i>
+
+                                                    Add Your First Banner
+
+                                                </button>
+
+                                            <% } %>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            <% } %>
+
+
+                        </tbody>
+
+                    </table>
+
                 </div>
-            </form>
+
+
+                <!-- =================================================
+                     COUNT
+                ================================================== -->
+
+                <div class="row align-items-center mt-3">
+
+                    <div class="col-md-6">
+
+                        <div class="text-muted">
+
+                            Showing
+
+                            <strong>
+                                <%= banners ? banners.length : 0 %>
+                            </strong>
+
+                            Banner(s)
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Delete Modal -->
-<div id="deleteBannerModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/60 overflow-x-hidden overflow-y-auto">
-    <div class="p-4 sm:max-w-md sm:w-full sm:mx-auto min-h-[calc(100vh-3.5rem)] flex items-center justify-center">
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-xl w-full overflow-hidden">
-            <form method="POST" id="deleteBannerForm" action="">
-                <div class="p-6 text-center">
-                    <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
-                        <i class="icon-trash-2 text-xl"></i>
+
+<!-- =========================================================
+     ADD BANNER MODAL
+========================================================= -->
+
+<div class="modal fade"
+     id="addBannerModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content">
+
+            <form method="POST"
+                  action="/admin/banners"
+                  enctype="multipart/form-data">
+
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+
+                        <i class="ti ti-photo-plus me-1"></i>
+
+                        Add New Banner
+
+                    </h5>
+
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+
+                    <!-- IMAGE -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Banner Image
+                        </label>
+
+
+                        <div id="addBannerImagePreviewWrapper"
+                             class="mb-3 d-none">
+
+                            <div class="border rounded p-2">
+
+                                <img id="addBannerImagePreview"
+                                     src=""
+                                     alt="Preview"
+                                     class="img-fluid rounded"
+                                     style="max-height:180px;width:100%;object-fit:cover;">
+
+                            </div>
+
+                        </div>
+
+
+                        <input type="file"
+                               name="image"
+                               class="form-control"
+                               accept="image/*"
+                               onchange="previewSelectedImage(this, 'addBannerImagePreview', 'addBannerImagePreviewWrapper')">
+
+                        <small class="text-muted">
+                            PNG, JPG, WEBP formats
+                        </small>
+
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Banner</h3>
-                    <p class="text-sm text-gray-600">Are you sure you want to delete "<span id="deleteBannerText" class="font-semibold text-gray-900"></span>"?</p>
+
+
+                    <!-- TEXT -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Banner Text
+                        </label>
+
+                        <input type="text"
+                               name="text"
+                               class="form-control"
+                               placeholder="e.g. SSC CGL 2026 Notification Out">
+
+                    </div>
+
+
+                    <!-- URL -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Link URL
+                        </label>
+
+                        <input type="text"
+                               name="url"
+                               class="form-control"
+                               placeholder="/post/ssc-cgl-2026">
+
+                    </div>
+
+
+                    <!-- COLOR -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Color Code
+                        </label>
+
+                        <input type="text"
+                               name="color"
+                               class="form-control"
+                               placeholder="#ff0000 or red">
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="form-check form-switch">
+
+                        <input type="checkbox"
+                               name="status"
+                               value="true"
+                               class="form-check-input"
+                               id="addBannerStatus"
+                               checked>
+
+                        <label class="form-check-label"
+                               for="addBannerStatus">
+
+                            Active Status
+
+                        </label>
+
+                    </div>
+
                 </div>
-                <div class="flex justify-end gap-3 p-4 sm:px-6 border-t border-gray-100 bg-gray-50/50">
-                    <button type="button" class="py-2.5 px-5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all" data-hs-overlay="#deleteBannerModal">Cancel</button>
-                    <button type="submit" class="py-2.5 px-5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-all shadow-sm">Delete</button>
+
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-outline-light"
+                            data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        <i class="ti ti-device-floppy me-1"></i>
+
+                        Save Banner
+
+                    </button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
+
 </div>
+
+
+<!-- =========================================================
+     EDIT BANNER MODAL
+========================================================= -->
+
+<div class="modal fade"
+     id="editBannerModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content">
+
+            <form method="POST"
+                  id="editBannerForm"
+                  action=""
+                  enctype="multipart/form-data">
+
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+
+                        <i class="ti ti-edit me-1"></i>
+
+                        Edit Banner
+
+                    </h5>
+
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+
+                    <!-- IMAGE -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Banner Image
+                        </label>
+
+
+                        <div id="editBannerImagePreviewWrapper"
+                             class="mb-3 d-none">
+
+                            <div class="border rounded p-2">
+
+                                <img id="editBannerImagePreview"
+                                     src=""
+                                     alt="Current Image"
+                                     class="img-fluid rounded"
+                                     style="max-height:180px;width:100%;object-fit:cover;">
+
+                            </div>
+
+                        </div>
+
+
+                        <input type="file"
+                               name="image"
+                               class="form-control"
+                               accept="image/*"
+                               onchange="previewSelectedImage(this, 'editBannerImagePreview', 'editBannerImagePreviewWrapper')">
+
+                        <small class="text-muted">
+                            Leave empty to keep existing image
+                        </small>
+
+                    </div>
+
+
+                    <!-- TEXT -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Banner Text
+                        </label>
+
+                        <input type="text"
+                               name="text"
+                               id="editBannerText"
+                               class="form-control">
+
+                    </div>
+
+
+                    <!-- URL -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Link URL
+                        </label>
+
+                        <input type="text"
+                               name="url"
+                               id="editBannerUrl"
+                               class="form-control">
+
+                    </div>
+
+
+                    <!-- COLOR -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Color Code
+                        </label>
+
+                        <input type="text"
+                               name="color"
+                               id="editBannerColor"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-outline-light"
+                            data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        <i class="ti ti-device-floppy me-1"></i>
+
+                        Save Changes
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     DELETE BANNER MODAL
+========================================================= -->
+
+<div class="modal fade"
+     id="deleteBannerModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+
+        <div class="modal-content">
+
+            <form method="POST"
+                  id="deleteBannerForm"
+                  action="">
+
+
+                <div class="modal-body text-center p-4">
+
+                    <i class="ti ti-alert-triangle text-danger fs-1 mb-2"></i>
+
+
+                    <h5>
+                        Delete Banner?
+                    </h5>
+
+
+                    <p class="text-muted mb-3">
+
+                        Are you sure you want to delete
+
+                        <strong id="deleteBannerText"></strong>?
+
+                        This action cannot be undone.
+
+                    </p>
+
+
+                    <div class="d-flex justify-content-center gap-2">
+
+
+                        <button type="button"
+                                class="btn btn-outline-light"
+                                data-bs-dismiss="modal">
+
+                            Cancel
+
+                        </button>
+
+
+                        <button type="submit"
+                                class="btn btn-danger">
+
+                            <i class="ti ti-trash me-1"></i>
+
+                            Delete
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     SCRIPT
+========================================================= -->
 
 <script>
-// Live Image Preview Handler
-function previewSelectedImage(input, previewImgId, wrapperId) {
-    const previewImg = document.getElementById(previewImgId);
-    const wrapper = document.getElementById(wrapperId);
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            previewImg.src = e.target.result;
-            if (wrapper) wrapper.classList.remove('hidden');
-        };
-        reader.readAsDataURL(input.files[0]);
+
+document.addEventListener('DOMContentLoaded', function () {
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    const searchInput =
+        document.getElementById('bannerSearch');
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener('keyup', function (event) {
+
+            if (event.key === 'Enter') {
+
+                const form =
+                    searchInput.closest('form');
+
+                if (form) {
+
+                    form.submit();
+
+                }
+
+            }
+
+        });
+
     }
+
+
+    /* =====================================================
+       MANAGE COLUMNS
+       SAME AS CATEGORIES
+    ===================================================== */
+
+  document.addEventListener('change', function (event) {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Check if changed element is Banner Manage Column checkbox
+    |--------------------------------------------------------------------------
+    */
+
+    const checkbox = event.target.closest(
+        '#banners-table [data-column]'
+    );
+
+    if (!checkbox) {
+        return;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Column index
+    |--------------------------------------------------------------------------
+    */
+
+    const columnIndex =
+        parseInt(checkbox.getAttribute('data-column'), 10);
+
+
+    if (isNaN(columnIndex)) {
+        return;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Show / Hide
+    |--------------------------------------------------------------------------
+    */
+
+    const display =
+        checkbox.checked
+            ? ''
+            : 'none';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Apply to every table row
+    |--------------------------------------------------------------------------
+    */
+
+    document
+        .querySelectorAll('#banners-table tr')
+        .forEach(function (row) {
+
+            const cell =
+                row.children[columnIndex];
+
+            if (cell) {
+
+                if (display === 'none') {
+
+                    cell.style.setProperty(
+                        'display',
+                        'none',
+                        'important'
+                    );
+
+                } else {
+
+                    cell.style.removeProperty(
+                        'display'
+                    );
+
+                }
+
+            }
+
+        });
+
+});
+    /* =====================================================
+       EDIT BANNER
+    ===================================================== */
+
+    document
+        .querySelectorAll('.editBannerBtn')
+        .forEach(function (btn) {
+
+
+            btn.addEventListener('click', function () {
+
+
+                const form =
+                    document.getElementById(
+                        'editBannerForm'
+                    );
+
+
+                if (!form) {
+                    return;
+                }
+
+
+                /*
+                 * FORM ACTION
+                 */
+
+                form.action =
+                    '/admin/banners/' +
+                    btn.dataset.id +
+                    '/update';
+
+
+                /*
+                 * TEXT
+                 */
+
+                const textInput =
+                    document.getElementById(
+                        'editBannerText'
+                    );
+
+
+                if (textInput) {
+
+                    textInput.value =
+                        btn.dataset.text || '';
+
+                }
+
+
+                /*
+                 * URL
+                 */
+
+                const urlInput =
+                    document.getElementById(
+                        'editBannerUrl'
+                    );
+
+
+                if (urlInput) {
+
+                    urlInput.value =
+                        btn.dataset.url || '';
+
+                }
+
+
+                /*
+                 * COLOR
+                 */
+
+                const colorInput =
+                    document.getElementById(
+                        'editBannerColor'
+                    );
+
+
+                if (colorInput) {
+
+                    colorInput.value =
+                        btn.dataset.color || '';
+
+                }
+
+
+                /*
+                 * IMAGE PREVIEW
+                 */
+
+                const previewWrapper =
+                    document.getElementById(
+                        'editBannerImagePreviewWrapper'
+                    );
+
+
+                const previewImg =
+                    document.getElementById(
+                        'editBannerImagePreview'
+                    );
+
+
+                if (
+                    previewWrapper &&
+                    previewImg
+                ) {
+
+
+                    if (btn.dataset.image) {
+
+                        previewImg.src =
+                            btn.dataset.image;
+
+                        previewWrapper.classList.remove(
+                            'd-none'
+                        );
+
+                    } else {
+
+                        previewImg.src = '';
+
+                        previewWrapper.classList.add(
+                            'd-none'
+                        );
+
+                    }
+
+                }
+
+
+            });
+
+        });
+
+
+    /* =====================================================
+       DELETE BANNER
+    ===================================================== */
+
+    document
+        .querySelectorAll('.deleteBannerBtn')
+        .forEach(function (btn) {
+
+
+            btn.addEventListener('click', function () {
+
+
+                const form =
+                    document.getElementById(
+                        'deleteBannerForm'
+                    );
+
+
+                const text =
+                    document.getElementById(
+                        'deleteBannerText'
+                    );
+
+
+                if (!form) {
+                    return;
+                }
+
+
+                /*
+                 * FORM ACTION
+                 */
+
+                form.action =
+                    '/admin/banners/' +
+                    btn.dataset.id +
+                    '/delete';
+
+
+                /*
+                 * BANNER NAME
+                 */
+
+                if (text) {
+
+                    text.textContent =
+                        '"' +
+                        (btn.dataset.text || 'this banner') +
+                        '"';
+
+                }
+
+            });
+
+        });
+
+
+    /* =====================================================
+       RESET ADD IMAGE PREVIEW
+    ===================================================== */
+
+    const addModal =
+        document.getElementById('addBannerModal');
+
+
+    if (addModal) {
+
+        addModal.addEventListener(
+            'hidden.bs.modal',
+            function () {
+
+
+                const wrapper =
+                    document.getElementById(
+                        'addBannerImagePreviewWrapper'
+                    );
+
+
+                const preview =
+                    document.getElementById(
+                        'addBannerImagePreview'
+                    );
+
+
+                const input =
+                    addModal.querySelector(
+                        'input[name="image"]'
+                    );
+
+
+                if (wrapper) {
+
+                    wrapper.classList.add(
+                        'd-none'
+                    );
+
+                }
+
+
+                if (preview) {
+
+                    preview.src = '';
+
+                }
+
+
+                if (input) {
+
+                    input.value = '';
+
+                }
+
+            }
+        );
+
+    }
+
+});
+
+
+/* =========================================================
+   IMAGE PREVIEW
+========================================================= */
+
+function previewSelectedImage(
+    input,
+    previewImgId,
+    wrapperId
+) {
+
+
+    const previewImg =
+        document.getElementById(
+            previewImgId
+        );
+
+
+    const wrapper =
+        document.getElementById(
+            wrapperId
+        );
+
+
+    if (
+        !input ||
+        !previewImg ||
+        !wrapper
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        input.files &&
+        input.files[0]
+    ) {
+
+
+        const file =
+            input.files[0];
+
+
+        /*
+         * Basic image validation
+         */
+
+        if (
+            !file.type ||
+            !file.type.startsWith('image/')
+        ) {
+
+            input.value = '';
+
+            wrapper.classList.add(
+                'd-none'
+            );
+
+            previewImg.src = '';
+
+            return;
+
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function (event) {
+
+
+                previewImg.src =
+                    event.target.result;
+
+
+                wrapper.classList.remove(
+                    'd-none'
+                );
+
+            };
+
+
+        reader.readAsDataURL(
+            file
+        );
+
+    }
+
 }
 
-// Direct Execution - Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.editBannerBtn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const form = document.getElementById('editBannerForm');
-            form.action = '/admin/banners/' + btn.dataset.id + '/update';
-            
-            document.getElementById('editBannerText').value = btn.dataset.text || '';
-            document.getElementById('editBannerUrl').value = btn.dataset.url || '';
-            document.getElementById('editBannerColor').value = btn.dataset.color || '';
-            
-            const previewWrapper = document.getElementById('editBannerImagePreviewWrapper');
-            const previewImg = document.getElementById('editBannerImagePreview');
-            
-            if (btn.dataset.image) {
-                previewImg.src = btn.dataset.image;
-                previewWrapper.classList.remove('hidden');
-            } else {
-                previewWrapper.classList.add('hidden');
-                previewImg.src = '';
-            }
-        });
-    });
-
-    document.querySelectorAll('.deleteBannerBtn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            document.getElementById('deleteBannerForm').action = '/admin/banners/' + btn.dataset.id + '/delete';
-            document.getElementById('deleteBannerText').textContent = btn.dataset.text || '';
-        });
-    });
-});
 </script>
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+
+<%- include('../../adminlayout/footer') %>

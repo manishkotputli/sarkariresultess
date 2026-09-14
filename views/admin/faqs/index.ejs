@@ -1,59 +1,467 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">FAQs</h1>
-    <a href="/admin/faqs/create" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-        <span class="flex"><i class="icon-plus"></i></span> Add FAQ
-    </a>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-1">
-    <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden">
-        <div class="flex items-center justify-between p-4 border-b border-border-color gap-2 flex-wrap">
-            <h2 class="text-gray-900 text-lg font-bold mb-0">All FAQs</h2>
-            <form method="GET" action="/admin/faqs" class="relative w-full md:w-64">
-                <input type="text" name="search" value="<%= search %>" placeholder="Search question..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-                <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0"><i class="icon-search"></i></button>
-            </form>
+    <!-- Start Content -->
+    <div class="content pb-0">
+
+        <!-- =========================
+             ALERTS
+        ========================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <ul class="mb-0">
+                    <% errors.forEach(function(error) { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+                <h4 class="mb-1">FAQs</h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="/admin">Home</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            FAQs
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Export -->
+                <div class="dropdown">
+                    <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
+                        <i class="ti ti-package-export me-2"></i> Export
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <ul>
+                            <li>
+                                <a href="/admin/faqs/export/pdf" class="dropdown-item">
+                                    <i class="ti ti-file-type-pdf me-1"></i> Export as PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/admin/faqs/export/excel" class="dropdown-item">
+                                    <i class="ti ti-file-type-xls me-1"></i> Export as Excel
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Refresh -->
+                <a href="javascript:location.reload();" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh">
+                    <i class="ti ti-refresh"></i>
+                </a>
+
+                <!-- Collapse -->
+                <a href="javascript:void(0);" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Collapse" data-bs-original-title="Collapse" id="collapse-header">
+                    <i class="ti ti-transition-top"></i>
+                </a>
+
+            </div>
+
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[700px]">
-                <thead>
-                    <tr class="bg-light">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Question</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Order</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <% if (faqs && faqs.length) { %>
-                        <% faqs.forEach(function(f) { %>
-                        <tr>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <a href="/admin/faqs/<%= f.id %>/edit" class="text-sm font-semibold text-gray-900 hover:text-primary transition-colors"><%= f.question %></a>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= f.Category ? f.Category.name : 'General' %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= f.ordering %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="inline-flex items-center text-xs font-bold rounded-lg px-3 py-1 border <%= f.status ? 'text-success border-success' : 'text-gray-500 border-gray-300' %>"><%= f.status ? 'Active' : 'Inactive' %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="/admin/faqs/<%= f.id %>/edit" class="size-9 rounded-full hover:bg-gray-100 text-gray-900 flex items-center justify-center transition-colors"><i class="icon-pencil-line text-sm"></i></a>
-                                    <form method="POST" action="/admin/faqs/<%= f.id %>/delete" onsubmit="return confirm('Delete this FAQ?');">
-                                        <button type="submit" class="size-9 rounded-full hover:bg-gray-100 text-gray-900 hover:text-danger flex items-center justify-center transition-colors cursor-pointer"><i class="icon-trash-2 text-sm"></i></button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="5" class="px-6 py-10 text-center text-gray-500 bg-white">No FAQs found. <a href="/admin/faqs/create" class="text-primary font-medium">Add your first FAQ</a>.</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
+
+        <!-- =========================
+             FAQ CARD
+        ========================== -->
+
+        <div class="card border-0 rounded-0">
+
+            <!-- CARD HEADER -->
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+                <!-- Search -->
+                <form method="GET" action="/admin/faqs" class="mb-0">
+                    <div class="input-icon input-icon-start position-relative">
+                        <span class="input-icon-addon text-dark">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" class="form-control" id="faqSearch" placeholder="Search FAQs...">
+                    </div>
+                </form>
+
+                <!-- Add FAQ -->
+                <div class="d-inline-flex align-items-center gap-3">
+                    <a href="/admin/faqs/create" class="btn btn-primary">
+                        <i class="ti ti-square-rounded-plus-filled me-1"></i> Add FAQ
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- =========================
+                 CARD BODY
+            ========================== -->
+
+            <div class="card-body">
+
+                <!-- =========================
+                     TABLE HEADER & TOOLS
+                ========================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+                    <!-- SORT -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="dropdown">
+                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light shadow" data-bs-toggle="dropdown">
+                                <i class="ti ti-sort-ascending-2 me-2"></i> Sort By
+                            </a>
+                            <div class="dropdown-menu">
+                                <ul>
+                                    <li>
+                                        <a href="/admin/faqs?sort=question_asc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Question (A-Z)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/faqs?sort=question_desc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Question (Z-A)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/faqs?sort=order_asc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Order (Low to High)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/admin/faqs?sort=order_desc&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="dropdown-item">
+                                            Order (High to Low)
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT TOOLS -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <!-- Manage Columns Dropdown -->
+                        <div class="dropdown">
+                            <a href="javascript:void(0);" class="btn bg-soft-indigo border-0" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                <i class="ti ti-columns-3 me-2"></i> Manage Columns
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+                                <ul class="list-unstyled mb-0">
+
+                                    <!-- ID Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span># ID</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="0" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Question Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Question</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="1" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Category Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Category</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="2" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Order Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Order</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="3" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                    <!-- Status Column -->
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+                                        <i class="ti ti-columns me-1"></i>
+                                        <div class="form-check form-switch w-100 ps-0">
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+                                                <span>Status</span>
+                                                <input class="form-check-input column-toggle ms-auto" type="checkbox" data-column="4" checked>
+                                            </label>
+                                        </div>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- =========================
+                     FAQ TABLE
+                ========================== -->
+
+                <div class="table-responsive custom-table">
+                    <table class="table table-nowrap" id="faqs-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Question</th>
+                                <th>Category</th>
+                                <th>Order</th>
+                                <th>Status</th>
+                                <th class="text-end no-sort">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="faqsTableBody">
+                            <% if (faqs && faqs.length) { %>
+                                <% faqs.forEach(function(faq, index) { %>
+                                    <tr data-status="<%= faq.status ? 'active' : 'inactive' %>">
+
+                                        <!-- ID -->
+                                        <td><%= faq.id %></td>
+
+                                        <!-- QUESTION -->
+                                        <td>
+                                            <h6 class="mb-0 fw-semibold">
+                                                <a href="/admin/faqs/<%= faq.id %>/edit" class="text-dark">
+                                                    <%= faq.question %>
+                                                </a>
+                                            </h6>
+                                        </td>
+
+                                        <!-- CATEGORY -->
+                                        <td>
+                                            <% if (faq.Category) { %>
+                                                <span class="badge bg-soft-primary text-primary">
+                                                    <i class="ti ti-category me-1"></i>
+                                                    <%= faq.Category.name %>
+                                                </span>
+                                            <% } else { %>
+                                                <span class="text-muted">General</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- ORDER -->
+                                        <td>
+                                            <span class="text-muted">
+                                                <%= faq.ordering ?? 0 %>
+                                            </span>
+                                        </td>
+
+                                        <!-- STATUS -->
+                                        <td>
+                                            <% if (faq.status) { %>
+                                                <span class="badge bg-soft-success text-success">
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i> Active
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge bg-soft-danger text-danger">
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i> Inactive
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- ACTION -->
+                                        <td class="text-end">
+                                            <div class="dropdown">
+                                                <a href="javascript:void(0);" class="btn btn-icon btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="ti ti-dots-vertical"></i>
+                                                </a>
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <!-- Edit -->
+                                                    <li>
+                                                        <a href="/admin/faqs/<%= faq.id %>/edit" class="dropdown-item">
+                                                            <i class="ti ti-edit me-1"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <!-- Delete -->
+                                                    <li>
+                                                        <a href="javascript:void(0);" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#delete_faq_<%= faq.id %>">
+                                                            <i class="ti ti-trash me-1"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <!-- EMPTY -->
+                                <tr id="noFaqsRow">
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="ti ti-message-question fs-40 d-block mb-2"></i>
+                                            <h5>No FAQs Found</h5>
+                                            <p class="mb-2">There are no FAQs available.</p>
+                                            <a href="/admin/faqs/create" class="btn btn-primary btn-sm">
+                                                <i class="ti ti-plus me-1"></i> Add Your First FAQ
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- =========================
+                     PAGINATION / COUNT
+                ========================== -->
+
+                <% if (typeof pagination !== 'undefined' && pagination && pagination.totalPages > 1) { %>
+                    <div class="row align-items-center mt-3">
+
+                        <!-- Info -->
+                        <div class="col-md-6">
+                            <div class="text-muted">
+                                Page <%= pagination.page %> of <%= pagination.totalPages %> &nbsp;·&nbsp; <%= typeof total !== 'undefined' ? total : (faqs ? faqs.length : 0) %> total FAQs
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-end">
+                                <ul class="pagination mb-0">
+
+                                    <!-- Previous -->
+                                    <% if (pagination.hasPrev) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/faqs?page=<%= pagination.page - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>">
+                                                <i class="ti ti-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    <% } %>
+
+                                    <!-- Pages -->
+                                    <% if (pagination.pages && pagination.pages.length) { %>
+                                        <% pagination.pages.forEach(function(page) { %>
+                                            <li class="page-item <%= page === pagination.page ? 'active' : '' %>">
+                                                <a class="page-link" href="/admin/faqs?page=<%= page %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>">
+                                                    <%= page %>
+                                                </a>
+                                            </li>
+                                        <% }) %>
+                                    <% } %>
+
+                                    <!-- Next -->
+                                    <% if (pagination.hasNext) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/faqs?page=<%= pagination.page + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>">
+                                                <i class="ti ti-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    <% } %>
+
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                <% } %>
+
+            </div>
+
         </div>
+
     </div>
+
 </div>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+<!-- Manage Columns Toggle Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggles = document.querySelectorAll('.column-toggle');
+        const table = document.getElementById('faqs-table');
+
+        if (!table) return;
+
+        function updateColumnVisibility(colIndex, isVisible) {
+            // Header cell hide/show
+            const th = table.querySelector(`thead tr th:nth-child(${colIndex + 1})`);
+            if (th) {
+                th.classList.toggle('d-none', !isVisible);
+            }
+
+            // Body cells hide/show
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                // Ignore "No FAQs Found" full width row
+                if (row.id === 'noFaqsRow') return;
+
+                const td = row.querySelector(`td:nth-child(${colIndex + 1})`);
+                if (td) {
+                    td.classList.toggle('d-none', !isVisible);
+                }
+            });
+
+            // Update empty row colspan
+            const noFaqsTd = table.querySelector('#noFaqsRow td');
+            if (noFaqsTd) {
+                const visibleThs = table.querySelectorAll('thead tr th:not(.d-none)').length;
+                noFaqsTd.setAttribute('colspan', visibleThs || 1);
+            }
+        }
+
+        // Initialize toggle listeners & load saved preferences
+        toggles.forEach(toggle => {
+            const colIndex = parseInt(toggle.getAttribute('data-column'), 10);
+            const storageKey = 'faq_col_' + colIndex;
+
+            // Restore from localStorage if saved
+            const savedState = localStorage.getItem(storageKey);
+            if (savedState !== null) {
+                const isChecked = savedState === 'true';
+                toggle.checked = isChecked;
+                updateColumnVisibility(colIndex, isChecked);
+            }
+
+            // Event listener for toggle click
+            toggle.addEventListener('change', function () {
+                const isChecked = this.checked;
+                updateColumnVisibility(colIndex, isChecked);
+                localStorage.setItem(storageKey, isChecked);
+            });
+        });
+    });
+</script>
+
+<%- include('../../adminlayout/footer') %>

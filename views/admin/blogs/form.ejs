@@ -1,471 +1,2222 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
 <style>
-  /* CKEditor Visual Editable Area */
-  .ck-editor__editable_inline {
-    min-height: 480px !important;
-    font-size: 15px;
-    line-height: 1.6;
-  }
-  
-  /* Transparent/Checkerboard background for crisp image preview */
-  .preview-bg-pattern {
-    background-color: #f8fafc;
-    background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-    background-size: 12px 12px;
-  }
 
-  /* HTML Code Editor Large Dark Box */
-  .html-code-editor {
-    font-family: 'Fira Code', 'Courier New', Courier, monospace;
-    font-size: 14px;
-    background-color: #0f172a;
-    color: #38bdf8;
-    line-height: 1.6;
-    tab-size: 2;
-  }
+    /* =========================================================
+       CKEDITOR
+    ========================================================= */
+
+    .ck-editor__editable_inline {
+        min-height: 450px !important;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .ck-content {
+        min-height: 450px;
+    }
+
+    .ck-editor__editable_inline {
+        padding: 20px !important;
+    }
+
+
+    /* =========================================================
+       SELECTED IMAGE
+    ========================================================= */
+
+    .ck-content .ck-widget.ck-widget_selected {
+        outline: 3px solid #0d6efd !important;
+        outline-offset: 2px;
+    }
+
+
+    /* =========================================================
+       IMAGE WIDTH
+    ========================================================= */
+
+    .ck-content figure.image {
+        transition: width 0.2s ease-in-out;
+        margin: 1rem auto;
+    }
+
+    .ck-content figure.image.img-25 {
+        width: 25% !important;
+    }
+
+    .ck-content figure.image.img-50 {
+        width: 50% !important;
+    }
+
+    .ck-content figure.image.img-75 {
+        width: 75% !important;
+    }
+
+    .ck-content figure.image.img-100 {
+        width: 100% !important;
+    }
+
+    .ck-content figure.image img {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+
+    /* =========================================================
+       HTML CODE EDITOR
+    ========================================================= */
+
+    .html-code-editor {
+        font-family: 'Fira Code', 'Courier New', Courier, monospace;
+        font-size: 14px;
+        background-color: #0f172a;
+        color: #38bdf8;
+        line-height: 1.6;
+        tab-size: 2;
+        min-height: 600px;
+    }
+
+
+    /* =========================================================
+       PREVIEW BACKGROUND
+    ========================================================= */
+
+    .preview-bg-pattern {
+        background-color: #f8fafc;
+        background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+        background-size: 12px 12px;
+    }
+
+
+    /* =========================================================
+       CKEDITOR ERROR
+    ========================================================= */
+
+    .ckeditor-error {
+        display: none;
+        margin-top: 8px;
+        color: #dc3545;
+        font-size: 13px;
+    }
+
 </style>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold"><%= mode === 'edit' ? 'Edit Blog Post' : 'Add Blog Post' %></h1>
-    <a href="/admin/blogs" class="text-sm font-medium text-gray-600 hover:text-primary flex items-center gap-1"><i class="icon-arrow-left"></i> Back to Blog Posts</a>
+
+<!-- =========================================================
+     PAGE WRAPPER
+========================================================= -->
+
+<div class="page-wrapper">
+
+    <div class="content pb-0">
+
+
+        <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+
+                    <%= mode === 'edit'
+                        ? 'Edit Blog Post'
+                        : 'Add Blog Post' %>
+
+                </h4>
+
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin/blogs">
+                                Blog Posts
+                            </a>
+
+                        </li>
+
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            <%= mode === 'edit' ? 'Edit' : 'Add' %>
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div>
+
+                <a href="/admin/blogs"
+                   class="btn btn-outline-light">
+
+                    <i class="ti ti-arrow-left me-1"></i>
+
+                    Back to Blog Posts
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             ALERTS
+        ====================================================== -->
+
+        <% if (typeof errors !== 'undefined' &&
+               errors &&
+               errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+        <% } %>
+
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <%= success %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =====================================================
+             BLOG FORM
+        ====================================================== -->
+
+        <form method="POST"
+              action="<%= formAction %>"
+              enctype="multipart/form-data"
+              id="blogForm">
+
+
+            <div class="row">
+
+
+                <!-- =================================================
+                     LEFT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-8">
+
+
+                    <!-- =================================================
+                         CONTENT & MEDIA
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Content & Media
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- TITLE -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+
+                                    Title
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input type="text"
+                                       name="title"
+                                       id="titleInput"
+                                       required
+                                       value="<%= blog ? blog.title : '' %>"
+                                       class="form-control"
+                                       placeholder="Enter blog title">
+
+                            </div>
+
+
+                            <!-- CATEGORY + SLUG -->
+
+                            <div class="row">
+
+
+                                <!-- CATEGORY -->
+
+                                <div class="col-md-6 mb-4">
+
+                                    <label class="form-label">
+
+                                        Category
+
+                                    </label>
+
+
+                                    <select name="category_id"
+                                            class="form-select">
+
+                                        <option value="">
+                                            Select Category
+                                        </option>
+
+
+                                        <% if (categories && categories.length) { %>
+
+                                            <% categories.forEach(function(cat) { %>
+
+                                                <option
+                                                    value="<%= cat.id %>"
+                                                    <%= blog &&
+                                                        Number(blog.category_id) === Number(cat.id)
+                                                        ? 'selected'
+                                                        : '' %>>
+
+                                                    <%= cat.name %>
+
+                                                </option>
+
+                                            <% }) %>
+
+                                        <% } %>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- SLUG -->
+
+                                <div class="col-md-6 mb-4">
+
+                                    <label class="form-label">
+
+                                        Slug
+
+                                        <span class="text-muted">
+                                            (optional)
+                                        </span>
+
+                                    </label>
+
+
+                                    <input type="text"
+                                           name="slug"
+                                           value="<%= blog ? (blog.slug || '') : '' %>"
+                                           class="form-control"
+                                           placeholder="auto-generated-from-title">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- SHORT DESCRIPTION -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Short Description
+                                </label>
+
+
+                                <textarea name="short_description"
+                                          rows="3"
+                                          class="form-control"
+                                          placeholder="Enter short description"><%= blog ? (blog.short_description || '') : '' %></textarea>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 CKEDITOR TABS
+                            ================================================== -->
+
+                            <div class="mb-4">
+
+
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+
+                                    <label class="form-label mb-0">
+                                        Blog Content
+                                    </label>
+
+
+                                    <span class="badge bg-light text-dark border">
+
+                                        <i class="ti ti-edit me-1"></i>
+
+                                        Rich Text Editor
+
+                                    </span>
+
+                                </div>
+
+
+                                <!-- EDITOR TABS -->
+
+                                <div class="border-bottom mb-3">
+
+                                    <div class="d-flex gap-2">
+
+                                        <button type="button"
+                                                id="tabVisualBtn"
+                                                class="btn btn-sm border-0 border-bottom border-primary text-primary rounded-0">
+
+                                            <i class="ti ti-edit me-1"></i>
+                                            Visual Editor
+
+                                        </button>
+
+
+                                        <button type="button"
+                                                id="tabHtmlBtn"
+                                                class="btn btn-sm border-0 border-bottom border-transparent text-muted rounded-0">
+
+                                            <i class="ti ti-code me-1"></i>
+                                            HTML / Code Editor
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- VISUAL EDITOR -->
+
+                                <div id="visualEditorPane">
+
+                                    <textarea
+                                        name="content"
+                                        id="contentEditor"><%= blog ? (blog.content || '') : '' %></textarea>
+
+                                </div>
+
+
+                                <!-- HTML EDITOR -->
+
+                                <div id="htmlEditorPane"
+                                     class="d-none">
+
+                                    <textarea
+                                        id="rawHtmlTextarea"
+                                        class="html-code-editor form-control rounded-0"
+                                        placeholder="Write raw HTML code..."><%= blog ? (blog.content || '') : '' %></textarea>
+
+                                </div>
+
+
+                                <div id="ckeditorError"
+                                     class="ckeditor-error">
+
+                                    Editor could not be loaded.
+                                    Please refresh the page.
+
+                                </div>
+
+
+                                <small class="text-muted d-block mt-2">
+
+                                    You can switch between Visual Editor and HTML / Code Editor anytime.
+
+                                </small>
+
+                            </div>
+
+
+                            <!-- TAGS -->
+
+                            <div class="mb-0">
+
+                                <label class="form-label">
+
+                                    Tags
+
+                                    <span class="text-muted">
+                                        (comma separated)
+                                    </span>
+
+                                </label>
+
+
+                                <input type="text"
+                                       name="tags"
+                                       value="<%= blog ? (blog.tags || '') : '' %>"
+                                       placeholder="ssc, jobs, exam-tips"
+                                       class="form-control">
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         SEO META
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                SEO Meta
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- META TITLE -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Meta Title
+                                </label>
+
+
+                                <input type="text"
+                                       name="meta_title"
+                                       id="metaTitleInput"
+                                       value="<%= blog ? (blog.meta_title || '') : '' %>"
+                                       class="form-control">
+
+
+                                <small class="text-muted">
+
+                                    <span id="metaTitleCount">
+                                        0
+                                    </span>/60 characters
+
+                                </small>
+
+                            </div>
+
+
+                            <!-- META KEYWORDS -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Meta Keywords
+                                </label>
+
+
+                                <input type="text"
+                                       name="meta_keywords"
+                                       value="<%= blog ? (blog.meta_keywords || '') : '' %>"
+                                       class="form-control"
+                                       placeholder="comma, separated, keywords">
+
+                            </div>
+
+
+                            <!-- META DESCRIPTION -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Meta Description
+                                </label>
+
+
+                                <textarea name="meta_description"
+                                          id="metaDescInput"
+                                          rows="3"
+                                          class="form-control"><%= blog ? (blog.meta_description || '') : '' %></textarea>
+
+
+                                <small class="text-muted">
+
+                                    <span id="metaDescCount">
+                                        0
+                                    </span>/160 characters
+
+                                </small>
+
+                            </div>
+
+
+                            <!-- CANONICAL -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Canonical URL
+                                </label>
+
+
+                                <input type="url"
+                                       name="canonical_url"
+                                       value="<%= blog ? (blog.canonical_url || '') : '' %>"
+                                       class="form-control"
+                                       placeholder="https://example.com/blog/...">
+
+                            </div>
+
+
+                            <!-- ROBOTS -->
+
+                            <div class="d-flex align-items-center gap-4">
+
+                                <div class="form-check">
+
+                                    <input type="checkbox"
+                                           name="noindex"
+                                           class="form-check-input"
+                                           id="noindexCheck"
+                                           <%= blog && blog.noindex ? 'checked' : '' %>>
+
+
+                                    <label class="form-check-label"
+                                           for="noindexCheck">
+
+                                        No-index
+
+                                    </label>
+
+                                </div>
+
+
+                                <div class="form-check">
+
+                                    <input type="checkbox"
+                                           name="nofollow"
+                                           class="form-check-input"
+                                           id="nofollowCheck"
+                                           <%= blog && blog.nofollow ? 'checked' : '' %>>
+
+
+                                    <label class="form-check-label"
+                                           for="nofollowCheck">
+
+                                        No-follow
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         SEARCH ENGINE PREVIEW
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Search Engine Preview
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="border rounded p-4 bg-white">
+
+                                <p id="serpUrl"
+                                   class="text-muted small mb-1 text-truncate">
+
+                                    yoursite.com &rsaquo; blog &rsaquo;
+
+                                    <span id="serpSlug">
+                                        <%= blog ? (blog.slug || 'post-slug') : 'post-slug' %>
+                                    </span>
+
+                                </p>
+
+
+                                <p id="serpTitle"
+                                   class="text-primary fs-5 mb-1 text-truncate">
+
+                                    <%= blog && blog.meta_title
+                                        ? blog.meta_title
+                                        : (blog
+                                            ? blog.title
+                                            : 'Your Blog Title Appears Here') %>
+
+                                </p>
+
+
+                                <p id="serpDesc"
+                                   class="text-muted mb-0">
+
+                                    <%= blog && blog.meta_description
+                                        ? blog.meta_description
+                                        : 'Your meta description will appear here to preview how it looks on Google search results.' %>
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     RIGHT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-4">
+
+
+                    <!-- =================================================
+                         THUMBNAIL
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Thumbnail Image
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- PREVIEW -->
+
+                            <div class="w-100 ratio ratio-16x9 rounded border preview-bg-pattern overflow-hidden mb-3">
+
+                                <div id="thumbPreviewWrap"
+                                     class="<%= blog && blog.thumbnail ? '' : 'd-none' %> position-relative">
+
+                                    <img id="thumbPreviewImg"
+                                         src="<%= blog && blog.thumbnail ? blog.thumbnail : '' %>"
+                                         class="w-100 h-100 object-fit-contain p-1"
+                                         alt="Thumbnail preview">
+
+
+                                    <div class="position-absolute top-0 end-0 p-2">
+
+                                        <button type="button"
+                                                id="removeThumbBtn"
+                                                class="btn btn-danger btn-sm btn-icon"
+                                                title="Remove image">
+
+                                            <i class="ti ti-trash"></i>
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div id="thumbPlaceholder"
+                                     class="<%= blog && blog.thumbnail ? 'd-none' : '' %> d-flex flex-column align-items-center justify-content-center text-muted">
+
+                                    <i class="ti ti-photo fs-1 mb-2"></i>
+
+                                    <span class="small">
+                                        16:9 Image Preview
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- IMAGE TABS -->
+
+                            <div class="d-flex gap-2 mb-3">
+
+                                <button type="button"
+                                        id="tabThumbUploadBtn"
+                                        class="btn btn-primary btn-sm flex-fill">
+
+                                    Upload File
+
+                                </button>
+
+
+                                <button type="button"
+                                        id="tabThumbUrlBtn"
+                                        class="btn btn-outline-light btn-sm flex-fill">
+
+                                    Image URL
+
+                                </button>
+
+                            </div>
+
+
+                            <!-- FILE UPLOAD -->
+
+                            <div id="thumbUploadPane">
+
+                                <input type="file"
+                                       name="thumbnail"
+                                       id="thumbnailFileInput"
+                                       accept="image/*"
+                                       class="form-control">
+
+
+                                <small class="text-muted d-block mt-1">
+
+                                    JPG, PNG, WEBP, GIF (Max 5MB)
+
+                                </small>
+
+                            </div>
+
+
+                            <!-- URL -->
+
+                            <div id="thumbUrlPane"
+                                 class="d-none">
+
+                                <input type="text"
+                                       id="thumbnailUrlInput"
+                                       placeholder="https://example.com/image.jpg"
+                                       class="form-control">
+
+
+                                <input type="hidden"
+                                       name="thumbnail_url"
+                                       id="thumbnailUrlHidden"
+                                       value="<%= blog && blog.thumbnail ? blog.thumbnail : '' %>">
+
+
+                                <small class="text-muted d-block mt-1">
+
+                                    Paste direct image link and press Enter.
+
+                                </small>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         PUBLISH
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Publish
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- STATUS -->
+
+                            <div class="mb-4">
+
+                                <label class="form-label">
+                                    Status
+                                </label>
+
+
+                                <select name="status"
+                                        class="form-select">
+
+                                    <option value="draft"
+                                            <%= (!blog || blog.status === 'draft')
+                                                ? 'selected'
+                                                : '' %>>
+
+                                        Draft
+
+                                    </option>
+
+
+                                    <option value="published"
+                                            <%= blog && blog.status === 'published'
+                                                ? 'selected'
+                                                : '' %>>
+
+                                        Published
+
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- FEATURED -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+                                <label for="featuredCheck"
+                                       class="form-label mb-0">
+
+                                    Featured Post
+
+                                </label>
+
+
+                                <div class="form-check form-switch">
+
+                                    <input type="checkbox"
+                                           name="is_featured"
+                                           id="featuredCheck"
+                                           value="true"
+                                           class="form-check-input"
+                                           <%= blog && blog.is_featured
+                                               ? 'checked'
+                                               : '' %>>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- SUBMIT -->
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100">
+
+                                <i class="ti ti-device-floppy me-1"></i>
+
+                                <%= mode === 'edit'
+                                    ? 'Update Blog Post'
+                                    : 'Save Blog Post' %>
+
+                            </button>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         STATS
+                    ================================================== -->
+
+                    <% if (mode === 'edit' && blog) { %>
+
+                        <div class="card border-0 rounded-0 mb-4">
+
+                            <div class="card-header">
+
+                                <h5 class="card-title mb-0">
+                                    Stats
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body">
+
+                                <div class="text-muted">
+
+
+                                    <p class="mb-2">
+
+                                        <i class="ti ti-eye me-1"></i>
+
+                                        Views:
+
+                                        <%= blog.views || 0 %>
+
+                                    </p>
+
+
+                                    <p class="mb-2">
+
+                                        <i class="ti ti-file-text me-1"></i>
+
+                                        Word Count:
+
+                                        <%= blog.word_count || 0 %>
+
+                                        &middot;
+
+                                        Read Time:
+
+                                        <%= blog.read_time || 0 %> min
+
+                                    </p>
+
+
+                                    <p class="mb-0">
+
+                                        <i class="ti ti-heart me-1"></i>
+
+                                        Likes:
+
+                                        <%= blog.likes_count || 0 %>
+
+                                        &middot;
+
+                                        Comments:
+
+                                        <%= blog.comments_count || 0 %>
+
+                                    </p>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    <% } %>
+
+
+                </div>
+
+            </div>
+
+        </form>
+
+
+    </div>
+
 </div>
 
-<form method="POST" action="<%= formAction %>" enctype="multipart/form-data" id="blogForm">
-    <div class="grid grid-cols-12 gap-4 lg:gap-6">
 
-        <!-- Main Form Column -->
-        <div class="col-span-12 xxl:col-span-8 space-y-4 lg:space-y-6">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Content & Media</h2>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Title <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" id="titleInput" required value="<%= blog ? blog.title : '' %>" class="form-input w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                </div>
+<!-- =========================================================
+     CKEDITOR 5
+========================================================= -->
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Category</label>
-                        <select name="category_id" class="form-select w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                            <option value="">Select Category</option>
-                            <% categories.forEach(function(cat) { %>
-                                <option value="<%= cat.id %>" <%= blog && blog.category_id === cat.id ? 'selected' : '' %>><%= cat.name %></option>
-                            <% }) %>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Slug <span class="text-gray-400 font-normal">(optional)</span></label>
-                        <input type="text" name="slug" value="<%= blog ? blog.slug : '' %>" class="form-input w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    </div>
-                </div>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Short Description</label>
-                    <textarea name="short_description" rows="2" class="form-input w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-2 focus:ring-primary/20 focus:border-primary"><%= blog ? (blog.short_description || '') : '' %></textarea>
-                </div>
-
-                <!-- 2 EDITOR TABS HEADER -->
-                <div class="mb-2">
-                    <div class="flex items-center justify-between border-b border-gray-200 mb-3">
-                        <div class="flex gap-2">
-                            <button type="button" id="tabVisualBtn" class="py-2.5 px-5 text-sm font-semibold border-b-2 border-primary text-primary transition flex items-center gap-2 cursor-pointer">
-                                <span>📝</span> Visual Editor
-                            </button>
-                            <button type="button" id="tabHtmlBtn" class="py-2.5 px-5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition flex items-center gap-2 cursor-pointer">
-                                <span>💻</span> HTML / Code Editor
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- VISUAL EDITOR CONTAINER -->
-                    <div id="visualEditorPane">
-                        <textarea name="content" id="contentEditor"><%= blog ? (blog.content || '') : '' %></textarea>
-                    </div>
-
-                    <!-- RAW HTML CODE CONTAINER (EXPANDED LARGE HEIGHT) -->
-                    <div id="htmlEditorPane" class="hidden">
-                        <textarea id="rawHtmlTextarea" class="html-code-editor w-full h-[600px] rounded-lg p-4 border border-gray-800 shadow-inner focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="Type plain text or write raw HTML code... Switching tabs will automatically format HTML content."><%= blog ? (blog.content || '') : '' %></textarea>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-400 mt-2">Tip: Switch tabs anytime. Plain text in visual editor is converted to formatted HTML code automatically.</p>
-
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Tags <span class="text-gray-400 font-normal">(comma separated)</span></label>
-                    <input type="text" name="tags" value="<%= blog ? (blog.tags || '') : '' %>" placeholder="ssc, jobs, exam-tips" class="form-input w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-            </div>
-
-            <!-- SEO Meta Card -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">SEO Meta</h2>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Meta Title</label>
-                    <input type="text" name="meta_title" id="metaTitleInput" value="<%= blog ? (blog.meta_title || '') : '' %>" class="form-input w-full bg-white border border-gray-300 text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    <p class="text-xs text-gray-400 mt-1 mb-0"><span id="metaTitleCount">0</span>/60 characters</p>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Meta Keywords</label>
-                    <input type="text" name="meta_keywords" value="<%= blog ? (blog.meta_keywords || '') : '' %>" class="form-input w-full bg-white border border-gray-300 text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Meta Description</label>
-                    <textarea name="meta_description" id="metaDescInput" rows="2" class="form-input w-full bg-white border border-gray-300 text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= blog ? (blog.meta_description || '') : '' %></textarea>
-                    <p class="text-xs text-gray-400 mt-1 mb-0"><span id="metaDescCount">0</span>/160 characters</p>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Canonical URL</label>
-                    <input type="url" name="canonical_url" value="<%= blog ? (blog.canonical_url || '') : '' %>" class="form-input w-full bg-white border border-gray-300 text-sm rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center gap-2 text-sm font-medium text-gray-900"><input type="checkbox" name="noindex" <%= blog && blog.noindex ? 'checked' : '' %> class="w-4 h-4 text-primary rounded cursor-pointer"> No-index</label>
-                    <label class="flex items-center gap-2 text-sm font-medium text-gray-900"><input type="checkbox" name="nofollow" <%= blog && blog.nofollow ? 'checked' : '' %> class="w-4 h-4 text-primary rounded cursor-pointer"> No-follow</label>
-                </div>
-            </div>
-
-            <!-- SERP Preview Card -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Search Engine Preview</h2>
-                <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                    <p id="serpUrl" class="text-[13px] text-gray-600 mb-1 truncate">yoursite.com &rsaquo; blog &rsaquo; <span id="serpSlug"><%= blog ? blog.slug : 'post-slug' %></span></p>
-                    <p id="serpTitle" class="text-[#1a0dab] text-lg leading-snug mb-1 truncate"><%= blog && blog.meta_title ? blog.meta_title : (blog ? blog.title : 'Your Blog Title Appears Here') %></p>
-                    <p id="serpDesc" class="text-sm text-gray-600 line-clamp-2 mb-0"><%= blog && blog.meta_description ? blog.meta_description : 'Your meta description will appear here to preview how it looks on Google search results.' %></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar Column -->
-        <div class="col-span-12 xxl:col-span-4 space-y-4 lg:space-y-6">
-            <!-- THUMBNAIL CARD -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-3">Thumbnail Image</h2>
-
-                <div class="w-full aspect-video rounded-lg border border-gray-200 preview-bg-pattern overflow-hidden relative mb-3 flex items-center justify-center">
-                    <div id="thumbPreviewWrap" class="<%= blog && blog.thumbnail ? '' : 'hidden' %> w-full h-full relative group">
-                        <img id="thumbPreviewImg" src="<%= blog && blog.thumbnail ? blog.thumbnail : '' %>" class="w-full h-full object-contain p-1" alt="Thumbnail preview">
-                        
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
-                            <button type="button" id="removeThumbBtn" class="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition shadow" title="Remove image">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="thumbPlaceholder" class="<%= blog && blog.thumbnail ? 'hidden' : '' %> flex flex-col items-center justify-center text-gray-400 p-4 text-center">
-                        <svg class="w-10 h-10 mb-1 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span class="text-xs font-medium">16:9 Image Preview</span>
-                    </div>
-                </div>
-
-                <div class="flex gap-2 mb-3">
-                    <button type="button" id="tabThumbUploadBtn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-primary bg-primary text-white transition cursor-pointer">Upload File</button>
-                    <button type="button" id="tabThumbUrlBtn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-gray-300 bg-white text-gray-700 transition cursor-pointer">Image URL</button>
-                </div>
-
-                <div id="thumbUploadPane">
-                    <input type="file" name="thumbnail" id="thumbnailFileInput" accept="image/*" class="form-input w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    <p class="text-xs text-gray-400 mt-1 mb-0">JPG, PNG, WEBP, GIF (Max 5MB)</p>
-                </div>
-
-                <div id="thumbUrlPane" class="hidden">
-                    <input type="text" id="thumbnailUrlInput" placeholder="https://example.com/image.jpg" class="form-input w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                    <input type="hidden" name="thumbnail_url" id="thumbnailUrlHidden" value="<%= blog && blog.thumbnail ? blog.thumbnail : '' %>">
-                    <p class="text-xs text-gray-400 mt-1 mb-0">Paste direct image link & hit Enter to preview.</p>
-                </div>
-            </div>
-
-            <!-- Publish Box -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Publish</h2>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Status</label>
-                    <select name="status" class="form-select w-full bg-white border border-gray-300 text-sm text-gray-900 rounded-lg py-2.5 px-3 focus:ring-0 focus:border-primary">
-                        <option value="draft" <%= (!blog || blog.status === 'draft') ? 'selected' : '' %>>Draft</option>
-                        <option value="published" <%= blog && blog.status === 'published' ? 'selected' : '' %>>Published</option>
-                    </select>
-                </div>
-                <div class="flex items-center justify-between mb-5">
-                    <label class="text-sm font-medium text-gray-900">Featured Post</label>
-                    <input type="checkbox" name="is_featured" <%= blog && blog.is_featured ? 'checked' : '' %> class="w-5 h-5 text-primary border-gray-300 rounded cursor-pointer">
-                </div>
-                <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition shadow-sm cursor-pointer">
-                    <%= mode === 'edit' ? 'Update Post' : 'Save Post' %>
-                </button>
-            </div>
-
-            <% if (mode === 'edit' && blog) { %>
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-3">Stats</h2>
-                <div class="text-sm text-gray-600 space-y-2">
-                    <p class="mb-0">Views: <%= blog.views || 0 %></p>
-                    <p class="mb-0">Word Count: <%= blog.word_count || 0 %> &middot; Read Time: <%= blog.read_time || 0 %> min</p>
-                    <p class="mb-0">Likes: <%= blog.likes_count || 0 %> &middot; Comments: <%= blog.comments_count || 0 %></p>
-                </div>
-            </div>
-            <% } %>
-        </div>
-    </div>
-</form>
-
-<!-- CKEditor 5 Script -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 
 <script>
+
 (function () {
-  // ---------- CUSTOM IMAGE UPLOAD ADAPTER (WITH BASE64 FALLBACK) ----------
-  class SmartUploadAdapter {
-    constructor(loader) {
-      this.loader = loader;
+
+    /* =========================================================
+       CUSTOM IMAGE UPLOAD ADAPTER
+    ========================================================= */
+
+    function CustomUploadAdapterPlugin(editor) {
+
+        editor.plugins.get('FileRepository').createUploadAdapter =
+            (loader) => {
+
+                return {
+
+                    upload() {
+
+                        return loader.file.then(file => {
+
+                            return new Promise((resolve, reject) => {
+
+
+                                const data =
+                                    new FormData();
+
+
+                                data.append(
+                                    'upload',
+                                    file
+                                );
+
+
+                                <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+
+                                    data.append(
+                                        '_csrf',
+                                        '<%= csrfToken %>'
+                                    );
+
+                                <% } %>
+
+
+                                fetch(
+                                    '/admin/upload/editor-image',
+                                    {
+                                        method: 'POST',
+                                        body: data
+                                    }
+                                )
+
+                                .then(response => {
+
+                                    if (!response.ok) {
+
+                                        throw new Error(
+                                            'Image upload failed'
+                                        );
+
+                                    }
+
+                                    return response.json();
+
+                                })
+
+                                .then(result => {
+
+                                    if (result && result.url) {
+
+                                        resolve({
+                                            default: result.url
+                                        });
+
+                                    }
+
+                                    else if (
+                                        result &&
+                                        result.default
+                                    ) {
+
+                                        resolve({
+                                            default: result.default
+                                        });
+
+                                    }
+
+                                    else {
+
+                                        reject(
+                                            result &&
+                                            result.error
+                                                ? (
+                                                    result.error.message ||
+                                                    result.error
+                                                )
+                                                : 'Image upload failed'
+                                        );
+
+                                    }
+
+                                })
+
+                                .catch(error => {
+
+                                    console.error(
+                                        'CKEditor Upload Error:',
+                                        error
+                                    );
+
+                                    reject(error);
+
+                                });
+
+                            });
+
+                        });
+
+                    },
+
+
+                    abort() {}
+
+                };
+
+            };
+
     }
-    
-    upload() {
-      return this.loader.file.then((file) => new Promise((resolve, reject) => {
-        const formData = new FormData();
-        formData.append('upload', file);
 
-        fetch('/admin/upload/editor-image', { method: 'POST', body: formData })
-          .then((r) => r.json())
-          .then((data) => {
-            if (data && data.url) {
-              resolve({ default: data.url });
-            } else {
-              throw new Error('Server upload failed');
-            }
-          })
-          .catch(() => {
-            // Base64 fallback on error
-            const reader = new FileReader();
-            reader.onload = () => resolve({ default: reader.result });
-            reader.onerror = (err) => reject('Failed to read file: ' + err);
-            reader.readAsDataURL(file);
-          });
-      }));
-    }
-    abort() {}
-  }
 
-  function SmartUploadAdapterPlugin(editor) {
-    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new SmartUploadAdapter(loader);
-  }
 
-  // ---------- AUTOMATIC HTML FORMATTING FUNCTION ----------
-  function generateFormattedHtml(htmlContent) {
-    if (!htmlContent || !htmlContent.trim()) return '';
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
+    /* =========================================================
+       HTML FORMATTER
+    ========================================================= */
 
-      // Add auto-styling to image elements
-      const imgs = doc.querySelectorAll('img');
-      imgs.forEach(img => {
-        if (!img.style.maxWidth) img.style.maxWidth = '100%';
-        if (!img.style.height) img.style.height = 'auto';
-      });
+    function generateFormattedHtml(htmlContent) {
 
-      let rawHtml = doc.body.innerHTML;
-      let formatted = '';
-      let indent = '';
-      const reg = /(>)(<)(\/*)/g;
-      rawHtml = rawHtml.replace(reg, '$1\r\n$2$3');
-
-      rawHtml.split('\r\n').forEach(function(node) {
-        if (node.match(/.+<\/\w[^>]*>$/)) {
-          formatted += indent + node + '\r\n';
-        } else if (node.match(/^<\/\w/)) {
-          if (indent !== '') indent = indent.substring(2);
-          formatted += indent + node + '\r\n';
-        } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
-          formatted += indent + node + '\r\n';
-          indent += '  ';
-        } else {
-          formatted += indent + node + '\r\n';
+        if (!htmlContent || !htmlContent.trim()) {
+            return '';
         }
-      });
-      return formatted.trim();
-    } catch (e) {
-      return htmlContent;
-    }
-  }
 
-  // ---------- INITIALIZE CKEDITOR WITH IMAGE RESIZE & TEXT FORMATTING ----------
-  let editorInstance = null;
-  
-  ClassicEditor
-    .create(document.querySelector('#contentEditor'), {
-      extraPlugins: [SmartUploadAdapterPlugin],
-      toolbar: {
-        items: [
-          'heading', '|',
-          'fontSize', 'fontColor', 'fontBackgroundColor', '|',
-          'bold', 'italic', 'underline', 'strikethrough', '|',
-          'alignment', 'bulletedList', 'numberedList', 'outdent', 'indent', '|',
-          'link', 'blockQuote', 'insertTable', 'imageUpload', 'mediaEmbed', '|',
-          'undo', 'redo'
-        ],
-        shouldNotGroupWhenFull: true
-      },
-      image: {
-        resizeUnit: '%',
-        resizeOptions: [
-          { name: 'resizeImage:original', value: null, icon: 'original' },
-          { name: 'resizeImage:25', value: '25', icon: 'small' },
-          { name: 'resizeImage:50', value: '50', icon: 'medium' },
-          { name: 'resizeImage:75', value: '75', icon: 'large' }
-        ],
-        toolbar: [
-          'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|',
-          'toggleImageCaption', 'imageTextAlternative', '|',
-          'resizeImage'
-        ]
-      },
-      table: {
-        contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
-      },
-      link: { addTargetToExternalLinks: true }
-    })
-    .then((editor) => {
-      editorInstance = editor;
-      window.__blogEditor = editor;
-    })
-    .catch((err) => console.error('CKEditor init error:', err));
 
-  // ---------- TAB SWITCHING & AUTO HTML CONVERSION ----------
-  const tabVisualBtn = document.getElementById('tabVisualBtn');
-  const tabHtmlBtn = document.getElementById('tabHtmlBtn');
-  const visualPane = document.getElementById('visualEditorPane');
-  const htmlPane = document.getElementById('htmlEditorPane');
-  const rawHtmlTextarea = document.getElementById('rawHtmlTextarea');
+        try {
 
-  tabVisualBtn.addEventListener('click', function () {
-    // Sync HTML textarea -> Visual Editor
-    if (editorInstance) {
-      editorInstance.setData(rawHtmlTextarea.value);
-    }
-    
-    visualPane.classList.remove('hidden');
-    htmlPane.classList.add('hidden');
+            const parser =
+                new DOMParser();
 
-    tabVisualBtn.className = "py-2.5 px-5 text-sm font-semibold border-b-2 border-primary text-primary transition flex items-center gap-2 cursor-pointer";
-    tabHtmlBtn.className = "py-2.5 px-5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition flex items-center gap-2 cursor-pointer";
-  });
 
-  tabHtmlBtn.addEventListener('click', function () {
-    // Convert text into formatted HTML automatically on tab click
-    if (editorInstance) {
-      const editorData = editorInstance.getData();
-      rawHtmlTextarea.value = generateFormattedHtml(editorData);
-    }
-    
-    htmlPane.classList.remove('hidden');
-    visualPane.classList.add('hidden');
+            const doc =
+                parser.parseFromString(
+                    htmlContent,
+                    'text/html'
+                );
 
-    tabHtmlBtn.className = "py-2.5 px-5 text-sm font-semibold border-b-2 border-primary text-primary transition flex items-center gap-2 cursor-pointer";
-    tabVisualBtn.className = "py-2.5 px-5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition flex items-center gap-2 cursor-pointer";
-  });
 
-  // ---------- THUMBNAIL TAB & PREVIEW LOGIC ----------
-  const tabThumbUploadBtn = document.getElementById('tabThumbUploadBtn');
-  const tabThumbUrlBtn = document.getElementById('tabThumbUrlBtn');
-  const thumbUploadPane = document.getElementById('thumbUploadPane');
-  const thumbUrlPane = document.getElementById('thumbUrlPane');
+            const imgs =
+                doc.querySelectorAll('img');
 
-  const previewWrap = document.getElementById('thumbPreviewWrap');
-  const previewImg = document.getElementById('thumbPreviewImg');
-  const placeholder = document.getElementById('thumbPlaceholder');
-  const fileInput = document.getElementById('thumbnailFileInput');
-  const urlInput = document.getElementById('thumbnailUrlInput');
-  const urlHidden = document.getElementById('thumbnailUrlHidden');
-  const removeBtn = document.getElementById('removeThumbBtn');
 
-  function showPreview(src) {
-    if (!src) return clearPreview();
-    previewImg.src = src;
-    previewWrap.classList.remove('hidden');
-    placeholder.classList.add('hidden');
-  }
+            imgs.forEach(img => {
 
-  function clearPreview() {
-    previewImg.src = '';
-    previewWrap.classList.add('hidden');
-    placeholder.classList.remove('hidden');
-    fileInput.value = '';
-    urlInput.value = '';
-    urlHidden.value = '';
-  }
+                if (!img.style.maxWidth) {
+                    img.style.maxWidth = '100%';
+                }
 
-  function activateThumbTab(which) {
-    const isUpload = which === 'upload';
-    thumbUploadPane.classList.toggle('hidden', !isUpload);
-    thumbUrlPane.classList.toggle('hidden', isUpload);
+                if (!img.style.height) {
+                    img.style.height = 'auto';
+                }
 
-    tabThumbUploadBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg border transition cursor-pointer ' + (isUpload ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700');
-    tabThumbUrlBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg border transition cursor-pointer ' + (!isUpload ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700');
-  }
+            });
 
-  tabThumbUploadBtn.addEventListener('click', () => activateThumbTab('upload'));
-  tabThumbUrlBtn.addEventListener('click', () => activateThumbTab('url'));
 
-  fileInput.addEventListener('change', function (e) {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => showPreview(ev.target.result);
-      reader.readAsDataURL(file);
-    }
-  });
+            let rawHtml =
+                doc.body.innerHTML;
 
-  function applyUrl() {
-    const val = urlInput.value.trim();
-    if (val) {
-      urlHidden.value = val;
-      showPreview(val);
-    }
-  }
 
-  urlInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') applyUrl(); });
-  urlInput.addEventListener('blur', applyUrl);
+            let formatted = '';
 
-  removeBtn.addEventListener('click', clearPreview);
+            let indent = '';
 
-  <% if (blog && blog.thumbnail) { %>
-    if ("<%- blog.thumbnail %>".startsWith('http')) {
-      urlInput.value = "<%- blog.thumbnail %>";
-      activateThumbTab('url');
-    }
-  <% } %>
 
-  // ---------- SERP PREVIEW ----------
-  const titleInput = document.getElementById('titleInput');
-  const metaTitleInput = document.getElementById('metaTitleInput');
-  const metaDescInput = document.getElementById('metaDescInput');
-  const serpTitle = document.getElementById('serpTitle');
-  const serpDesc = document.getElementById('serpDesc');
-  const metaTitleCount = document.getElementById('metaTitleCount');
-  const metaDescCount = document.getElementById('metaDescCount');
+            const reg =
+                /(>)(<)(\/*)/g;
 
-  function updateSerp() {
-    serpTitle.textContent = metaTitleInput.value.trim() || titleInput.value.trim() || 'Your Blog Title Appears Here';
-    serpDesc.textContent = metaDescInput.value.trim() || 'Your meta description will appear here to preview how it looks on Google search results.';
-    metaTitleCount.textContent = metaTitleInput.value.length;
-    metaDescCount.textContent = metaDescInput.value.length;
-  }
 
-  [titleInput, metaTitleInput, metaDescInput].forEach(el => el.addEventListener('input', updateSerp));
-  updateSerp();
+            rawHtml =
+                rawHtml.replace(
+                    reg,
+                    '$1\r\n$2$3'
+                );
 
-  // ---------- SUBMIT HANDLER ----------
-  document.getElementById('blogForm').addEventListener('submit', function () {
-    if (!htmlPane.classList.contains('hidden') && editorInstance) {
-      editorInstance.setData(rawHtmlTextarea.value);
+
+            rawHtml
+                .split('\r\n')
+                .forEach(function (node) {
+
+                    if (
+                        node.match(
+                            /.+<\/\w[^>]*>$/
+                        )
+                    ) {
+
+                        formatted +=
+                            indent +
+                            node +
+                            '\r\n';
+
+                    }
+
+                    else if (
+                        node.match(/^<\/\w/)
+                    ) {
+
+                        if (indent !== '') {
+                            indent =
+                                indent.substring(2);
+                        }
+
+                        formatted +=
+                            indent +
+                            node +
+                            '\r\n';
+
+                    }
+
+                    else if (
+                        node.match(
+                            /^<\w[^>]*[^\/]>.*$/
+                        )
+                    ) {
+
+                        formatted +=
+                            indent +
+                            node +
+                            '\r\n';
+
+                        indent += '  ';
+
+                    }
+
+                    else {
+
+                        formatted +=
+                            indent +
+                            node +
+                            '\r\n';
+
+                    }
+
+                });
+
+
+            return formatted.trim();
+
+        }
+
+        catch (error) {
+
+            return htmlContent;
+
+        }
+
     }
 
-    if (!thumbUploadPane.classList.contains('hidden')) {
-      if (fileInput.files.length > 0) urlHidden.value = '';
-    } else {
-      fileInput.value = '';
+
+
+    /* =========================================================
+       INITIALIZE CKEDITOR
+    ========================================================= */
+
+    let editorInstance = null;
+
+
+    const editorElement =
+        document.querySelector(
+            '#contentEditor'
+        );
+
+
+    if (editorElement) {
+
+        ClassicEditor
+            .create(
+                editorElement,
+                {
+
+                    extraPlugins: [
+                        CustomUploadAdapterPlugin
+                    ],
+
+
+                    toolbar: {
+
+                        items: [
+
+                            'heading',
+
+                            '|',
+
+                            'fontSize',
+                            'fontColor',
+                            'fontBackgroundColor',
+
+                            '|',
+
+                            'bold',
+                            'italic',
+                            'underline',
+                            'strikethrough',
+
+                            '|',
+
+                            'alignment',
+
+                            'bulletedList',
+                            'numberedList',
+                            'outdent',
+                            'indent',
+
+                            '|',
+
+                            'link',
+                            'blockQuote',
+                            'insertTable',
+                            'uploadImage',
+                            'mediaEmbed',
+
+                            '|',
+
+                            'undo',
+                            'redo'
+
+                        ],
+
+                        shouldNotGroupWhenFull:
+                            true
+
+                    },
+
+
+                    image: {
+
+                        resizeUnit: '%',
+
+                        resizeOptions: [
+
+                            {
+                                name:
+                                    'resizeImage:original',
+                                value: null,
+                                icon: 'original'
+                            },
+
+                            {
+                                name:
+                                    'resizeImage:25',
+                                value: '25',
+                                icon: 'small'
+                            },
+
+                            {
+                                name:
+                                    'resizeImage:50',
+                                value: '50',
+                                icon: 'medium'
+                            },
+
+                            {
+                                name:
+                                    'resizeImage:75',
+                                value: '75',
+                                icon: 'large'
+                            }
+
+                        ],
+
+
+                        toolbar: [
+
+                            'imageStyle:inline',
+                            'imageStyle:block',
+                            'imageStyle:side',
+
+                            '|',
+
+                            'toggleImageCaption',
+                            'imageTextAlternative',
+
+                            '|',
+
+                            'resizeImage'
+
+                        ]
+
+                    },
+
+
+                    table: {
+
+                        contentToolbar: [
+
+                            'tableColumn',
+                            'tableRow',
+                            'mergeTableCells'
+
+                        ]
+
+                    },
+
+
+                    link: {
+
+                        addTargetToExternalLinks:
+                            true
+
+                    }
+
+                }
+            )
+
+
+            .then(editor => {
+
+                editorInstance =
+                    editor;
+
+
+                window.__blogEditor =
+                    editor;
+
+
+                console.log(
+                    'CKEditor initialized successfully'
+                );
+
+            })
+
+
+            .catch(error => {
+
+                console.error(
+                    'CKEditor initialization error:',
+                    error
+                );
+
+
+                const errorElement =
+                    document.getElementById(
+                        'ckeditorError'
+                    );
+
+
+                if (errorElement) {
+
+                    errorElement.style.display =
+                        'block';
+
+                }
+
+            });
+
     }
-  });
+
+
+
+    /* =========================================================
+       EDITOR TABS
+    ========================================================= */
+
+    const tabVisualBtn =
+        document.getElementById(
+            'tabVisualBtn'
+        );
+
+
+    const tabHtmlBtn =
+        document.getElementById(
+            'tabHtmlBtn'
+        );
+
+
+    const visualPane =
+        document.getElementById(
+            'visualEditorPane'
+        );
+
+
+    const htmlPane =
+        document.getElementById(
+            'htmlEditorPane'
+        );
+
+
+    const rawHtmlTextarea =
+        document.getElementById(
+            'rawHtmlTextarea'
+        );
+
+
+    if (
+        tabVisualBtn &&
+        tabHtmlBtn &&
+        visualPane &&
+        htmlPane &&
+        rawHtmlTextarea
+    ) {
+
+
+        tabVisualBtn.addEventListener(
+            'click',
+            function () {
+
+
+                if (editorInstance) {
+
+                    editorInstance.setData(
+                        rawHtmlTextarea.value
+                    );
+
+                }
+
+
+                visualPane.classList.remove(
+                    'd-none'
+                );
+
+
+                htmlPane.classList.add(
+                    'd-none'
+                );
+
+
+                tabVisualBtn.className =
+                    'btn btn-sm border-0 border-bottom border-primary text-primary rounded-0';
+
+
+                tabHtmlBtn.className =
+                    'btn btn-sm border-0 border-bottom border-transparent text-muted rounded-0';
+
+            }
+        );
+
+
+        tabHtmlBtn.addEventListener(
+            'click',
+            function () {
+
+
+                if (editorInstance) {
+
+                    const editorData =
+                        editorInstance.getData();
+
+
+                    rawHtmlTextarea.value =
+                        generateFormattedHtml(
+                            editorData
+                        );
+
+                }
+
+
+                htmlPane.classList.remove(
+                    'd-none'
+                );
+
+
+                visualPane.classList.add(
+                    'd-none'
+                );
+
+
+                tabHtmlBtn.className =
+                    'btn btn-sm border-0 border-bottom border-primary text-primary rounded-0';
+
+
+                tabVisualBtn.className =
+                    'btn btn-sm border-0 border-bottom border-transparent text-muted rounded-0';
+
+            }
+        );
+
+    }
+
+
+
+    /* =========================================================
+       THUMBNAIL
+    ========================================================= */
+
+    const tabThumbUploadBtn =
+        document.getElementById(
+            'tabThumbUploadBtn'
+        );
+
+
+    const tabThumbUrlBtn =
+        document.getElementById(
+            'tabThumbUrlBtn'
+        );
+
+
+    const thumbUploadPane =
+        document.getElementById(
+            'thumbUploadPane'
+        );
+
+
+    const thumbUrlPane =
+        document.getElementById(
+            'thumbUrlPane'
+        );
+
+
+    const previewWrap =
+        document.getElementById(
+            'thumbPreviewWrap'
+        );
+
+
+    const previewImg =
+        document.getElementById(
+            'thumbPreviewImg'
+        );
+
+
+    const placeholder =
+        document.getElementById(
+            'thumbPlaceholder'
+        );
+
+
+    const fileInput =
+        document.getElementById(
+            'thumbnailFileInput'
+        );
+
+
+    const urlInput =
+        document.getElementById(
+            'thumbnailUrlInput'
+        );
+
+
+    const urlHidden =
+        document.getElementById(
+            'thumbnailUrlHidden'
+        );
+
+
+    const removeBtn =
+        document.getElementById(
+            'removeThumbBtn'
+        );
+
+
+    function showPreview(src) {
+
+        if (!src) {
+
+            clearPreview();
+
+            return;
+
+        }
+
+
+        previewImg.src =
+            src;
+
+
+        previewWrap.classList.remove(
+            'd-none'
+        );
+
+
+        placeholder.classList.add(
+            'd-none'
+        );
+
+    }
+
+
+    function clearPreview() {
+
+        previewImg.src =
+            '';
+
+
+        previewWrap.classList.add(
+            'd-none'
+        );
+
+
+        placeholder.classList.remove(
+            'd-none'
+        );
+
+
+        fileInput.value =
+            '';
+
+
+        urlInput.value =
+            '';
+
+
+        urlHidden.value =
+            '';
+
+    }
+
+
+    function activateThumbTab(which) {
+
+        const isUpload =
+            which === 'upload';
+
+
+        thumbUploadPane.classList.toggle(
+            'd-none',
+            !isUpload
+        );
+
+
+        thumbUrlPane.classList.toggle(
+            'd-none',
+            isUpload
+        );
+
+
+        if (isUpload) {
+
+            tabThumbUploadBtn.className =
+                'btn btn-primary btn-sm flex-fill';
+
+            tabThumbUrlBtn.className =
+                'btn btn-outline-light btn-sm flex-fill';
+
+        }
+
+        else {
+
+            tabThumbUploadBtn.className =
+                'btn btn-outline-light btn-sm flex-fill';
+
+            tabThumbUrlBtn.className =
+                'btn btn-primary btn-sm flex-fill';
+
+        }
+
+    }
+
+
+    if (tabThumbUploadBtn) {
+
+        tabThumbUploadBtn.addEventListener(
+            'click',
+            () => activateThumbTab('upload')
+        );
+
+    }
+
+
+    if (tabThumbUrlBtn) {
+
+        tabThumbUrlBtn.addEventListener(
+            'click',
+            () => activateThumbTab('url')
+        );
+
+    }
+
+
+    if (fileInput) {
+
+        fileInput.addEventListener(
+            'change',
+            function (event) {
+
+                const file =
+                    event.target.files &&
+                    event.target.files[0];
+
+
+                if (file) {
+
+                    const reader =
+                        new FileReader();
+
+
+                    reader.onload =
+                        function (event) {
+
+                            showPreview(
+                                event.target.result
+                            );
+
+                        };
+
+
+                    reader.readAsDataURL(
+                        file
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    function applyUrl() {
+
+        const val =
+            urlInput.value.trim();
+
+
+        if (val) {
+
+            urlHidden.value =
+                val;
+
+
+            showPreview(
+                val
+            );
+
+        }
+
+    }
+
+
+    if (urlInput) {
+
+        urlInput.addEventListener(
+            'keyup',
+            function (event) {
+
+                if (event.key === 'Enter') {
+
+                    event.preventDefault();
+
+                    applyUrl();
+
+                }
+
+            }
+        );
+
+
+        urlInput.addEventListener(
+            'blur',
+            applyUrl
+        );
+
+    }
+
+
+    if (removeBtn) {
+
+        removeBtn.addEventListener(
+            'click',
+            clearPreview
+        );
+
+    }
+
+
+    <% if (blog && blog.thumbnail) { %>
+
+        if (
+            "<%- blog.thumbnail %>"
+                .startsWith('http')
+        ) {
+
+            if (urlInput) {
+
+                urlInput.value =
+                    "<%- blog.thumbnail %>";
+
+            }
+
+            activateThumbTab(
+                'url'
+            );
+
+        }
+
+    <% } %>
+
+
+
+    /* =========================================================
+       SERP PREVIEW
+    ========================================================= */
+
+    const titleInput =
+        document.getElementById(
+            'titleInput'
+        );
+
+
+    const slugInput =
+        document.querySelector(
+            'input[name="slug"]'
+        );
+
+
+    const metaTitleInput =
+        document.getElementById(
+            'metaTitleInput'
+        );
+
+
+    const metaDescInput =
+        document.getElementById(
+            'metaDescInput'
+        );
+
+
+    const serpSlug =
+        document.getElementById(
+            'serpSlug'
+        );
+
+
+    const serpTitle =
+        document.getElementById(
+            'serpTitle'
+        );
+
+
+    const serpDesc =
+        document.getElementById(
+            'serpDesc'
+        );
+
+
+    const metaTitleCount =
+        document.getElementById(
+            'metaTitleCount'
+        );
+
+
+    const metaDescCount =
+        document.getElementById(
+            'metaDescCount'
+        );
+
+
+    function updateSerp() {
+
+        if (!titleInput) {
+            return;
+        }
+
+
+        const title =
+            titleInput.value.trim();
+
+
+        const metaTitle =
+            metaTitleInput
+                ? metaTitleInput.value.trim()
+                : '';
+
+
+        const metaDesc =
+            metaDescInput
+                ? metaDescInput.value.trim()
+                : '';
+
+
+        const slug =
+            slugInput
+                ? slugInput.value.trim()
+                : 'post-slug';
+
+
+        if (serpSlug) {
+
+            serpSlug.textContent =
+                slug || 'post-slug';
+
+        }
+
+
+        if (serpTitle) {
+
+            serpTitle.textContent =
+                metaTitle ||
+                title ||
+                'Your Blog Title Appears Here';
+
+        }
+
+
+        if (serpDesc) {
+
+            serpDesc.textContent =
+                metaDesc ||
+                'Your meta description will appear here to preview how it looks on Google search results.';
+
+        }
+
+
+        if (metaTitleCount) {
+
+            metaTitleCount.textContent =
+                metaTitleInput
+                    ? metaTitleInput.value.length
+                    : 0;
+
+        }
+
+
+        if (metaDescCount) {
+
+            metaDescCount.textContent =
+                metaDescInput
+                    ? metaDescInput.value.length
+                    : 0;
+
+        }
+
+    }
+
+
+    [
+        titleInput,
+        slugInput,
+        metaTitleInput,
+        metaDescInput
+
+    ]
+
+    .filter(Boolean)
+
+    .forEach(function (element) {
+
+        element.addEventListener(
+            'input',
+            updateSerp
+        );
+
+    });
+
+
+    updateSerp();
+
+
+
+    /* =========================================================
+       FORM SUBMIT
+    ========================================================= */
+
+    const blogForm =
+        document.getElementById(
+            'blogForm'
+        );
+
+
+    if (blogForm) {
+
+        blogForm.addEventListener(
+            'submit',
+            function () {
+
+
+                /*
+                 * If HTML tab is open,
+                 * copy raw HTML into CKEditor.
+                 */
+
+                if (
+                    htmlPane &&
+                    !htmlPane.classList.contains('d-none') &&
+                    editorInstance
+                ) {
+
+                    editorInstance.setData(
+                        rawHtmlTextarea.value
+                    );
+
+                }
+
+
+                /*
+                 * CKEditor automatically syncs
+                 * textarea, but force it once more.
+                 */
+
+                if (editorInstance) {
+
+                    editorElement.value =
+                        editorInstance.getData();
+
+                }
+
+
+                /*
+                 * Thumbnail handling
+                 */
+
+                if (
+                    thumbUploadPane &&
+                    !thumbUploadPane.classList.contains('d-none')
+                ) {
+
+                    if (
+                        fileInput &&
+                        fileInput.files.length > 0
+                    ) {
+
+                        urlHidden.value =
+                            '';
+
+                    }
+
+                }
+
+                else {
+
+                    if (fileInput) {
+
+                        fileInput.value =
+                            '';
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
 })();
+
 </script>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+<%- include('../../adminlayout/footer') %>
