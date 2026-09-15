@@ -12,4 +12,5 @@ router.post('/blog-categories', controller.store);
 router.post('/blog-categories/:id/update', controller.update);
 router.post('/blog-categories/:id/delete', controller.destroy);
 
+
 module.exports = router;
