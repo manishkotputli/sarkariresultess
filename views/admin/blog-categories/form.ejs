@@ -1,0 +1,454 @@
+<%- include('../../adminlayout/header') %>
+
+<div class="page-wrapper">
+
+    <!-- Start Content -->
+    <div class="content pb-0">
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+            <div>
+                <h4 class="mb-1">
+                    <%= mode === 'edit' ? 'Edit Blog Category' : 'Add Blog Category' %>
+                </h4>
+
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+                            <a href="/admin">Home</a>
+                        </li>
+
+                        <li class="breadcrumb-item">
+                            <a href="/admin/blog-categories">
+                                Blog Categories
+                            </a>
+                        </li>
+
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <%= mode === 'edit' ? 'Edit' : 'Create' %>
+                        </li>
+
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+                <a href="/admin/blog-categories"
+                   class="btn btn-outline-light shadow text-dark">
+
+                    <i class="ti ti-arrow-left me-1"></i>
+                    Back to Blog Categories
+
+                </a>
+            </div>
+        </div>
+
+
+        <!-- =========================
+             FORM
+        ========================== -->
+        <form method="POST"
+              action="<%= formAction %>"
+              id="blogCategoryForm">
+
+            <div class="row g-4">
+
+                <!-- =========================
+                     MAIN FORM SECTION
+                ========================== -->
+                <div class="col-12 col-xl-8">
+
+                    <!-- Category Information -->
+                    <div class="card border-0 shadow-sm mb-4">
+
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="card-title mb-0 fw-bold">
+                                Category Information
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            <!-- Category Name -->
+                            <div class="mb-4">
+
+                                <label for="categoryName"
+                                       class="form-label text-muted fs-7">
+
+                                    Category Name
+                                    <span class="text-danger">*</span>
+
+                                </label>
+
+                                <input type="text"
+                                       name="name"
+                                       id="categoryName"
+                                       class="form-control"
+                                       value="<%= category ? (category.name || '') : '' %>"
+                                       placeholder="e.g. Government Jobs"
+                                       required
+                                       autocomplete="off">
+
+                                <small class="text-muted">
+                                    Enter a unique name for your blog category.
+                                </small>
+
+                            </div>
+
+
+                            <!-- Slug -->
+                            <div class="mb-0">
+
+                                <label for="categorySlug"
+                                       class="form-label text-muted fs-7">
+
+                                    Slug
+                                    <span class="text-danger">*</span>
+
+                                </label>
+
+                                <input type="text"
+                                       name="slug"
+                                       id="categorySlug"
+                                       class="form-control"
+                                       value="<%= category ? (category.slug || '') : '' %>"
+                                       placeholder="e.g. government-jobs"
+                                       required
+                                       autocomplete="off">
+
+                                <small class="text-muted">
+                                    Used in the category URL.
+                                    Example:
+                                    <span class="text-dark">
+                                        /blog/category/government-jobs
+                                    </span>
+                                </small>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <!-- Preview Card -->
+                    <div class="card border-0 shadow-sm">
+
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="card-title mb-0 fw-bold">
+                                Category Preview
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="border rounded p-4 bg-light">
+
+                                <div class="d-flex align-items-center gap-3">
+
+                                    <div class="avatar avatar-lg bg-primary rounded-circle d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-category fs-24 text-white"></i>
+                                    </div>
+
+                                    <div>
+                                        <h5 class="mb-1"
+                                            id="previewCategoryName">
+
+                                            <%= category
+                                                ? (category.name || 'Category Name')
+                                                : 'Category Name' %>
+
+                                        </h5>
+
+                                        <p class="text-muted mb-0">
+
+                                            /blog/category/<span id="previewCategorySlug"><%= category
+                                                ? (category.slug || 'category-slug')
+                                                : 'category-slug' %></span>
+
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- =========================
+                     SETTINGS SIDEBAR
+                ========================== -->
+                <div class="col-12 col-xl-4">
+
+                    <div class="card border-0 shadow-sm sticky-top"
+                         style="top: 80px;">
+
+                        <div class="card-header bg-white border-bottom py-3">
+
+                            <h5 class="card-title mb-0 fw-bold">
+                                Settings
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <!-- Status -->
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+                                <label class="form-check-label fw-semibold text-dark mb-0"
+                                       for="categoryStatusSwitch">
+
+                                    Active Status
+
+                                </label>
+
+                                <div class="form-check form-switch mb-0 ps-0">
+
+                                    <input type="checkbox"
+                                           name="status"
+                                           id="categoryStatusSwitch"
+                                           class="form-check-input ms-0"
+                                           <%= (!category || category.status) ? 'checked' : '' %>>
+
+                                </div>
+
+                            </div>
+
+
+                            <hr class="my-3 text-border">
+
+
+                            <!-- Category Information -->
+                            <div class="mb-4">
+
+                                <h6 class="fw-semibold mb-3">
+                                    Category Details
+                                </h6>
+
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+
+                                    <span class="text-muted">
+                                        Status
+                                    </span>
+
+                                    <span id="statusPreview"
+                                          class="badge <%= (!category || category.status)
+                                              ? 'badge-soft-success'
+                                              : 'badge-soft-danger' %>">
+
+                                        <%= (!category || category.status)
+                                            ? 'Active'
+                                            : 'Inactive' %>
+
+                                    </span>
+
+                                </div>
+
+                                <% if (mode === 'edit' && category) { %>
+
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+
+                                        <span class="text-muted">
+                                            Category ID
+                                        </span>
+
+                                        <span class="fw-semibold text-dark">
+                                            #<%= category.id %>
+                                        </span>
+
+                                    </div>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <!-- Submit -->
+                            <button type="submit"
+                                    class="btn btn-primary w-100 py-2 fw-semibold"
+                                    id="submitBtn">
+
+                                <i class="ti ti-device-floppy me-1"></i>
+
+                                <%= mode === 'edit'
+                                    ? 'Update Blog Category'
+                                    : 'Save Blog Category' %>
+
+                            </button>
+
+
+                            <!-- Cancel -->
+                            <a href="/admin/blog-categories"
+                               class="btn btn-light w-100 mt-2">
+
+                                <i class="ti ti-x me-1"></i>
+                                Cancel
+
+                            </a>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+<!-- =========================
+     BLOG CATEGORY SCRIPT
+========================= -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const nameInput = document.getElementById('categoryName');
+    const slugInput = document.getElementById('categorySlug');
+
+    const previewName = document.getElementById('previewCategoryName');
+    const previewSlug = document.getElementById('previewCategorySlug');
+
+    const statusSwitch = document.getElementById('categoryStatusSwitch');
+    const statusPreview = document.getElementById('statusPreview');
+
+    const form = document.getElementById('blogCategoryForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+
+    /* ==========================================
+       SLUGIFY
+    ========================================== */
+    function slugify(text) {
+
+        return text
+            .toString()
+            .toLowerCase()
+            .trim()
+            .replace(/[\s_]+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
+
+    }
+
+
+    /* ==========================================
+       AUTO SLUG
+    ========================================== */
+
+    let slugManuallyChanged = false;
+
+    slugInput.addEventListener('input', function () {
+
+        slugManuallyChanged = true;
+
+        previewSlug.textContent =
+            this.value || 'category-slug';
+
+    });
+
+
+    nameInput.addEventListener('input', function () {
+
+        previewName.textContent =
+            this.value || 'Category Name';
+
+        /*
+         * Only auto-generate slug when user
+         * has not manually edited slug.
+         */
+        if (!slugManuallyChanged) {
+
+            const generatedSlug = slugify(this.value);
+
+            slugInput.value = generatedSlug;
+
+            previewSlug.textContent =
+                generatedSlug || 'category-slug';
+        }
+
+    });
+
+
+    /* ==========================================
+       STATUS PREVIEW
+    ========================================== */
+
+    if (statusSwitch) {
+
+        statusSwitch.addEventListener('change', function () {
+
+            if (this.checked) {
+
+                statusPreview.textContent = 'Active';
+
+                statusPreview.classList.remove(
+                    'badge-soft-danger'
+                );
+
+                statusPreview.classList.add(
+                    'badge-soft-success'
+                );
+
+            } else {
+
+                statusPreview.textContent = 'Inactive';
+
+                statusPreview.classList.remove(
+                    'badge-soft-success'
+                );
+
+                statusPreview.classList.add(
+                    'badge-soft-danger'
+                );
+
+            }
+
+        });
+
+    }
+
+
+    /* ==========================================
+       FORM SUBMIT LOADING
+    ========================================== */
+
+    if (form) {
+
+        form.addEventListener('submit', function () {
+
+            if (submitBtn) {
+
+                submitBtn.disabled = true;
+
+                submitBtn.innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-1"
+                          role="status"
+                          aria-hidden="true"></span>
+                    <%= mode === 'edit'
+                        ? 'Updating...'
+                        : 'Saving...' %>
+                `;
+
+            }
+
+        });
+
+    }
+
+});
+</script>
+
+
+<%- include('../../adminlayout/footer') %>
