@@ -79,29 +79,94 @@
 						<i class="ti ti-arrow-bar-to-right"></i>
 					</button>
 
-				<div class="me-auto d-flex align-items-center header-search d-lg-flex d-none">
-    <!-- Premium Welcome Header -->
-    <div class="d-flex align-items-center gap-2 py-1 px-3 rounded-pill shadow-sm border border-light-subtle" 
-         style="background: #fff; backdrop-filter: blur(10px);">
-        
-        <!-- Welcome Label -->
-        <span class="fs-15 text-secondary tracking-wide" style="font-weight: 700;">
+<div class="me-auto d-flex align-items-center header-search d-lg-flex d-none">
+
+    <div class="d-flex align-items-center gap-2">
+
+        <!-- Welcome -->
+        <span class="admin-welcome-label">
             Welcome,
         </span>
 
-        <!-- Super Bold Premium Name (Large & Vibrant Gradient) -->
-        <span class="fs-4 tracking-tight" 
-              style="font-weight: 900; background: #000000; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.05));">
-            <%= (typeof currentUser !== 'undefined' && currentUser && currentUser.name)
+        <!-- Admin Name -->
+        <span class="admin-welcome-name">
+            <%= (typeof currentUser !== 'undefined' &&
+                 currentUser &&
+                 currentUser.name)
                 ? currentUser.name
                 : 'Admin' %>
         </span>
 
-        <!-- Large Wave Emoji -->
-        <span class="fs-4">👋</span>
+        <!-- Wave -->
+        <span class="admin-welcome-wave">
+            👋
+        </span>
 
     </div>
+
 </div>
+
+
+<style>
+
+    /* ========================================
+       WELCOME
+    ======================================== */
+
+    .admin-welcome-label {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #ff9800 !important;
+    }
+
+
+    /* ========================================
+       ADMIN NAME
+       LIGHT = BLACK
+    ======================================== */
+
+    .admin-welcome-name {
+        font-size: 28px !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.8px !important;
+        line-height: 1 !important;
+
+        color: #000000 !important;
+
+        -webkit-text-fill-color: #000000 !important;
+
+        background: none !important;
+        background-image: none !important;
+
+        opacity: 1 !important;
+    }
+
+
+    /* ========================================
+       DARK THEME = WHITE
+       SAME SYSTEM AS LOGO
+    ======================================== */
+
+    [data-bs-theme="dark"] .admin-welcome-name {
+        color: #ffffff !important;
+
+        -webkit-text-fill-color: #ffffff !important;
+
+        background: none !important;
+        background-image: none !important;
+    }
+
+
+    /* ========================================
+       WAVE
+    ======================================== */
+
+    .admin-welcome-wave {
+        font-size: 28px !important;
+        line-height: 1 !important;
+    }
+
+</style>
 
 				</div>
 
@@ -426,7 +491,7 @@
 
 					<!-- Logo Dark -->
 					<a href="index.html" class="dark-logo">
-						<img src="/admin_assets/img/logo-white.svg" alt="Logo">
+						<img src="/admin_assets/img/logosd.png" alt="Logo" width="175px">
 					</a>
 				</div>
 				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
@@ -704,45 +769,47 @@
             </li>
 
 
-            <!-- =====================================================
-                 SALES & FINANCE
-            ====================================================== -->
+          <!-- =====================================================
+     SALES & FINANCE
+====================================================== -->
 
-            <li class="menu-title">
-                <span>Sales & Finance</span>
-            </li>
+<li class="menu-title">
+    <span>Sales & Finance</span>
+</li>
 
-            <li>
-                <ul>
+<li>
+    <ul>
 
-                    <li class="submenu">
+        <li class="submenu">
 
-                        <a href="javascript:void(0);">
-                            <i class="ti ti-currency-dollar"></i>
-                            <span>Finance</span>
-                            <span class="menu-arrow"></span>
-                        </a>
+            <a href="javascript:void(0);">
+                <i class="ti ti-currency-dollar"></i>
+                <span>Finance</span>
+                <span class="menu-arrow"></span>
+            </a>
 
-                        <ul>
+            <ul>
 
-                            <li>
-                                <a href="/admin/sales/purchases">
-                                    Purchases
-                                </a>
-                            </li>
+                <!-- Purchases -->
+                <li>
+                    <a href="/admin/purchases">
+                        Purchases
+                    </a>
+                </li>
 
-                            <li>
-                                <a href="/admin/sales/income-expenses">
-                                    Income & Expenses
-                                </a>
-                            </li>
+                <!-- Income & Expenses -->
+                <li>
+                    <a href="/admin/income-expense">
+                        Income & Expenses
+                    </a>
+                </li>
 
-                        </ul>
+            </ul>
 
-                    </li>
+        </li>
 
-                </ul>
-            </li>
+    </ul>
+</li>
 
 
             <!-- =====================================================
@@ -793,7 +860,7 @@
                 <ul>
 
                     <li>
-                        <a href="/admin/roles-permissions">
+                        <a href="/admin/roles">
                             <i class="ti ti-shield-lock"></i>
                             <span>Roles & Permissions</span>
                         </a>

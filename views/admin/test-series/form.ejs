@@ -1,76 +1,1912 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold"><%= mode === 'edit' ? 'Edit Test Series' : 'Add Test Series' %></h1>
-    <a href="/admin/test-series" class="text-sm font-medium text-gray-600 hover:text-primary flex items-center gap-1"><i class="icon-arrow-left"></i> Back to Test Series</a>
-</div>
 
-<form method="POST" action="<%= formAction %>" enctype="multipart/form-data">
-    <div class="grid grid-cols-12 gap-4 lg:gap-6">
-        <div class="col-span-12 xxl:col-span-8 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Test Series Details</h2>
+<style>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Title <span class="text-danger">*</span></label>
-                    <input type="text" name="title" required value="<%= item ? item.title : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
+    /* =========================================================
+       TEST SERIES FORM
+    ========================================================== */
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Slug <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <input type="text" name="slug" value="<%= item ? item.slug : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
+    .series-thumbnail-preview {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+    }
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Description</label>
-                    <textarea name="description" rows="8" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= item ? (item.description || '') : '' %></textarea>
-                </div>
+    .series-thumbnail-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .series-thumbnail-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #98a2b3;
+    }
+
+    .series-thumbnail-placeholder i {
+        font-size: 42px;
+        margin-bottom: 8px;
+    }
+
+    .price-preview {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 14px 16px;
+    }
+
+    .price-preview .current-price {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0d6efd;
+    }
+
+    .price-preview .old-price {
+        font-size: 14px;
+        color: #98a2b3;
+        text-decoration: line-through;
+    }
+
+    .price-preview .discount-badge {
+        font-size: 11px;
+        padding: 4px 7px;
+    }
+
+    .series-info-box {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .series-info-box .info-label {
+        font-size: 12px;
+        color: #98a2b3;
+        margin-bottom: 3px;
+    }
+
+    .series-info-box .info-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #344054;
+    }
+
+    .exam-setting-box {
+        background: #f8fafc;
+        border: 1px solid #eaecf0;
+        border-radius: 8px;
+        padding: 12px 14px;
+    }
+
+</style>
+
+
+<!-- =========================================================
+     PAGE WRAPPER
+========================================================= -->
+
+<div class="page-wrapper">
+
+    <div class="content pb-0">
+
+
+        <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+
+                    <%= mode === 'edit'
+                        ? 'Edit Test Series'
+                        : 'Add Test Series' %>
+
+                </h4>
+
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin/test-series">
+                                Test Series
+                            </a>
+
+                        </li>
+
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            <%= mode === 'edit'
+                                ? 'Edit'
+                                : 'Add' %>
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
             </div>
+
+
+            <div>
+
+                <a href="/admin/test-series"
+                   class="btn btn-outline-light">
+
+                    <i class="ti ti-arrow-left me-1"></i>
+
+                    Back to Test Series
+
+                </a>
+
+            </div>
+
         </div>
 
-        <div class="col-span-12 xxl:col-span-4 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Thumbnail</h2>
-                <% if (item && item.thumbnail) { %>
-                    <img src="<%= item.thumbnail %>" class="w-full h-40 object-cover rounded-lg mb-3 bg-light" alt="">
-                <% } %>
-                <input type="file" name="thumbnail" accept="image/*" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                <p class="text-xs text-gray-400 mt-1 mb-0">JPG/PNG/WEBP, max 5MB<%= item && item.thumbnail ? '. Leave blank to keep current image.' : '' %></p>
-            </div>
 
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-    <h2 class="text-gray-900 text-lg font-bold mb-1">Exam Settings</h2>
-    <p class="text-xs text-gray-400 mb-4">Defaults for tests in this series — each test can override these.</p>
-    <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-900 mb-2">Default Duration (minutes)</label>
-        <input type="number" min="1" name="default_duration_minutes" value="<%= item && item.default_duration_minutes ? item.default_duration_minutes : '' %>" placeholder="e.g. 60" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-    </div>
-    <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">Default Negative Marking</label>
-        <input type="number" step="0.01" min="0" name="default_negative_marking" value="<%= item ? item.default_negative_marking : '0' %>" placeholder="e.g. 0.25" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-    </div>
-</div>
+        <!-- =====================================================
+             ALERTS
+        ====================================================== -->
 
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Pricing &amp; Status</h2>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Price (₹) <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" name="price" required value="<%= item ? item.price : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Discount Price (₹)</label>
-                    <input type="number" step="0.01" name="discount_price" value="<%= item && item.discount_price ? item.discount_price : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="flex items-center justify-between mb-4">
-                    <label class="text-sm font-medium text-gray-900">Active</label>
-                    <input type="checkbox" name="is_active" <%= (!item || item.is_active) ? 'checked' : '' %> class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                </div>
-                <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover transition cursor-pointer">
-                    <%= mode === 'edit' ? 'Update Test Series' : 'Save Test Series' %>
+        <% if (typeof errors !== 'undefined' &&
+               errors &&
+               errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
                 </button>
-            </div>
-        </div>
-    </div>
-</form>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+            </div>
+
+        <% } %>
+
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <%= success %>
+
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =====================================================
+             FORM
+        ====================================================== -->
+
+        <form method="POST"
+              action="<%= formAction %>"
+              enctype="multipart/form-data"
+              id="testSeriesForm">
+
+
+            <div class="row">
+
+
+                <!-- =================================================
+                     LEFT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-8">
+
+
+                    <!-- =================================================
+                         TEST SERIES DETAILS
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Test Series Details
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- TITLE -->
+
+                            <div class="mb-4">
+
+                                <label for="seriesTitle"
+                                       class="form-label">
+
+                                    Test Series Title
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input type="text"
+                                       name="title"
+                                       id="seriesTitle"
+                                       required
+                                       value="<%= item ? (item.title || '') : '' %>"
+                                       class="form-control"
+                                       placeholder="Enter test series title"
+                                       autocomplete="off">
+
+                            </div>
+
+
+                            <!-- SLUG -->
+
+                            <div class="mb-4">
+
+                                <label for="seriesSlug"
+                                       class="form-label">
+
+                                    Slug
+
+                                    <span class="text-muted">
+                                        (optional)
+                                    </span>
+
+                                </label>
+
+
+                                <input type="text"
+                                       name="slug"
+                                       id="seriesSlug"
+                                       value="<%= item ? (item.slug || '') : '' %>"
+                                       class="form-control"
+                                       placeholder="test-series-slug"
+                                       autocomplete="off">
+
+
+                                <small class="text-muted d-block mt-1">
+
+                                    Used for the Test Series URL.
+                                    Leave blank to generate it automatically.
+
+                                </small>
+
+                            </div>
+
+
+                            <!-- DESCRIPTION -->
+
+                            <div>
+
+                                <label for="seriesDescription"
+                                       class="form-label">
+
+                                    Description
+
+                                </label>
+
+
+                                <textarea name="description"
+                                          id="seriesDescription"
+                                          rows="10"
+                                          class="form-control"
+                                          placeholder="Enter test series description..."><%= item ? (item.description || '') : '' %></textarea>
+
+
+                                <div class="text-end text-muted small mt-1">
+
+                                    <span id="descriptionCount">
+                                        0
+                                    </span>
+
+                                    characters
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         EXAM SETTINGS
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h5 class="card-title mb-1">
+                                    Exam Settings
+                                </h5>
+
+                                <p class="text-muted small mb-0">
+
+                                    Default settings for tests in this
+                                    series. Individual tests can override
+                                    these settings.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+
+                                <!-- DURATION -->
+
+                                <div class="col-md-6 mb-4 mb-md-0">
+
+                                    <label for="defaultDuration"
+                                           class="form-label">
+
+                                        Default Duration
+
+                                    </label>
+
+
+                                    <div class="input-group">
+
+                                        <input type="number"
+                                               min="1"
+                                               name="default_duration_minutes"
+                                               id="defaultDuration"
+                                               value="<%= item && item.default_duration_minutes ? item.default_duration_minutes : '' %>"
+                                               placeholder="e.g. 60"
+                                               class="form-control">
+
+                                        <span class="input-group-text">
+                                            Minutes
+                                        </span>
+
+                                    </div>
+
+
+                                    <small class="text-muted d-block mt-1">
+
+                                        Default time allowed for each test.
+
+                                    </small>
+
+                                </div>
+
+
+                                <!-- NEGATIVE MARKING -->
+
+                                <div class="col-md-6">
+
+                                    <label for="negativeMarking"
+                                           class="form-label">
+
+                                        Default Negative Marking
+
+                                    </label>
+
+
+                                    <div class="input-group">
+
+                                        <input type="number"
+                                               step="0.01"
+                                               min="0"
+                                               name="default_negative_marking"
+                                               id="negativeMarking"
+                                               value="<%= item ? (item.default_negative_marking || '0') : '0' %>"
+                                               placeholder="e.g. 0.25"
+                                               class="form-control">
+
+                                        <span class="input-group-text">
+                                            Marks
+                                        </span>
+
+                                    </div>
+
+
+                                    <small class="text-muted d-block mt-1">
+
+                                        Negative marks deducted for an
+                                        incorrect answer.
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- SETTINGS PREVIEW -->
+
+                            <div class="exam-setting-box mt-4">
+
+                                <div class="row g-3">
+
+
+                                    <div class="col-sm-6">
+
+                                        <div class="d-flex align-items-center gap-2">
+
+                                            <div class="avatar avatar-sm bg-soft-primary rounded">
+
+                                                <i class="ti ti-clock text-primary"></i>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <small class="text-muted d-block">
+                                                    Duration
+                                                </small>
+
+                                                <strong id="durationPreview">
+
+                                                    <%= item && item.default_duration_minutes
+                                                        ? item.default_duration_minutes
+                                                        : 0 %>
+
+                                                    Minutes
+
+                                                </strong>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-sm-6">
+
+                                        <div class="d-flex align-items-center gap-2">
+
+                                            <div class="avatar avatar-sm bg-soft-warning rounded">
+
+                                                <i class="ti ti-alert-triangle text-warning"></i>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <small class="text-muted d-block">
+                                                    Negative Marking
+                                                </small>
+
+                                                <strong id="negativePreview">
+
+                                                    <%= item
+                                                        ? (item.default_negative_marking || 0)
+                                                        : 0 %>
+
+                                                    Marks
+
+                                                </strong>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         TEST SERIES PREVIEW
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Test Series Preview
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="border rounded p-3">
+
+                                <div class="d-flex align-items-center gap-3">
+
+
+                                    <!-- ICON -->
+
+                                    <div class="avatar avatar-lg bg-soft-primary rounded">
+
+                                        <i class="ti ti-clipboard-list fs-24 text-primary"></i>
+
+                                    </div>
+
+
+                                    <!-- CONTENT -->
+
+                                    <div class="flex-grow-1">
+
+                                        <h5 id="previewSeriesTitle"
+                                            class="mb-1">
+
+                                            <%= item && item.title
+                                                ? item.title
+                                                : 'Your Test Series Title' %>
+
+                                        </h5>
+
+
+                                        <p id="previewSeriesDescription"
+                                           class="text-muted mb-2">
+
+                                            <%= item && item.description
+                                                ? item.description.substring(0, 180)
+                                                : 'Your test series description will appear here.' %>
+
+                                        </p>
+
+
+                                        <div class="d-flex align-items-center gap-3 flex-wrap small text-muted">
+
+
+                                            <span>
+
+                                                <i class="ti ti-clock me-1"></i>
+
+                                                <span id="previewDuration2">
+
+                                                    <%= item && item.default_duration_minutes
+                                                        ? item.default_duration_minutes
+                                                        : 0 %>
+
+                                                </span>
+
+                                                Min
+
+                                            </span>
+
+
+                                            <span>
+
+                                                <i class="ti ti-alert-triangle me-1"></i>
+
+                                                <span id="previewNegative">
+
+                                                    <%= item
+                                                        ? (item.default_negative_marking || 0)
+                                                        : 0 %>
+
+                                                </span>
+
+                                                Negative
+
+                                            </span>
+
+
+                                            <span id="previewSeriesStatus">
+
+                                                <i class="ti ti-circle-check me-1"></i>
+
+                                                <%= (!item || item.is_active)
+                                                    ? 'Active'
+                                                    : 'Inactive' %>
+
+                                            </span>
+
+
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         EDIT INFORMATION
+                    ================================================== -->
+
+                    <% if (mode === 'edit' && item) { %>
+
+                        <div class="card border-0 rounded-0 mb-4">
+
+                            <div class="card-header">
+
+                                <h5 class="card-title mb-0">
+                                    Test Series Information
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body">
+
+                                <div class="row g-3">
+
+
+                                    <!-- ID -->
+
+                                    <div class="col-md-4">
+
+                                        <div class="series-info-box">
+
+                                            <div class="info-label">
+                                                Test Series ID
+                                            </div>
+
+                                            <div class="info-value">
+
+                                                #<%= item.id %>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- DURATION -->
+
+                                    <div class="col-md-4">
+
+                                        <div class="series-info-box">
+
+                                            <div class="info-label">
+                                                Default Duration
+                                            </div>
+
+                                            <div class="info-value">
+
+                                                <%= item.default_duration_minutes || 0 %>
+                                                Minutes
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- STATUS -->
+
+                                    <div class="col-md-4">
+
+                                        <div class="series-info-box">
+
+                                            <div class="info-label">
+                                                Status
+                                            </div>
+
+                                            <div class="info-value"
+                                                 id="infoStatus">
+
+                                                <%= item.is_active
+                                                    ? 'Active'
+                                                    : 'Inactive' %>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    <% } %>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     RIGHT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-4">
+
+
+                    <!-- =================================================
+                         THUMBNAIL
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Thumbnail Image
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- PREVIEW -->
+
+                            <div class="series-thumbnail-preview mb-3">
+
+
+                                <% if (item && item.thumbnail) { %>
+
+
+                                    <div id="thumbnailWrap"
+                                         class="w-100 h-100">
+
+                                        <img src="<%= item.thumbnail %>"
+                                             id="thumbnailPreview"
+                                             alt="Test Series Thumbnail">
+
+
+                                        <div class="position-absolute top-0 end-0 p-2">
+
+                                            <button type="button"
+                                                    id="removeThumbnail"
+                                                    class="btn btn-danger btn-sm btn-icon"
+                                                    title="Remove image">
+
+                                                <i class="ti ti-trash"></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div id="thumbnailPlaceholder"
+                                         class="series-thumbnail-placeholder d-none">
+
+                                        <i class="ti ti-photo"></i>
+
+                                        <span>
+                                            16:9 Image Preview
+                                        </span>
+
+                                    </div>
+
+
+                                <% } else { %>
+
+
+                                    <div id="thumbnailWrap"
+                                         class="w-100 h-100 d-none">
+
+                                        <img src=""
+                                             id="thumbnailPreview"
+                                             alt="Test Series Thumbnail">
+
+
+                                        <div class="position-absolute top-0 end-0 p-2">
+
+                                            <button type="button"
+                                                    id="removeThumbnail"
+                                                    class="btn btn-danger btn-sm btn-icon"
+                                                    title="Remove image">
+
+                                                <i class="ti ti-trash"></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div id="thumbnailPlaceholder"
+                                         class="series-thumbnail-placeholder">
+
+                                        <i class="ti ti-photo"></i>
+
+                                        <span>
+                                            16:9 Image Preview
+                                        </span>
+
+                                    </div>
+
+
+                                <% } %>
+
+
+                            </div>
+
+
+                            <!-- FILE -->
+
+                            <div class="mb-2">
+
+                                <label for="thumbnailInput"
+                                       class="form-label">
+
+                                    Upload Thumbnail
+
+                                </label>
+
+
+                                <input type="file"
+                                       name="thumbnail"
+                                       id="thumbnailInput"
+                                       accept="image/*"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <small class="text-muted">
+
+                                JPG, PNG, WEBP or GIF
+                                <br>
+                                Maximum size: 5MB
+
+                                <% if (item && item.thumbnail) { %>
+
+                                    <br>
+                                    Leave blank to keep the current image.
+
+                                <% } %>
+
+                            </small>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PRICING & STATUS
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Pricing & Status
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- PRICE -->
+
+                            <div class="mb-4">
+
+                                <label for="priceInput"
+                                       class="form-label">
+
+                                    Price
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <div class="input-group">
+
+                                    <span class="input-group-text">
+                                        ₹
+                                    </span>
+
+
+                                    <input type="number"
+                                           step="0.01"
+                                           min="0"
+                                           name="price"
+                                           id="priceInput"
+                                           required
+                                           value="<%= item ? (item.price || '') : '' %>"
+                                           placeholder="0.00"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- DISCOUNT PRICE -->
+
+                            <div class="mb-4">
+
+                                <label for="discountPriceInput"
+                                       class="form-label">
+
+                                    Discount Price
+
+                                    <span class="text-muted">
+                                        (Optional)
+                                    </span>
+
+                                </label>
+
+
+                                <div class="input-group">
+
+                                    <span class="input-group-text">
+                                        ₹
+                                    </span>
+
+
+                                    <input type="number"
+                                           step="0.01"
+                                           min="0"
+                                           name="discount_price"
+                                           id="discountPriceInput"
+                                           value="<%= item && item.discount_price ? item.discount_price : '' %>"
+                                           placeholder="0.00"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PRICE PREVIEW -->
+
+                            <div class="price-preview mb-4">
+
+                                <div class="text-muted small mb-1">
+
+                                    Test Series Price
+
+                                </div>
+
+
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+
+
+                                    <span id="currentPricePreview"
+                                          class="current-price">
+
+                                        ₹<%= item && item.discount_price
+                                            ? Number(item.discount_price).toFixed(2)
+                                            : (item && item.price
+                                                ? Number(item.price).toFixed(2)
+                                                : '0.00') %>
+
+                                    </span>
+
+
+                                    <span id="oldPricePreview"
+                                          class="old-price
+                                          <%= item &&
+                                             item.discount_price &&
+                                             Number(item.discount_price) < Number(item.price)
+                                             ? ''
+                                             : 'd-none' %>">
+
+                                        ₹<%= item && item.price
+                                            ? Number(item.price).toFixed(2)
+                                            : '0.00' %>
+
+                                    </span>
+
+
+                                    <span id="discountBadge"
+                                          class="badge bg-success discount-badge
+                                          <%= item &&
+                                             item.discount_price &&
+                                             item.price &&
+                                             Number(item.discount_price) < Number(item.price)
+                                             ? ''
+                                             : 'd-none' %>">
+
+                                        <%= item &&
+                                           item.discount_price &&
+                                           item.price &&
+                                           Number(item.price) > 0
+                                            ? Math.round(
+                                                (
+                                                    (Number(item.price) -
+                                                     Number(item.discount_price))
+                                                    /
+                                                    Number(item.price)
+                                                ) * 100
+                                              )
+                                            : 0 %>% OFF
+
+                                    </span>
+
+
+                                </div>
+
+                            </div>
+
+
+                            <hr class="my-4">
+
+
+                            <!-- ACTIVE STATUS -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+
+                                <div>
+
+                                    <label for="activeStatus"
+                                           class="form-label mb-1">
+
+                                        Active Status
+
+                                    </label>
+
+
+                                    <small class="text-muted d-block">
+
+                                        Enable or disable this test series.
+
+                                    </small>
+
+                                </div>
+
+
+                                <div class="form-check form-switch">
+
+                                    <input type="checkbox"
+                                           name="is_active"
+                                           value="on"
+                                           id="activeStatus"
+                                           class="form-check-input"
+                                           <%= (!item || item.is_active)
+                                               ? 'checked'
+                                               : '' %>>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- STATUS -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+                                <span class="text-muted">
+
+                                    Current Status
+
+                                </span>
+
+
+                                <span id="statusBadge"
+                                      class="badge
+                                      <%= (!item || item.is_active)
+                                          ? 'badge-soft-success'
+                                          : 'badge-soft-danger' %>">
+
+                                    <%= (!item || item.is_active)
+                                        ? 'Active'
+                                        : 'Inactive' %>
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- SUBMIT -->
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100"
+                                    id="submitBtn">
+
+                                <i class="ti ti-device-floppy me-1"></i>
+
+                                <%= mode === 'edit'
+                                    ? 'Update Test Series'
+                                    : 'Save Test Series' %>
+
+                            </button>
+
+
+                            <!-- CANCEL -->
+
+                            <a href="/admin/test-series"
+                               class="btn btn-light w-100 mt-2">
+
+                                <i class="ti ti-x me-1"></i>
+
+                                Cancel
+
+                            </a>
+
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+        </form>
+
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     TEST SERIES FORM SCRIPT
+========================================================= -->
+
+<script>
+
+(function () {
+
+    'use strict';
+
+
+    /* =========================================================
+       ELEMENTS
+    ========================================================== */
+
+    const form =
+        document.getElementById('testSeriesForm');
+
+    const titleInput =
+        document.getElementById('seriesTitle');
+
+    const slugInput =
+        document.getElementById('seriesSlug');
+
+    const descriptionInput =
+        document.getElementById('seriesDescription');
+
+    const durationInput =
+        document.getElementById('defaultDuration');
+
+    const negativeInput =
+        document.getElementById('negativeMarking');
+
+    const priceInput =
+        document.getElementById('priceInput');
+
+    const discountPriceInput =
+        document.getElementById('discountPriceInput');
+
+    const activeStatus =
+        document.getElementById('activeStatus');
+
+    const submitBtn =
+        document.getElementById('submitBtn');
+
+
+    /* =========================================================
+       PREVIEW ELEMENTS
+    ========================================================== */
+
+    const previewTitle =
+        document.getElementById('previewSeriesTitle');
+
+    const previewDescription =
+        document.getElementById('previewSeriesDescription');
+
+    const previewDuration =
+        document.getElementById('previewDuration2');
+
+    const previewNegative =
+        document.getElementById('previewNegative');
+
+    const previewStatus =
+        document.getElementById('previewSeriesStatus');
+
+    const durationPreview =
+        document.getElementById('durationPreview');
+
+    const negativePreview =
+        document.getElementById('negativePreview');
+
+    const statusBadge =
+        document.getElementById('statusBadge');
+
+    const infoStatus =
+        document.getElementById('infoStatus');
+
+    const descriptionCount =
+        document.getElementById('descriptionCount');
+
+
+    /* =========================================================
+       THUMBNAIL
+    ========================================================== */
+
+    const thumbnailInput =
+        document.getElementById('thumbnailInput');
+
+    const thumbnailWrap =
+        document.getElementById('thumbnailWrap');
+
+    const thumbnailPreview =
+        document.getElementById('thumbnailPreview');
+
+    const thumbnailPlaceholder =
+        document.getElementById('thumbnailPlaceholder');
+
+    const removeThumbnail =
+        document.getElementById('removeThumbnail');
+
+
+    /* =========================================================
+       PRICE
+    ========================================================== */
+
+    const currentPricePreview =
+        document.getElementById('currentPricePreview');
+
+    const oldPricePreview =
+        document.getElementById('oldPricePreview');
+
+    const discountBadge =
+        document.getElementById('discountBadge');
+
+
+    /* =========================================================
+       SLUGIFY
+    ========================================================== */
+
+    function slugify(text) {
+
+        return String(text || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[\s_]+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
+
+    }
+
+
+    /* =========================================================
+       SLUG AUTO GENERATION
+    ========================================================== */
+
+    let slugManuallyChanged =
+        Boolean(
+            slugInput &&
+            slugInput.value.trim()
+        );
+
+
+    if (slugInput) {
+
+        slugInput.addEventListener(
+            'input',
+            function () {
+
+                slugManuallyChanged =
+                    true;
+
+            }
+        );
+
+    }
+
+
+    if (titleInput) {
+
+        titleInput.addEventListener(
+            'input',
+            function () {
+
+                const title =
+                    this.value.trim();
+
+
+                if (previewTitle) {
+
+                    previewTitle.textContent =
+                        title ||
+                        'Your Test Series Title';
+
+                }
+
+
+                if (!slugManuallyChanged &&
+                    slugInput) {
+
+                    slugInput.value =
+                        slugify(title);
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       DESCRIPTION
+    ========================================================== */
+
+    function updateDescription() {
+
+        if (!descriptionInput) {
+            return;
+        }
+
+
+        const description =
+            descriptionInput.value.trim();
+
+
+        if (descriptionCount) {
+
+            descriptionCount.textContent =
+                description.length;
+
+        }
+
+
+        if (previewDescription) {
+
+            previewDescription.textContent =
+                description
+                    ? description.substring(0, 180)
+                    : 'Your test series description will appear here.';
+
+        }
+
+    }
+
+
+    if (descriptionInput) {
+
+        descriptionInput.addEventListener(
+            'input',
+            updateDescription
+        );
+
+        updateDescription();
+
+    }
+
+
+    /* =========================================================
+       EXAM SETTINGS PREVIEW
+    ========================================================== */
+
+    function updateExamSettings() {
+
+        const duration =
+            durationInput &&
+            durationInput.value
+                ? durationInput.value
+                : 0;
+
+
+        const negative =
+            negativeInput &&
+            negativeInput.value
+                ? negativeInput.value
+                : 0;
+
+
+        if (durationPreview) {
+
+            durationPreview.textContent =
+                duration + ' Minutes';
+
+        }
+
+
+        if (previewDuration) {
+
+            previewDuration.textContent =
+                duration;
+
+        }
+
+
+        if (negativePreview) {
+
+            negativePreview.textContent =
+                negative;
+
+        }
+
+
+        if (previewNegative) {
+
+            previewNegative.textContent =
+                negative;
+
+        }
+
+    }
+
+
+    if (durationInput) {
+
+        durationInput.addEventListener(
+            'input',
+            updateExamSettings
+        );
+
+    }
+
+
+    if (negativeInput) {
+
+        negativeInput.addEventListener(
+            'input',
+            updateExamSettings
+        );
+
+    }
+
+
+    updateExamSettings();
+
+
+    /* =========================================================
+       STATUS PREVIEW
+    ========================================================== */
+
+    function updateStatus() {
+
+        if (!activeStatus) {
+            return;
+        }
+
+
+        const active =
+            activeStatus.checked;
+
+
+        if (previewStatus) {
+
+            previewStatus.innerHTML =
+                active
+                    ? '<i class="ti ti-circle-check me-1"></i> Active'
+                    : '<i class="ti ti-circle-x me-1"></i> Inactive';
+
+        }
+
+
+        if (infoStatus) {
+
+            infoStatus.textContent =
+                active
+                    ? 'Active'
+                    : 'Inactive';
+
+        }
+
+
+        if (statusBadge) {
+
+            statusBadge.textContent =
+                active
+                    ? 'Active'
+                    : 'Inactive';
+
+
+            statusBadge.classList.remove(
+                'badge-soft-success',
+                'badge-soft-danger'
+            );
+
+
+            statusBadge.classList.add(
+                active
+                    ? 'badge-soft-success'
+                    : 'badge-soft-danger'
+            );
+
+        }
+
+    }
+
+
+    if (activeStatus) {
+
+        activeStatus.addEventListener(
+            'change',
+            updateStatus
+        );
+
+    }
+
+
+    /* =========================================================
+       PRICE PREVIEW
+    ========================================================== */
+
+    function updatePrice() {
+
+        const price =
+            priceInput
+                ? parseFloat(priceInput.value) || 0
+                : 0;
+
+
+        const discountPrice =
+            discountPriceInput
+                ? parseFloat(discountPriceInput.value) || 0
+                : 0;
+
+
+        const hasDiscount =
+            price > 0 &&
+            discountPrice > 0 &&
+            discountPrice < price;
+
+
+        const currentPrice =
+            hasDiscount
+                ? discountPrice
+                : price;
+
+
+        if (currentPricePreview) {
+
+            currentPricePreview.textContent =
+                '₹' + currentPrice.toFixed(2);
+
+        }
+
+
+        if (oldPricePreview) {
+
+            oldPricePreview.textContent =
+                '₹' + price.toFixed(2);
+
+
+            oldPricePreview.classList.toggle(
+                'd-none',
+                !hasDiscount
+            );
+
+        }
+
+
+        if (discountBadge) {
+
+            if (hasDiscount) {
+
+                const discount =
+                    Math.round(
+                        (
+                            (price - discountPrice)
+                            /
+                            price
+                        ) * 100
+                    );
+
+
+                discountBadge.textContent =
+                    discount + '% OFF';
+
+
+                discountBadge.classList.remove(
+                    'd-none'
+                );
+
+            } else {
+
+                discountBadge.classList.add(
+                    'd-none'
+                );
+
+            }
+
+        }
+
+    }
+
+
+    if (priceInput) {
+
+        priceInput.addEventListener(
+            'input',
+            updatePrice
+        );
+
+    }
+
+
+    if (discountPriceInput) {
+
+        discountPriceInput.addEventListener(
+            'input',
+            updatePrice
+        );
+
+    }
+
+
+    updatePrice();
+
+
+    /* =========================================================
+       THUMBNAIL PREVIEW
+    ========================================================== */
+
+    function showThumbnail(src) {
+
+        if (!src) {
+            return;
+        }
+
+
+        if (thumbnailPreview) {
+
+            thumbnailPreview.src =
+                src;
+
+        }
+
+
+        if (thumbnailWrap) {
+
+            thumbnailWrap.classList.remove(
+                'd-none'
+            );
+
+        }
+
+
+        if (thumbnailPlaceholder) {
+
+            thumbnailPlaceholder.classList.add(
+                'd-none'
+            );
+
+        }
+
+    }
+
+
+    function clearThumbnail() {
+
+        if (thumbnailPreview) {
+
+            thumbnailPreview.src =
+                '';
+
+        }
+
+
+        if (thumbnailWrap) {
+
+            thumbnailWrap.classList.add(
+                'd-none'
+            );
+
+        }
+
+
+        if (thumbnailPlaceholder) {
+
+            thumbnailPlaceholder.classList.remove(
+                'd-none'
+            );
+
+        }
+
+
+        if (thumbnailInput) {
+
+            thumbnailInput.value =
+                '';
+
+        }
+
+    }
+
+
+    if (thumbnailInput) {
+
+        thumbnailInput.addEventListener(
+            'change',
+            function () {
+
+                const file =
+                    this.files &&
+                    this.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                if (!file.type.startsWith('image/')) {
+
+                    alert(
+                        'Please select a valid image file.'
+                    );
+
+                    this.value =
+                        '';
+
+                    return;
+
+                }
+
+
+                if (file.size > 5 * 1024 * 1024) {
+
+                    alert(
+                        'Image size must be less than 5MB.'
+                    );
+
+                    this.value =
+                        '';
+
+                    return;
+
+                }
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        showThumbnail(
+                            event.target.result
+                        );
+
+                    };
+
+
+                reader.readAsDataURL(file);
+
+            }
+        );
+
+    }
+
+
+    if (removeThumbnail) {
+
+        removeThumbnail.addEventListener(
+            'click',
+            function () {
+
+                clearThumbnail();
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       FORM SUBMIT
+    ========================================================== */
+
+    if (form) {
+
+        form.addEventListener(
+            'submit',
+            function () {
+
+                if (!submitBtn) {
+                    return;
+                }
+
+
+                submitBtn.disabled =
+                    true;
+
+
+                submitBtn.innerHTML = `
+
+                    <span class="spinner-border spinner-border-sm me-1"
+                          role="status"
+                          aria-hidden="true">
+                    </span>
+
+                    <%= mode === 'edit'
+                        ? 'Updating...'
+                        : 'Saving...' %>
+
+                `;
+
+            }
+        );
+
+    }
+
+
+})();
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

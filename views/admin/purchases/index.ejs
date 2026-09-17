@@ -1,144 +1,2223 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%
+    /*
+    |--------------------------------------------------------------------------
+    | SAFE LOCALS
+    |--------------------------------------------------------------------------
+    */
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <div>
-        <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold mb-1">Purchases</h1>
-        <p class="text-sm text-gray-500 mb-0">Order history across courses and test series.</p>
-    </div>
-</div>
+    const purchaseFilters =
+        typeof filters !== 'undefined' && filters
+            ? filters
+            : {};
 
-<div class="grid grid-cols-12 gap-4 lg:gap-6 mb-4 lg:mb-6">
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-success text-white text-2xl"><i class="icon-indian-rupee"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Revenue</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0">₹<%= Number(stats.totalRevenue).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-primary text-white text-2xl"><i class="icon-receipt"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Orders</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0"><%= stats.totalOrders %></h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-secondary text-white text-2xl"><i class="icon-check-circle"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Completed</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0"><%= stats.completedOrders %></h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-danger text-white text-2xl"><i class="icon-banknote-x"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Refunded</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0"><%= stats.refundedOrders %></h3>
-            </div>
-        </div>
-    </div>
-</div>
+    const purchaseList =
+        Array.isArray(purchases)
+            ? purchases
+            : [];
 
-<div class="grid grid-cols-1">
-    <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden">
-        <form method="GET" action="/admin/purchases" class="flex items-center justify-between flex-wrap gap-3 p-4 border-b border-border-color">
-            <div class="relative w-full sm:w-64">
-                <input type="text" name="search" value="<%= filters.search %>" placeholder="Search by order ID..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-                <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0"><i class="icon-search"></i></button>
-            </div>
-            <div class="flex items-center flex-wrap gap-2 md:gap-3">
-                <select name="type" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                    <option value="">All Items</option>
-                    <option value="course" <%= filters.type === 'course' ? 'selected' : '' %>>Courses</option>
-                    <option value="test_series" <%= filters.type === 'test_series' ? 'selected' : '' %>>Test Series</option>
-                </select>
-                <select name="status" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                    <option value="">All Status</option>
-                    <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                    <option value="completed" <%= filters.status === 'completed' ? 'selected' : '' %>>Completed</option>
-                    <option value="failed" <%= filters.status === 'failed' ? 'selected' : '' %>>Failed</option>
-                    <option value="refunded" <%= filters.status === 'refunded' ? 'selected' : '' %>>Refunded</option>
-                </select>
-                <select name="user" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                    <option value="">All Users</option>
-                    <% users.forEach(function(u) { %>
-                        <option value="<%= u.id %>" <%= String(filters.user) === String(u.id) ? 'selected' : '' %>><%= u.name %></option>
-                    <% }) %>
-                </select>
-                <% if (filters.search || filters.type || filters.status || filters.user) { %>
-                <a href="/admin/purchases" class="text-sm text-gray-600 hover:text-primary font-medium">Clear</a>
-                <% } %>
-            </div>
-        </form>
+    const userList =
+        Array.isArray(users)
+            ? users
+            : [];
 
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[920px]">
-                <thead>
-                    <tr class="border-b border-border-color bg-gray-50/50">
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Order ID</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Item</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">User</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Amount</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 bg-white text-gray-900 text-end text-[13px] font-semibold uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <% if (purchases && purchases.length) { %>
-                        <% purchases.forEach(function(p) { %>
-                        <tr>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm font-semibold text-gray-900"><%= p.order_id || ('#' + p.id) %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <p class="text-sm text-gray-900 mb-0"><%= p.itemTitle %></p>
-                                <span class="text-xs text-gray-500"><%= p.purchasable_type === 'course' ? 'Course' : 'Test Series' %></span>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <p class="text-sm font-medium text-gray-900 mb-0"><%= p.User ? p.User.name : '—' %></p>
-                                <p class="text-xs text-gray-500 mb-0"><%= p.User ? p.User.email : '' %></p>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm font-bold text-gray-900">₹<%= Number(p.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white">
-                                <form method="POST" action="/admin/purchases/<%= p.id %>/status" class="inline">
-                                    <select name="payment_status" onchange="this.form.submit()" class="text-xs font-bold rounded-lg px-2 py-1 border cursor-pointer <%= p.payment_status === 'completed' ? 'text-success border-success' : p.payment_status === 'refunded' ? 'text-gray-500 border-gray-300' : p.payment_status === 'failed' ? 'text-danger border-danger' : 'text-warning border-warning' %>">
-                                        <option value="pending" <%= p.payment_status === 'pending' ? 'selected' : '' %>>Pending</option>
-                                        <option value="completed" <%= p.payment_status === 'completed' ? 'selected' : '' %>>Completed</option>
-                                        <option value="failed" <%= p.payment_status === 'failed' ? 'selected' : '' %>>Failed</option>
-                                        <option value="refunded" <%= p.payment_status === 'refunded' ? 'selected' : '' %>>Refunded</option>
-                                    </select>
-                                </form>
-                            </td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= formatDate(p.created_at) %></span></td>
-                            <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                                <a href="/admin/purchases/<%= p.id %>/receipt" target="_blank" class="size-9 rounded-full hover:bg-gray-100 text-gray-900 inline-flex items-center justify-center transition-colors" aria-label="Receipt"><i class="icon-receipt text-sm"></i></a>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="7" class="px-6 py-10 text-center text-gray-500 bg-white">No purchases found.</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
+    const purchaseStats =
+        typeof stats !== 'undefined' && stats
+            ? stats
+            : {};
 
-        <% if (pagination.totalPages > 1) { %>
-        <div class="flex items-center justify-between flex-wrap gap-3 p-4 border-t border-border-color">
-            <p class="text-sm text-gray-600 mb-0">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= total %> total</p>
-            <div class="flex items-center gap-1">
-                <% if (pagination.hasPrev) { %><a href="/admin/purchases?page=<%= pagination.page - 1 %>&search=<%= filters.search %>&type=<%= filters.type %>&status=<%= filters.status %>&user=<%= filters.user %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a><% } %>
-                <% pagination.pages.forEach(function(p) { %><a href="/admin/purchases?page=<%= p %>&search=<%= filters.search %>&type=<%= filters.type %>&status=<%= filters.status %>&user=<%= filters.user %>" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === pagination.page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a><% }) %>
-                <% if (pagination.hasNext) { %><a href="/admin/purchases?page=<%= pagination.page + 1 %>&search=<%= filters.search %>&type=<%= filters.type %>&status=<%= filters.status %>&user=<%= filters.user %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a><% } %>
+    const purchasePagination =
+        typeof pagination !== 'undefined' && pagination
+            ? pagination
+            : {
+                page: 1,
+                totalPages: 1,
+                hasPrev: false,
+                hasNext: false,
+                pages: [1]
+            };
+
+    const totalPurchases =
+        typeof total !== 'undefined'
+            ? Number(total) || 0
+            : purchaseList.length;
+
+    const searchValue =
+        purchaseFilters.search || '';
+
+    const typeValue =
+        purchaseFilters.type || '';
+
+    const statusValue =
+        purchaseFilters.status || '';
+
+    const userValue =
+        purchaseFilters.user || '';
+
+    const sortValue =
+        purchaseFilters.sort || '';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    function formatMoney(value) {
+
+        return Number(value || 0).toLocaleString(
+            'en-IN',
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+    }
+
+
+    function safeDate(value) {
+
+        if (!value) {
+            return '-';
+        }
+
+        try {
+
+            if (typeof formatDate === 'function') {
+                return formatDate(value);
+            }
+
+            const date = new Date(value);
+
+            if (isNaN(date.getTime())) {
+                return value;
+            }
+
+            return date.toLocaleDateString(
+                'en-IN',
+                {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                }
+            );
+
+        } catch (error) {
+
+            return value;
+
+        }
+
+    }
+
+
+    function queryString(params) {
+
+        const query = [];
+
+        Object.keys(params).forEach(function (key) {
+
+            const value = params[key];
+
+            if (
+                value !== undefined &&
+                value !== null &&
+                value !== ''
+            ) {
+
+                query.push(
+                    encodeURIComponent(key) +
+                    '=' +
+                    encodeURIComponent(value)
+                );
+
+            }
+
+        });
+
+        return query.join('&');
+
+    }
+
+
+    function statusClass(status) {
+
+        if (status === 'completed') {
+            return 'bg-soft-success text-success';
+        }
+
+        if (status === 'failed') {
+            return 'bg-soft-danger text-danger';
+        }
+
+        if (status === 'refunded') {
+            return 'bg-soft-secondary text-secondary';
+        }
+
+        return 'bg-soft-warning text-warning';
+
+    }
+
+
+    function statusIcon(status) {
+
+        if (status === 'completed') {
+            return 'ti-circle-check';
+        }
+
+        if (status === 'failed') {
+            return 'ti-circle-x';
+        }
+
+        if (status === 'refunded') {
+            return 'ti-arrow-back-up';
+        }
+
+        return 'ti-clock';
+
+    }
+
+%>
+
+
+<%- include('../../adminlayout/header') %>
+
+
+<style>
+
+    /*
+    |--------------------------------------------------------------------------
+    | PURCHASE STAT CARDS
+    |--------------------------------------------------------------------------
+    */
+
+    .purchase-stat-card {
+        border: 1px solid #e9edf4;
+        transition: all .25s ease;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .purchase-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .07);
+    }
+
+    .purchase-stat-card::after {
+        content: "";
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        right: -45px;
+        bottom: -55px;
+        background: rgba(0, 0, 0, .025);
+        pointer-events: none;
+    }
+
+    .purchase-stat-icon {
+        width: 54px;
+        height: 54px;
+        min-width: 54px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 23px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PURCHASE TABLE
+    |--------------------------------------------------------------------------
+    */
+
+    #purchases-table th {
+        white-space: nowrap;
+    }
+
+    #purchases-table td {
+        vertical-align: middle;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ORDER ID
+    |--------------------------------------------------------------------------
+    */
+
+    .purchase-order-id {
+        font-weight: 700;
+        color: #212529;
+        font-size: 13px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ITEM
+    |--------------------------------------------------------------------------
+    */
+
+    .purchase-item-title {
+        max-width: 280px;
+    }
+
+    .purchase-item-title span {
+        display: block;
+        max-width: 280px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER
+    |--------------------------------------------------------------------------
+    */
+
+    .purchase-user-name {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .purchase-user-email {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | STATUS SELECT
+    |--------------------------------------------------------------------------
+    */
+
+    .purchase-status-select {
+        min-width: 118px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 28px 5px 9px;
+        cursor: pointer;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMPTY STATE
+    |--------------------------------------------------------------------------
+    */
+
+    .purchase-empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .purchase-empty-icon {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        margin-bottom: 16px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTER DROPDOWN
+    |--------------------------------------------------------------------------
+    */
+
+    .purchase-filter-menu {
+        min-width: 280px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESPONSIVE
+    |--------------------------------------------------------------------------
+    */
+
+    @media (max-width: 767px) {
+
+        .purchase-item-title {
+            max-width: 200px;
+        }
+
+        .purchase-item-title span {
+            max-width: 200px;
+        }
+
+        .purchase-filter-menu {
+            min-width: 260px;
+        }
+
+    }
+
+</style>
+
+
+<div class="page-wrapper">
+
+    <div class="content pb-0">
+
+
+        <!-- =========================================================
+             ALERTS
+        ========================================================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div
+                class="alert alert-success alert-dismissible fade show mb-4"
+                role="alert"
+            >
+
+                <i class="ti ti-circle-check me-2"></i>
+
+                <%= success %>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+
             </div>
-        </div>
+
         <% } %>
+
+
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+
+            <div
+                class="alert alert-danger alert-dismissible fade show mb-4"
+                role="alert"
+            >
+
+                <ul class="mb-0 ps-3">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =========================================================
+             PAGE HEADER
+        ========================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    Purchases
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+                        <li
+                            class="breadcrumb-item active"
+                            aria-current="page"
+                        >
+                            Purchases
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+
+                <!-- Refresh -->
+
+                <a
+                    href="javascript:location.reload();"
+                    class="btn btn-icon btn-outline-light shadow"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    aria-label="Refresh"
+                    data-bs-original-title="Refresh"
+                >
+
+                    <i class="ti ti-refresh"></i>
+
+                </a>
+
+
+                <!-- Collapse -->
+
+                <a
+                    href="javascript:void(0);"
+                    class="btn btn-icon btn-outline-light shadow"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    aria-label="Collapse"
+                    data-bs-original-title="Collapse"
+                    id="collapse-header"
+                >
+
+                    <i class="ti ti-transition-top"></i>
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================================
+             STATISTICS
+        ========================================================== -->
+
+        <div class="row mb-4">
+
+
+            <!-- TOTAL REVENUE -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card purchase-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Total Revenue
+                                </p>
+
+                                <h4 class="mb-1 fw-bold text-success">
+
+                                    ₹<%= formatMoney(
+                                        purchaseStats.totalRevenue
+                                    ) %>
+
+                                </h4>
+
+                                <small class="text-muted">
+                                    Revenue from purchases
+                                </small>
+
+                            </div>
+
+
+                            <span class="purchase-stat-icon bg-soft-success text-success">
+
+                                <i class="ti ti-currency-rupee"></i>
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- TOTAL ORDERS -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card purchase-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Total Orders
+                                </p>
+
+                                <h4 class="mb-1 fw-bold text-primary">
+
+                                    <%= Number(
+                                        purchaseStats.totalOrders || 0
+                                    ).toLocaleString('en-IN') %>
+
+                                </h4>
+
+                                <small class="text-muted">
+                                    All purchase orders
+                                </small>
+
+                            </div>
+
+
+                            <span class="purchase-stat-icon bg-soft-primary text-primary">
+
+                                <i class="ti ti-receipt"></i>
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- COMPLETED -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card purchase-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Completed
+                                </p>
+
+                                <h4 class="mb-1 fw-bold text-info">
+
+                                    <%= Number(
+                                        purchaseStats.completedOrders || 0
+                                    ).toLocaleString('en-IN') %>
+
+                                </h4>
+
+                                <small class="text-muted">
+                                    Successfully completed
+                                </small>
+
+                            </div>
+
+
+                            <span class="purchase-stat-icon bg-soft-info text-info">
+
+                                <i class="ti ti-circle-check"></i>
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- REFUNDED -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card purchase-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Refunded
+                                </p>
+
+                                <h4 class="mb-1 fw-bold text-danger">
+
+                                    <%= Number(
+                                        purchaseStats.refundedOrders || 0
+                                    ).toLocaleString('en-IN') %>
+
+                                </h4>
+
+                                <small class="text-muted">
+                                    Refunded orders
+                                </small>
+
+                            </div>
+
+
+                            <span class="purchase-stat-icon bg-soft-danger text-danger">
+
+                                <i class="ti ti-arrow-back-up"></i>
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================================
+             PURCHASE CARD
+        ========================================================== -->
+
+        <div class="card border-0 rounded-0">
+
+
+            <!-- =====================================================
+                 CARD HEADER
+            ====================================================== -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+
+                <!-- SEARCH -->
+
+                <form
+                    method="GET"
+                    action="/admin/purchases"
+                    class="mb-0 d-flex align-items-center gap-2 flex-wrap"
+                >
+
+                    <div class="input-icon input-icon-start position-relative">
+
+                        <span class="input-icon-addon text-dark">
+
+                            <i class="ti ti-search"></i>
+
+                        </span>
+
+
+                        <input
+                            type="text"
+                            name="search"
+                            value="<%= searchValue %>"
+                            class="form-control"
+                            placeholder="Search order ID..."
+                        >
+
+                    </div>
+
+
+                    <!-- PRESERVE FILTERS -->
+
+                    <input
+                        type="hidden"
+                        name="type"
+                        value="<%= typeValue %>"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="status"
+                        value="<%= statusValue %>"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="user"
+                        value="<%= userValue %>"
+                    >
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="ti ti-search me-1"></i>
+
+                        Search
+
+                    </button>
+
+
+                    <% if (
+                        searchValue ||
+                        typeValue ||
+                        statusValue ||
+                        userValue
+                    ) { %>
+
+                        <a
+                            href="/admin/purchases"
+                            class="btn btn-link text-decoration-none text-muted"
+                        >
+
+                            Clear
+
+                        </a>
+
+                    <% } %>
+
+                </form>
+
+
+                <!-- RIGHT SIDE -->
+
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                    <span class="text-muted small">
+
+                        <%= totalPurchases %>
+                        order<%= totalPurchases === 1 ? '' : 's' %>
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 TOOLBAR
+            ====================================================== -->
+
+            <div class="card-body border-bottom py-3">
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+
+                    <!-- SORT -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a
+                                href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-outline-light shadow"
+                                data-bs-toggle="dropdown"
+                            >
+
+                                <i class="ti ti-sort-ascending-2 me-2"></i>
+
+                                Sort By
+
+                            </a>
+
+
+                            <div class="dropdown-menu">
+
+                                <ul>
+
+                                    <li>
+
+                                        <a
+                                            href="/admin/purchases?<%= queryString({
+                                                search: searchValue,
+                                                type: typeValue,
+                                                status: statusValue,
+                                                user: userValue,
+                                                sort: 'newest'
+                                            }) %>"
+                                            class="dropdown-item"
+                                        >
+
+                                            <i class="ti ti-calendar-up me-2"></i>
+
+                                            Newest First
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a
+                                            href="/admin/purchases?<%= queryString({
+                                                search: searchValue,
+                                                type: typeValue,
+                                                status: statusValue,
+                                                user: userValue,
+                                                sort: 'oldest'
+                                            }) %>"
+                                            class="dropdown-item"
+                                        >
+
+                                            <i class="ti ti-calendar-down me-2"></i>
+
+                                            Oldest First
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a
+                                            href="/admin/purchases?<%= queryString({
+                                                search: searchValue,
+                                                type: typeValue,
+                                                status: statusValue,
+                                                user: userValue,
+                                                sort: 'amount_desc'
+                                            }) %>"
+                                            class="dropdown-item"
+                                        >
+
+                                            <i class="ti ti-sort-descending-2 me-2"></i>
+
+                                            Highest Amount
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a
+                                            href="/admin/purchases?<%= queryString({
+                                                search: searchValue,
+                                                type: typeValue,
+                                                status: statusValue,
+                                                user: userValue,
+                                                sort: 'amount_asc'
+                                            }) %>"
+                                            class="dropdown-item"
+                                        >
+
+                                            <i class="ti ti-sort-ascending-2 me-2"></i>
+
+                                            Lowest Amount
+
+                                        </a>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RIGHT TOOLS -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+
+                        <!-- FILTER -->
+
+                        <div class="dropdown">
+
+                            <a
+                                href="javascript:void(0);"
+                                class="btn btn-outline-light shadow dropdown-toggle"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                            >
+
+                                <i class="ti ti-filter me-2"></i>
+
+                                Filter
+
+                                <% if (
+                                    typeValue ||
+                                    statusValue ||
+                                    userValue
+                                ) { %>
+
+                                    <span class="badge bg-primary ms-1">
+                                        <%= [
+                                            typeValue,
+                                            statusValue,
+                                            userValue
+                                        ].filter(Boolean).length %>
+                                    </span>
+
+                                <% } %>
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-end p-3 purchase-filter-menu">
+
+
+                                <form
+                                    method="GET"
+                                    action="/admin/purchases"
+                                >
+
+
+                                    <!-- SEARCH -->
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Search
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="search"
+                                            value="<%= searchValue %>"
+                                            class="form-control"
+                                            placeholder="Order ID..."
+                                        >
+
+                                    </div>
+
+
+                                    <!-- ITEM TYPE -->
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Item Type
+                                        </label>
+
+                                        <select
+                                            name="type"
+                                            class="form-select"
+                                        >
+
+                                            <option value="">
+                                                All Items
+                                            </option>
+
+                                            <option
+                                                value="course"
+                                                <%= typeValue === 'course' ? 'selected' : '' %>
+                                            >
+                                                Courses
+                                            </option>
+
+                                            <option
+                                                value="test_series"
+                                                <%= typeValue === 'test_series' ? 'selected' : '' %>
+                                            >
+                                                Test Series
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <!-- STATUS -->
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Payment Status
+                                        </label>
+
+                                        <select
+                                            name="status"
+                                            class="form-select"
+                                        >
+
+                                            <option value="">
+                                                All Status
+                                            </option>
+
+                                            <option
+                                                value="pending"
+                                                <%= statusValue === 'pending' ? 'selected' : '' %>
+                                            >
+                                                Pending
+                                            </option>
+
+                                            <option
+                                                value="completed"
+                                                <%= statusValue === 'completed' ? 'selected' : '' %>
+                                            >
+                                                Completed
+                                            </option>
+
+                                            <option
+                                                value="failed"
+                                                <%= statusValue === 'failed' ? 'selected' : '' %>
+                                            >
+                                                Failed
+                                            </option>
+
+                                            <option
+                                                value="refunded"
+                                                <%= statusValue === 'refunded' ? 'selected' : '' %>
+                                            >
+                                                Refunded
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <!-- USER -->
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            User
+                                        </label>
+
+                                        <select
+                                            name="user"
+                                            class="form-select"
+                                        >
+
+                                            <option value="">
+                                                All Users
+                                            </option>
+
+
+                                            <% userList.forEach(function(u) { %>
+
+                                                <option
+                                                    value="<%= u.id %>"
+                                                    <%= String(userValue) === String(u.id) ? 'selected' : '' %>
+                                                >
+
+                                                    <%= u.name %>
+
+                                                </option>
+
+                                            <% }) %>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <!-- SORT PRESERVE -->
+
+                                    <input
+                                        type="hidden"
+                                        name="sort"
+                                        value="<%= sortValue %>"
+                                    >
+
+
+                                    <div class="d-flex gap-2">
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-primary flex-fill"
+                                        >
+
+                                            Apply
+
+                                        </button>
+
+
+                                        <a
+                                            href="/admin/purchases"
+                                            class="btn btn-light flex-fill"
+                                        >
+
+                                            Clear
+
+                                        </a>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- MANAGE COLUMNS -->
+
+                        <div class="dropdown">
+
+                            <a
+                                href="javascript:void(0);"
+                                class="btn bg-soft-indigo border-0"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                            >
+
+                                <i class="ti ti-columns-3 me-2"></i>
+
+                                Manage Columns
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-menu-end p-3">
+
+                                <ul class="list-unstyled mb-0">
+
+
+                                    <!-- ORDER ID -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-hash me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Order ID</span>
+
+                                                <input
+                                                    class="form-check-input purchase-column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="0"
+                                                    data-key="order"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- ITEM -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-book me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Item</span>
+
+                                                <input
+                                                    class="form-check-input purchase-column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="1"
+                                                    data-key="item"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- USER -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-user me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>User</span>
+
+                                                <input
+                                                    class="form-check-input purchase-column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="2"
+                                                    data-key="user"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- AMOUNT -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-currency-rupee me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Amount</span>
+
+                                                <input
+                                                    class="form-check-input purchase-column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="3"
+                                                    data-key="amount"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- STATUS -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-circle-check me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Status</span>
+
+                                                <input
+                                                    class="form-check-input purchase-column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="4"
+                                                    data-key="status"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- DATE -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-calendar me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Date</span>
+
+                                                <input
+                                                    class="form-check-input purchase-column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="5"
+                                                    data-key="date"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- ACTION -->
+
+                                    <li class="gap-1 d-flex align-items-center">
+
+                                        <i class="ti ti-settings me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Action</span>
+
+                                                <input
+                                                    class="form-check-input ms-auto"
+                                                    type="checkbox"
+                                                    checked
+                                                    disabled
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 PURCHASE TABLE
+            ====================================================== -->
+
+            <div class="card-body pt-0">
+
+                <div class="table-responsive custom-table">
+
+                    <table
+                        class="table table-nowrap"
+                        id="purchases-table"
+                    >
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>
+                                    Order ID
+                                </th>
+
+                                <th>
+                                    Item
+                                </th>
+
+                                <th>
+                                    User
+                                </th>
+
+                                <th class="text-end">
+                                    Amount
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Date
+                                </th>
+
+                                <th class="text-end no-sort">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+
+                            <% if (purchaseList.length) { %>
+
+
+                                <% purchaseList.forEach(function(p) { %>
+
+                                    <tr>
+
+
+                                        <!-- ORDER ID -->
+
+                                        <td>
+
+                                            <span class="purchase-order-id">
+
+                                                <%= p.order_id || ('#' + p.id) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- ITEM -->
+
+                                        <td>
+
+                                            <div class="d-flex align-items-center gap-3 purchase-item-title">
+
+
+                                                <span
+                                                    class="avatar avatar-sm rounded-circle
+                                                    <%= p.purchasable_type === 'course'
+                                                        ? 'bg-soft-primary text-primary'
+                                                        : 'bg-soft-indigo text-indigo'
+                                                    %>"
+                                                >
+
+                                                    <i
+                                                        class="ti
+                                                        <%= p.purchasable_type === 'course'
+                                                            ? 'ti-book'
+                                                            : 'ti-clipboard-list'
+                                                        %>"
+                                                    ></i>
+
+                                                </span>
+
+
+                                                <div class="min-w-0">
+
+                                                    <h6 class="mb-0 fw-semibold">
+
+                                                        <span
+                                                            title="<%= p.itemTitle || 'Untitled Item' %>"
+                                                        >
+
+                                                            <%= p.itemTitle || 'Untitled Item' %>
+
+                                                        </span>
+
+                                                    </h6>
+
+
+                                                    <% if (p.purchasable_type === 'course') { %>
+
+                                                        <small class="text-muted">
+
+                                                            <i class="ti ti-book-2 me-1"></i>
+
+                                                            Course
+
+                                                        </small>
+
+                                                    <% } else { %>
+
+                                                        <small class="text-muted">
+
+                                                            <i class="ti ti-clipboard-list me-1"></i>
+
+                                                            Test Series
+
+                                                        </small>
+
+                                                    <% } %>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- USER -->
+
+                                        <td>
+
+                                            <% if (p.User) { %>
+
+                                                <div>
+
+                                                    <h6
+                                                        class="mb-0 fw-semibold purchase-user-name"
+                                                        title="<%= p.User.name %>"
+                                                    >
+
+                                                        <%= p.User.name %>
+
+                                                    </h6>
+
+
+                                                    <% if (p.User.email) { %>
+
+                                                        <small
+                                                            class="text-muted d-block purchase-user-email"
+                                                            title="<%= p.User.email %>"
+                                                        >
+
+                                                            <%= p.User.email %>
+
+                                                        </small>
+
+                                                    <% } %>
+
+                                                </div>
+
+                                            <% } else { %>
+
+                                                <span class="text-muted">
+                                                    —
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- AMOUNT -->
+
+                                        <td class="text-end">
+
+                                            <span class="fw-bold text-dark">
+
+                                                ₹<%= formatMoney(p.amount) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- STATUS -->
+
+                                        <td>
+
+                                            <form
+                                                method="POST"
+                                                action="/admin/purchases/<%= p.id %>/status"
+                                                class="d-inline"
+                                            >
+
+                                                <select
+                                                    name="payment_status"
+                                                    onchange="this.form.submit()"
+                                                    class="form-select purchase-status-select <%= statusClass(p.payment_status) %>"
+                                                    title="Change payment status"
+                                                >
+
+                                                    <option
+                                                        value="pending"
+                                                        <%= p.payment_status === 'pending' ? 'selected' : '' %>
+                                                    >
+                                                        Pending
+                                                    </option>
+
+                                                    <option
+                                                        value="completed"
+                                                        <%= p.payment_status === 'completed' ? 'selected' : '' %>
+                                                    >
+                                                        Completed
+                                                    </option>
+
+                                                    <option
+                                                        value="failed"
+                                                        <%= p.payment_status === 'failed' ? 'selected' : '' %>
+                                                    >
+                                                        Failed
+                                                    </option>
+
+                                                    <option
+                                                        value="refunded"
+                                                        <%= p.payment_status === 'refunded' ? 'selected' : '' %>
+                                                    >
+                                                        Refunded
+                                                    </option>
+
+                                                </select>
+
+                                            </form>
+
+                                        </td>
+
+
+                                        <!-- DATE -->
+
+                                        <td>
+
+                                            <span class="text-muted">
+
+                                                <i class="ti ti-calendar-event me-1"></i>
+
+                                                <%= safeDate(p.created_at) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- ACTION -->
+
+                                        <td class="text-end">
+
+                                            <div class="dropdown">
+
+                                                <a
+                                                    href="javascript:void(0);"
+                                                    class="btn btn-icon btn-sm"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                    title="Actions"
+                                                >
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+
+                                                    <!-- RECEIPT -->
+
+                                                    <li>
+
+                                                        <a
+                                                            href="/admin/purchases/<%= p.id %>/receipt"
+                                                            target="_blank"
+                                                            class="dropdown-item"
+                                                        >
+
+                                                            <i class="ti ti-receipt me-2"></i>
+
+                                                            View Receipt
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- COPY ORDER ID -->
+
+                                                    <li>
+
+                                                        <a
+                                                            href="javascript:void(0);"
+                                                            class="dropdown-item copy-order-id"
+                                                            data-order-id="<%= p.order_id || ('#' + p.id) %>"
+                                                        >
+
+                                                            <i class="ti ti-copy me-2"></i>
+
+                                                            Copy Order ID
+
+                                                        </a>
+
+                                                    </li>
+
+                                                </ul>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                <% }) %>
+
+
+                            <% } else { %>
+
+
+                                <!-- EMPTY -->
+
+                                <tr>
+
+                                    <td
+                                        colspan="7"
+                                        class="text-center"
+                                    >
+
+                                        <div class="purchase-empty-state">
+
+                                            <div class="purchase-empty-icon bg-soft-primary text-primary">
+
+                                                <i class="ti ti-shopping-cart-off"></i>
+
+                                            </div>
+
+
+                                            <h5 class="mb-1">
+                                                No Purchases Found
+                                            </h5>
+
+
+                                            <p class="text-muted mb-3">
+
+                                                No purchase orders match your
+                                                current search or filters.
+
+                                            </p>
+
+
+                                            <% if (
+                                                searchValue ||
+                                                typeValue ||
+                                                statusValue ||
+                                                userValue
+                                            ) { %>
+
+                                                <a
+                                                    href="/admin/purchases"
+                                                    class="btn btn-light btn-sm"
+                                                >
+
+                                                    <i class="ti ti-filter-off me-1"></i>
+
+                                                    Clear Filters
+
+                                                </a>
+
+                                            <% } %>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            <% } %>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+
+                <% if (
+                    purchasePagination &&
+                    purchasePagination.totalPages > 1
+                ) { %>
+
+
+                    <div class="row align-items-center mt-3">
+
+
+                        <!-- PAGINATION INFO -->
+
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Page
+                                <%= purchasePagination.page %>
+                                of
+                                <%= purchasePagination.totalPages %>
+
+                                &nbsp;·&nbsp;
+
+                                <%= totalPurchases %>
+                                total purchases
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PAGINATION -->
+
+                        <div class="col-md-6">
+
+                            <div class="d-flex justify-content-end">
+
+                                <ul class="pagination mb-0">
+
+
+                                    <!-- PREVIOUS -->
+
+                                    <% if (purchasePagination.hasPrev) { %>
+
+                                        <li class="page-item">
+
+                                            <a
+                                                class="page-link"
+                                                href="/admin/purchases?<%= queryString({
+                                                    page: purchasePagination.page - 1,
+                                                    search: searchValue,
+                                                    type: typeValue,
+                                                    status: statusValue,
+                                                    user: userValue,
+                                                    sort: sortValue
+                                                }) %>"
+                                            >
+
+                                                <i class="ti ti-chevron-left"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                    <!-- PAGES -->
+
+                                    <% if (
+                                        purchasePagination.pages &&
+                                        purchasePagination.pages.length
+                                    ) { %>
+
+
+                                        <% purchasePagination.pages.forEach(function(pg) { %>
+
+                                            <li
+                                                class="page-item <%= Number(pg) === Number(purchasePagination.page) ? 'active' : '' %>"
+                                            >
+
+                                                <a
+                                                    class="page-link"
+                                                    href="/admin/purchases?<%= queryString({
+                                                        page: pg,
+                                                        search: searchValue,
+                                                        type: typeValue,
+                                                        status: statusValue,
+                                                        user: userValue,
+                                                        sort: sortValue
+                                                    }) %>"
+                                                >
+
+                                                    <%= pg %>
+
+                                                </a>
+
+                                            </li>
+
+                                        <% }) %>
+
+
+                                    <% } %>
+
+
+                                    <!-- NEXT -->
+
+                                    <% if (purchasePagination.hasNext) { %>
+
+                                        <li class="page-item">
+
+                                            <a
+                                                class="page-link"
+                                                href="/admin/purchases?<%= queryString({
+                                                    page: purchasePagination.page + 1,
+                                                    search: searchValue,
+                                                    type: typeValue,
+                                                    status: statusValue,
+                                                    user: userValue,
+                                                    sort: sortValue
+                                                }) %>"
+                                            >
+
+                                                <i class="ti ti-chevron-right"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                <% } %>
+
+            </div>
+
+        </div>
+
     </div>
+
 </div>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+<!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Manage Columns
+        |--------------------------------------------------------------------------
+        */
+
+        const table =
+            document.getElementById(
+                'purchases-table'
+            );
+
+
+        const columnToggles =
+            document.querySelectorAll(
+                '.purchase-column-toggle[data-column]'
+            );
+
+
+        function applyColumn(
+            columnIndex,
+            visible
+        ) {
+
+            if (!table) {
+                return;
+            }
+
+
+            table
+                .querySelectorAll('tr')
+                .forEach(
+                    function (row) {
+
+                        const cell =
+                            row.children[
+                                columnIndex
+                            ];
+
+
+                        if (!cell) {
+                            return;
+                        }
+
+
+                        if (visible) {
+
+                            cell.style.removeProperty(
+                                'display'
+                            );
+
+                        } else {
+
+                            cell.style.setProperty(
+                                'display',
+                                'none',
+                                'important'
+                            );
+
+                        }
+
+                    }
+                );
+
+        }
+
+
+        columnToggles.forEach(
+            function (toggle) {
+
+
+                const column =
+                    parseInt(
+                        toggle.dataset.column,
+                        10
+                    );
+
+
+                const key =
+                    toggle.dataset.key ||
+                    column;
+
+
+                const storageKey =
+                    'purchases_column_' +
+                    key;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Restore Saved State
+                |--------------------------------------------------------------------------
+                */
+
+                const saved =
+                    localStorage.getItem(
+                        storageKey
+                    );
+
+
+                if (saved === '0') {
+
+                    toggle.checked =
+                        false;
+
+                    applyColumn(
+                        column,
+                        false
+                    );
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Toggle
+                |--------------------------------------------------------------------------
+                */
+
+                toggle.addEventListener(
+                    'change',
+                    function () {
+
+                        const visible =
+                            this.checked;
+
+
+                        localStorage.setItem(
+                            storageKey,
+                            visible
+                                ? '1'
+                                : '0'
+                        );
+
+
+                        applyColumn(
+                            column,
+                            visible
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Copy Order ID
+        |--------------------------------------------------------------------------
+        */
+
+        document
+            .querySelectorAll(
+                '.copy-order-id'
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        'click',
+                        async function () {
+
+                            const orderId =
+                                this.dataset.orderId ||
+                                '';
+
+
+                            try {
+
+                                await navigator.clipboard.writeText(
+                                    orderId
+                                );
+
+
+                                const original =
+                                    this.innerHTML;
+
+
+                                this.innerHTML =
+                                    '<i class="ti ti-check me-2"></i> Copied';
+
+
+                                setTimeout(
+                                    function () {
+
+                                        button.innerHTML =
+                                            original;
+
+                                    },
+                                    1200
+                                );
+
+
+                            } catch (error) {
+
+                                /*
+                                | Clipboard unavailable.
+                                | Silently ignore.
+                                */
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Prevent Accidental Double Submit
+        |--------------------------------------------------------------------------
+        */
+
+        document
+            .querySelectorAll(
+                '#purchases-table form'
+            )
+            .forEach(
+                function (form) {
+
+                    form.addEventListener(
+                        'submit',
+                        function () {
+
+                            const select =
+                                form.querySelector(
+                                    'select[name="payment_status"]'
+                                );
+
+
+                            if (select) {
+
+                                select.disabled =
+                                    true;
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+);
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

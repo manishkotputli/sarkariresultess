@@ -1,18 +1,14 @@
 'use strict';
+
 const incomeExpenseService = require('../../services/admin/incomeExpense.service');
 
 async function index(req, res, next) {
   try {
-    const loggedInUserId = req.session.admin.id;
-    const {
-      entries, total, page, perPage, stats, banks, banksTotal, bankPage, banksPerPage,
-      users, allBanks, allCategories,
-    } = await incomeExpenseService.getList(req.query,loggedInUserId);
 
-    res.render('admin/income-expense/index', {
-      title: 'Income & Expense',
-      active: 'income-expense',
-      entries, 
+    const loggedInUserId = req.session.admin.id;
+
+    const {
+      entries,
       total,
       page,
       perPage,
@@ -24,99 +20,273 @@ async function index(req, res, next) {
       users,
       allBanks,
       allCategories,
+    } = await incomeExpenseService.getList(
+      req.query,
+      loggedInUserId
+    );
+
+    res.render('admin/income-expense/index', {
+
+      title: 'Income & Expense',
+
+      active: 'income-expense',
+
+      entries,
+      total,
+      page,
+      perPage,
+
+      stats,
+
+      banks,
+      banksTotal,
+      bankPage,
+      banksPerPage,
+
+      users,
+      allBanks,
+      allCategories,
+
       filters: {
         search: req.query.search || '',
         type: req.query.type || '',
         user: req.query.user || '',
       },
+
     });
+
   } catch (err) {
+
     next(err);
+
   }
 }
+
 
 async function storeEntry(req, res, next) {
+
   try {
-    await incomeExpenseService.addEntry(req.body, req.session.admin.id);
-    req.flash('success', 'Entry added successfully.');
+
+    await incomeExpenseService.addEntry(
+      req.body,
+      req.session.admin.id
+    );
+
+    req.flash(
+      'success',
+      'Income/Expense entry added successfully.'
+    );
+
     res.redirect('/admin/income-expense');
+
   } catch (err) {
+
     if (err.status === 400) {
+
       req.flash('error', err.message);
-      return res.redirect('/admin/income-expense');
+
+      return res.redirect(
+        '/admin/income-expense'
+      );
+
     }
+
     next(err);
+
   }
+
 }
+
 
 async function updateEntry(req, res, next) {
+
   try {
-    await incomeExpenseService.editEntry(req.params.id, req.body, req.session.admin.id);
-    req.flash('success', 'Entry updated successfully.');
+
+    await incomeExpenseService.editEntry(
+      req.params.id,
+      req.body,
+      req.session.admin.id
+    );
+
+    req.flash(
+      'success',
+      'Income/Expense entry updated successfully.'
+    );
+
     res.redirect('/admin/income-expense');
+
   } catch (err) {
-    if (err.status === 400 || err.status === 404) {
+
+    if (
+      err.status === 400 ||
+      err.status === 404
+    ) {
+
       req.flash('error', err.message);
-      return res.redirect('/admin/income-expense');
+
+      return res.redirect(
+        '/admin/income-expense'
+      );
+
     }
+
     next(err);
+
   }
+
 }
+
 
 async function destroyEntry(req, res, next) {
+
   try {
-    await incomeExpenseService.removeEntry(req.params.id, req.session.admin.id);
-    req.flash('success', 'Entry deleted successfully.');
+
+    await incomeExpenseService.removeEntry(
+      req.params.id,
+      req.session.admin.id
+    );
+
+    req.flash(
+      'success',
+      'Income/Expense entry deleted successfully.'
+    );
+
     res.redirect('/admin/income-expense');
+
   } catch (err) {
+
     if (err.status === 404) {
+
       req.flash('error', err.message);
-      return res.redirect('/admin/income-expense');
+
+      return res.redirect(
+        '/admin/income-expense'
+      );
+
     }
+
     next(err);
+
   }
+
 }
+
 
 async function storeBank(req, res, next) {
+
   try {
-    await incomeExpenseService.addBank(req.body, req.session.admin.id);
-    req.flash('success', 'Account added successfully.');
+
+    await incomeExpenseService.addBank(
+      req.body,
+      req.session.admin.id
+    );
+
+    req.flash(
+      'success',
+      'Account added successfully.'
+    );
+
     res.redirect('/admin/income-expense');
+
   } catch (err) {
+
     if (err.status === 400) {
+
       req.flash('error', err.message);
-      return res.redirect('/admin/income-expense');
+
+      return res.redirect(
+        '/admin/income-expense'
+      );
+
     }
+
     next(err);
+
   }
+
 }
+
 
 async function updateBank(req, res, next) {
+
   try {
-    await incomeExpenseService.editBank(req.params.id, req.body,req.session.admin.id);
-    req.flash('success', 'Account updated successfully.');
+
+    await incomeExpenseService.editBank(
+      req.params.id,
+      req.body,
+      req.session.admin.id
+    );
+
+    req.flash(
+      'success',
+      'Account updated successfully.'
+    );
+
     res.redirect('/admin/income-expense');
+
   } catch (err) {
-    if (err.status === 400 || err.status === 404) {
+
+    if (
+      err.status === 400 ||
+      err.status === 404
+    ) {
+
       req.flash('error', err.message);
-      return res.redirect('/admin/income-expense');
+
+      return res.redirect(
+        '/admin/income-expense'
+      );
+
     }
+
     next(err);
+
   }
+
 }
+
 
 async function destroyBank(req, res, next) {
+
   try {
-    await incomeExpenseService.removeBank(req.params.id,req.session.admin.id);
-    req.flash('success', 'Account removed successfully.');
+
+    await incomeExpenseService.removeBank(
+      req.params.id,
+      req.session.admin.id
+    );
+
+    req.flash(
+      'success',
+      'Account removed successfully.'
+    );
+
     res.redirect('/admin/income-expense');
+
   } catch (err) {
+
     if (err.status === 404) {
+
       req.flash('error', err.message);
-      return res.redirect('/admin/income-expense');
+
+      return res.redirect(
+        '/admin/income-expense'
+      );
+
     }
+
     next(err);
+
   }
+
 }
 
-module.exports = { index, storeEntry, updateEntry, destroyEntry, storeBank, updateBank, destroyBank };
+
+module.exports = {
+  index,
+  storeEntry,
+  updateEntry,
+  destroyEntry,
+  storeBank,
+  updateBank,
+  destroyBank,
+};

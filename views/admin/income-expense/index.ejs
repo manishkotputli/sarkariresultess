@@ -1,693 +1,4031 @@
 <%
-function money(n) {
-  return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function maskAccount(acc) {
-  if (!acc) return '•••• ••••';
-  var clean = String(acc).replace(/\s+/g, '');
-  var last4 = clean.slice(-4);
-  return last4 ? ('•••• ' + last4) : '•••• ••••';
-}
-var cardThemes = ['fin-card-a', 'fin-card-b', 'fin-card-c', 'fin-card-d', 'fin-card-e', 'fin-card-f'];
+    /*
+    |--------------------------------------------------------------------------
+    | Safe Locals
+    |--------------------------------------------------------------------------
+    */
 
-var bankOptionsJson = JSON.stringify(allBanks.map(function (b) {
-  return { id: b.id, name: b.name, user_id: b.user_id };
-}));
-var categoryOptionsJson = JSON.stringify(allCategories.map(function (c) {
-  return { id: c.id, name: c.name, user_id: c.user_id, type: c.type };
-}));
+    const currentFilters =
+        typeof filters !== 'undefined' && filters
+            ? filters
+            : {};
+
+    const currentSearch =
+        currentFilters.search || '';
+
+    const currentType =
+        currentFilters.type || '';
+
+    const currentSort =
+        currentFilters.sort || '';
+
+    const entryList =
+        Array.isArray(entries)
+            ? entries
+            : [];
+
+    const bankList =
+        Array.isArray(banks)
+            ? banks
+            : [];
+
+    const bankSelectList =
+        Array.isArray(allBanks)
+            ? allBanks
+            : [];
+
+    const categorySelectList =
+        Array.isArray(allCategories)
+            ? allCategories
+            : [];
+
+    const userList =
+        Array.isArray(users)
+            ? users
+            : [];
+
+    const currentPage =
+        Number(page) || 1;
+
+    const entriesPerPage =
+        Number(perPage) || 15;
+
+    const totalEntries =
+        Number(total) || 0;
+
+    const totalBankCount =
+        Number(banksTotal) || 0;
+
+    const totalBankPages =
+        Math.max(
+            1,
+            Math.ceil(
+                totalBankCount / (
+                    Number(banksPerPage) || 8
+                )
+            )
+        );
+
+    const totalEntryPages =
+        Math.max(
+            1,
+            Math.ceil(
+                totalEntries / entriesPerPage
+            )
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Money Formatter
+    |--------------------------------------------------------------------------
+    */
+
+    function money(value) {
+
+        return '₹' + Number(value || 0).toLocaleString(
+            'en-IN',
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Date Formatter
+    |--------------------------------------------------------------------------
+    */
+
+    function displayDate(value) {
+
+        if (!value) {
+            return '-';
+        }
+
+        try {
+
+            const date = new Date(value);
+
+            if (isNaN(date.getTime())) {
+                return value;
+            }
+
+            return date.toLocaleDateString(
+                'en-IN',
+                {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                }
+            );
+
+        } catch (e) {
+
+            return value;
+
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Account Number Mask
+    |--------------------------------------------------------------------------
+    */
+
+    function maskAccount(value) {
+
+        if (!value) {
+            return '•••• ••••';
+        }
+
+        const clean =
+            String(value).replace(/\s+/g, '');
+
+        const last4 =
+            clean.slice(-4);
+
+        return last4
+            ? '•••• ' + last4
+            : '•••• ••••';
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Card Themes
+    |--------------------------------------------------------------------------
+    */
+
+    const cardThemes = [
+        'fin-card-a',
+        'fin-card-b',
+        'fin-card-c',
+        'fin-card-d',
+        'fin-card-e',
+        'fin-card-f'
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | JSON For Javascript
+    |--------------------------------------------------------------------------
+    */
+
+    const bankOptionsJson =
+        JSON.stringify(
+            bankSelectList.map(function (bank) {
+
+                return {
+                    id: bank.id,
+                    name: bank.name,
+                    user_id: bank.user_id
+                };
+
+            })
+        );
+
+    const categoryOptionsJson =
+        JSON.stringify(
+            categorySelectList.map(function (category) {
+
+                return {
+                    id: category.id,
+                    name: category.name,
+                    user_id: category.user_id,
+                    type: category.type
+                };
+
+            })
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Builder
+    |--------------------------------------------------------------------------
+    */
+
+    function buildQuery(params) {
+
+        const query = [];
+
+        Object.keys(params).forEach(function (key) {
+
+            const value = params[key];
+
+            if (
+                value !== undefined &&
+                value !== null &&
+                value !== ''
+            ) {
+
+                query.push(
+                    encodeURIComponent(key) +
+                    '=' +
+                    encodeURIComponent(value)
+                );
+
+            }
+
+        });
+
+        return query.join('&');
+
+    }
 %>
 
-<%- include('../../adminlayout/admin-layout-top') %>
+
+<%- include('../../adminlayout/header') %>
+
 
 <style>
-.fin-card { color: #fff; box-shadow: 0 10px 30px -12px rgba(0,0,0,0.35); }
-.fin-card-a { background: linear-gradient(135deg, #232b36 0%, #0c0f14 100%); }
-.fin-card-b { background: linear-gradient(135deg, #0f9b8e 0%, #0b5f57 100%); }
-.fin-card-c { background: linear-gradient(135deg, #4a8f34 0%, #16260f 100%); }
-.fin-card-d { background: linear-gradient(135deg, #0f6aad 0%, #062338 100%); }
-.fin-card-e { background: linear-gradient(135deg, #5b4a9e 0%, #1c1533 100%); }
-.fin-card-f { background: linear-gradient(135deg, #c17a24 0%, #2e1a08 100%); }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Finance Account Cards
+    |--------------------------------------------------------------------------
+    */
+
+    .finance-account-card {
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        min-height: 205px;
+        box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .30);
+        transition: all .25s ease;
+    }
+
+    .finance-account-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 35px -12px rgba(0, 0, 0, .38);
+    }
+
+    .finance-account-card::after {
+        content: "";
+        position: absolute;
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .08);
+        right: -45px;
+        bottom: -55px;
+    }
+
+    .fin-card-a {
+        background: linear-gradient(
+            135deg,
+            #232b36 0%,
+            #0c0f14 100%
+        );
+    }
+
+    .fin-card-b {
+        background: linear-gradient(
+            135deg,
+            #0f9b8e 0%,
+            #0b5f57 100%
+        );
+    }
+
+    .fin-card-c {
+        background: linear-gradient(
+            135deg,
+            #4a8f34 0%,
+            #16260f 100%
+        );
+    }
+
+    .fin-card-d {
+        background: linear-gradient(
+            135deg,
+            #0f6aad 0%,
+            #062338 100%
+        );
+    }
+
+    .fin-card-e {
+        background: linear-gradient(
+            135deg,
+            #5b4a9e 0%,
+            #1c1533 100%
+        );
+    }
+
+    .fin-card-f {
+        background: linear-gradient(
+            135deg,
+            #c17a24 0%,
+            #2e1a08 100%
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Finance Stat Cards
+    |--------------------------------------------------------------------------
+    */
+
+    .finance-stat-card {
+        border: 1px solid #e9edf4;
+        transition: all .2s ease;
+    }
+
+    .finance-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .06);
+    }
+
+    .finance-stat-icon {
+        width: 54px;
+        height: 54px;
+        min-width: 54px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Table
+    |--------------------------------------------------------------------------
+    */
+
+    #income-expense-table th {
+        white-space: nowrap;
+    }
+
+    #income-expense-table td {
+        vertical-align: middle;
+    }
+
+    .finance-title {
+        max-width: 280px;
+    }
+
+    .finance-title .title-text {
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Account Number
+    |--------------------------------------------------------------------------
+    */
+
+    .account-number {
+        letter-spacing: 1.5px;
+        font-size: 13px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Empty State
+    |--------------------------------------------------------------------------
+    */
+
+    .finance-empty-state {
+        padding: 55px 20px;
+        text-align: center;
+    }
+
+    .finance-empty-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 15px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Modal
+    |--------------------------------------------------------------------------
+    */
+
+    .finance-modal .modal-header {
+        border-bottom: 1px solid #eef1f5;
+    }
+
+    .finance-modal .modal-footer {
+        border-top: 1px solid #eef1f5;
+    }
+
+    .finance-modal .form-label {
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Responsive
+    |--------------------------------------------------------------------------
+    */
+
+    @media (max-width: 767px) {
+
+        .finance-title {
+            max-width: 180px;
+        }
+
+        .finance-title .title-text {
+            max-width: 170px;
+        }
+
+        .finance-account-card {
+            min-height: 190px;
+        }
+
+    }
+
 </style>
 
 
+<div class="page-wrapper">
+
+    <div class="content pb-0">
 
 
-<!-- Title -->
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <div>
-        <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold mb-1">Income &amp; Expense</h1>
-        <p class="text-sm text-gray-500 mb-0">Every user's accounts and transactions, in one place.</p>
-    </div>
-</div>
+        <!-- =========================================================
+             ALERTS
+        ========================================================== -->
 
-<!-- Stat Cards -->
-<div class="grid grid-cols-12 gap-4 lg:gap-6 mb-4 lg:mb-6">
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-success text-white text-2xl"><i class="icon-trending-up"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Income</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0"><%= money(stats.income) %></h3>
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div
+                class="alert alert-success alert-dismissible fade show mb-4"
+                role="alert"
+            >
+                <i class="ti ti-circle-check me-2"></i>
+
+                <%= success %>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+
             </div>
-        </div>
-    </div>
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-danger text-white text-2xl"><i class="icon-trending-down"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Expense</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0"><%= money(stats.expense) %></h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-secondary text-white text-2xl"><i class="icon-scale"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Net Balance</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0"><%= money(stats.balance) %></h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-span-12 sm:col-span-6 xl:col-span-3">
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between gap-3 h-full">
-            <span class="size-14 shrink-0 flex items-center justify-center rounded-full bg-primary text-white text-2xl"><i class="icon-wallet"></i></span>
-            <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Active Accounts</p>
-                <h3 class="text-xl font-bold text-gray-900 leading-none mb-0"><%= stats.totalBanks %></h3>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Accounts -->
-<div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden mb-4 lg:mb-6" id="accounts">
-    <div class="flex items-center justify-between p-4 border-b border-border-color gap-2 flex-wrap">
-        <div>
-            <h2 class="text-gray-900 text-lg font-bold mb-0.5">Accounts</h2>
-            <p class="text-sm text-gray-500 mb-0"><%= banksTotal %> account<%= banksTotal === 1 ? '' : 's' %> across all users</p>
-        </div>
-        <button data-hs-overlay="#addBankModal" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-            <span class="flex"><i class="icon-plus"></i></span> Add Account
-        </button>
-    </div>
-
-    <div class="p-4 lg:p-5">
-        <% if (banks && banks.length) { %>
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-            <% banks.forEach(function(bank) { %>
-            <% var theme = cardThemes[bank.id % cardThemes.length]; %>
-            <div class="fin-card <%= theme %> rounded-2xl p-5 relative overflow-hidden">
-                <div class="flex items-start justify-between mb-6">
-                    <div>
-                        <p class="text-white/60 text-[11px] font-semibold uppercase tracking-wider mb-1">Account</p>
-                        <h4 class="text-white text-base font-bold mb-0"><%= bank.name %></h4>
-                    </div>
-                    <div class="hs-dropdown [--placement:bottom-right] [--auto-close:inside] relative inline-flex">
-                        <button type="button" class="hs-dropdown-toggle size-8 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-colors" aria-haspopup="menu" aria-expanded="false" aria-label="Account options"><i class="icon-ellipsis-vertical text-sm"></i></button>
-                        <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-36 bg-white border border-border-color shadow rounded-lg mt-2 z-1" role="menu" aria-orientation="vertical">
-                            <div class="p-2 space-y-1">
-                                <button type="button"
-                                    class="editBankBtn w-full flex items-center hover:bg-primary-50 px-4 py-1.75 rounded-lg text-sm text-default hover:text-primary focus:outline-hidden focus:bg-white cursor-pointer"
-                                    data-hs-overlay="#editBankModal"
-                                    data-id="<%= bank.id %>"
-                                    data-user="<%= bank.user_id %>"
-                                    data-name="<%= bank.name %>"
-                                    data-account="<%= bank.account_number || '' %>"
-                                    data-balance="<%= bank.opening_balance %>"
-                                    data-active="<%= bank.is_active ? '1' : '0' %>">
-                                    <i class="icon-pencil-line me-2"></i>Edit
-                                </button>
-                                <button type="button"
-                                    class="deleteBankBtn w-full flex items-center hover:bg-primary-50 px-4 py-1.75 rounded-lg text-sm text-danger hover:text-danger focus:outline-hidden focus:bg-white cursor-pointer"
-                                    data-hs-overlay="#deleteBankModal"
-                                    data-id="<%= bank.id %>"
-                                    data-name="<%= bank.name %>">
-                                    <i class="icon-trash-2 me-2"></i>Remove
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="size-9 rounded-md bg-gradient-to-br from-warning to-orange mb-4"></div>
-
-                <p class="text-white text-lg font-semibold tracking-widest mb-6"><%= maskAccount(bank.account_number) %></p>
-
-                <div class="flex items-end justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="text-white/60 text-[10px] font-semibold uppercase tracking-wider mb-1">Account Holder</p>
-                        <p class="text-white text-sm font-semibold mb-0 truncate"><%= bank.User ? bank.User.name : '—' %></p>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <p class="text-white/60 text-[10px] font-semibold uppercase tracking-wider mb-1">Balance</p>
-                        <p class="text-white text-base font-bold mb-0"><%= money(bank.current_balance) %></p>
-                    </div>
-                </div>
-            </div>
-            <% }) %>
-        </div>
-
-        <% var totalBankPages = Math.max(1, Math.ceil(banksTotal / banksPerPage)); %>
-        <% if (totalBankPages > 1) { %>
-        <div class="flex items-center justify-center gap-1 mt-5">
-            <% for (var bp = 1; bp <= totalBankPages; bp++) { %>
-                <a href="/admin/income-expense?bank_page=<%= bp %>#accounts" class="size-9 flex items-center justify-center rounded-full border text-sm <%= bp === bankPage ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= bp %></a>
-            <% } %>
-        </div>
         <% } %>
 
-        <% } else { %>
-        <div class="text-center py-10">
-            <span class="size-14 rounded-full bg-primary/10 text-primary text-2xl inline-flex items-center justify-center mb-3"><i class="icon-wallet"></i></span>
-            <p class="text-gray-500 mb-0">No accounts yet. Add the first one to get started.</p>
-        </div>
-        <% } %>
-    </div>
-</div>
 
-<!-- Transactions -->
-<div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden" id="transactions">
-    <div class="flex items-center justify-between p-4 border-b border-border-color gap-2 flex-wrap">
-        <div>
-            <h2 class="text-gray-900 text-lg font-bold mb-0.5">Transactions</h2>
-            <p class="text-sm text-gray-500 mb-0"><%= total %> entr<%= total === 1 ? 'y' : 'ies' %> recorded</p>
-        </div>
-        <button data-hs-overlay="#addEntryModal" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-            <span class="flex"><i class="icon-plus"></i></span> Add Entry
-        </button>
-    </div>
+        <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
 
-    <form method="GET" action="/admin/income-expense" class="flex items-center justify-between flex-wrap gap-3 p-4 border-b border-border-color">
-        <div class="relative w-full sm:w-72">
-            <input type="text" name="search" value="<%= filters.search %>" placeholder="Search by title..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-            <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0"><i class="icon-search"></i></button>
-        </div>
-        <div class="flex items-center flex-wrap gap-2 md:gap-3">
-            <select name="type" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                <option value="">All Types</option>
-                <option value="1" <%= filters.type === '1' ? 'selected' : '' %>>Income</option>
-                <option value="2" <%= filters.type === '2' ? 'selected' : '' %>>Expense</option>
-            </select>
-            <select name="user" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-                <option value="">All Users</option>
-                <% users.forEach(function(u) { %>
-                    <option value="<%= u.id %>" <%= String(filters.user) === String(u.id) ? 'selected' : '' %>><%= u.name %></option>
-                <% }) %>
-            </select>
-            <% if (filters.search || filters.type || filters.user) { %>
-            <a href="/admin/income-expense" class="text-sm text-gray-600 hover:text-primary font-medium">Clear</a>
-            <% } %>
-        </div>
-    </form>
+            <div
+                class="alert alert-danger alert-dismissible fade show mb-4"
+                role="alert"
+            >
 
-    <div class="overflow-x-auto">
-        <table class="w-full min-w-[900px]">
-            <thead>
-                <tr class="border-b border-border-color bg-gray-50/50">
-                    <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Date</th>
-                    <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Title</th>
-                    <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Category</th>
-                    <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">Account</th>
-                    <th class="px-6 py-3 bg-white text-gray-900 text-start text-[13px] font-semibold uppercase tracking-wider">User</th>
-                    <th class="px-6 py-3 bg-white text-gray-900 text-end text-[13px] font-semibold uppercase tracking-wider">Amount</th>
-                    <th class="px-6 py-3 bg-white text-gray-900 text-end text-[13px] font-semibold uppercase tracking-wider">Action</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y">
-                <% if (entries && entries.length) { %>
-                    <% entries.forEach(function(entry) { %>
-                    <tr>
-                        <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= formatDate(entry.transaction_date) %></span></td>
-                        <td class="px-6 py-4 border-b border-border-color bg-white">
-                            <div class="flex items-center gap-3">
-                                <span class="size-9 shrink-0 flex items-center justify-center rounded-full <%= Number(entry.type) === 1 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger' %> text-base">
-                                    <i class="<%= Number(entry.type) === 1 ? 'icon-banknote-arrow-up' : 'icon-banknote-arrow-down' %>"></i>
-                                </span>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-900 mb-0"><%= entry.title %></p>
-                                    <span class="inline-flex items-center text-[11px] font-bold rounded px-1.5 py-0.5 <%= Number(entry.type) === 1 ? 'text-success bg-success/10' : 'text-danger bg-danger/10' %>"><%= Number(entry.type) === 1 ? 'Income' : 'Expense' %></span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= entry.IncomeExpenseCategory ? entry.IncomeExpenseCategory.name : '—' %></span></td>
-                        <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= entry.Bank ? entry.Bank.name : 'Cash / none' %></span></td>
-                        <td class="px-6 py-4 border-b border-border-color bg-white"><span class="text-sm text-gray-600"><%= entry.User ? entry.User.name : '—' %></span></td>
-                        <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                            <span class="text-sm font-bold <%= Number(entry.type) === 1 ? 'text-success' : 'text-danger' %>"><%= Number(entry.type) === 1 ? '+' : '-' %><%= money(entry.amount) %></span>
-                        </td>
-                        <td class="px-6 py-4 border-b border-border-color bg-white text-end">
-                            <div class="flex items-center justify-end gap-2">
-                                <button type="button"
-                                    class="editEntryBtn size-9 rounded-full hover:bg-gray-100 text-gray-900 flex items-center justify-center transition-colors"
-                                    aria-label="Edit"
-                                    data-hs-overlay="#editEntryModal"
-                                    data-id="<%= entry.id %>"
-                                    data-user="<%= entry.user_id %>"
-                                    data-type="<%= entry.type %>"
-                                    data-category="<%= entry.category_id %>"
-                                    data-bank="<%= entry.bank_id || '' %>"
-                                    data-title="<%= entry.title %>"
-                                    data-amount="<%= entry.amount %>"
-                                    data-date="<%= entry.transaction_date %>"
-                                    data-note="<%= entry.note || '' %>">
-                                    <i class="icon-pencil-line text-sm"></i>
-                                </button>
-                                <button type="button"
-                                    class="deleteEntryBtn size-9 rounded-full hover:bg-gray-100 text-gray-900 hover:text-danger flex items-center justify-center transition-colors"
-                                    aria-label="Delete"
-                                    data-hs-overlay="#deleteEntryModal"
-                                    data-id="<%= entry.id %>"
-                                    data-title="<%= entry.title %>">
-                                    <i class="icon-trash-2 text-sm"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                <ul class="mb-0 ps-3">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
                     <% }) %>
+
+                </ul>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =========================================================
+             PAGE HEADER
+        ========================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    Income &amp; Expense
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+                        <li
+                            class="breadcrumb-item active"
+                            aria-current="page"
+                        >
+                            Income &amp; Expense
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+                <!-- Refresh -->
+
+                <a
+                    href="javascript:location.reload();"
+                    class="btn btn-icon btn-outline-light shadow"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    aria-label="Refresh"
+                    data-bs-original-title="Refresh"
+                >
+                    <i class="ti ti-refresh"></i>
+                </a>
+
+
+                <!-- Collapse -->
+
+                <a
+                    href="javascript:void(0);"
+                    class="btn btn-icon btn-outline-light shadow"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    aria-label="Collapse"
+                    data-bs-original-title="Collapse"
+                    id="collapse-header"
+                >
+                    <i class="ti ti-transition-top"></i>
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================================
+             STAT CARDS
+        ========================================================== -->
+
+        <div class="row mb-4">
+
+
+            <!-- Total Income -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card finance-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Total Income
+                                </p>
+
+                                <h4 class="mb-0 fw-bold text-success">
+                                    <%= money(stats && stats.income) %>
+                                </h4>
+
+                                <small class="text-muted">
+                                    All your income entries
+                                </small>
+
+                            </div>
+
+                            <span class="finance-stat-icon bg-soft-success text-success">
+                                <i class="ti ti-trending-up"></i>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Total Expense -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card finance-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Total Expense
+                                </p>
+
+                                <h4 class="mb-0 fw-bold text-danger">
+                                    <%= money(stats && stats.expense) %>
+                                </h4>
+
+                                <small class="text-muted">
+                                    All your expense entries
+                                </small>
+
+                            </div>
+
+                            <span class="finance-stat-icon bg-soft-danger text-danger">
+                                <i class="ti ti-trending-down"></i>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Net Balance -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card finance-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Net Balance
+                                </p>
+
+                                <h4 class="mb-0 fw-bold <%= Number(stats && stats.balance) >= 0 ? 'text-primary' : 'text-danger' %>">
+                                    <%= money(stats && stats.balance) %>
+                                </h4>
+
+                                <small class="text-muted">
+                                    Income minus expense
+                                </small>
+
+                            </div>
+
+                            <span class="finance-stat-icon bg-soft-primary text-primary">
+                                <i class="ti ti-scale"></i>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Active Accounts -->
+
+            <div class="col-xl-3 col-md-6 mb-3">
+
+                <div class="card finance-stat-card h-100 mb-0">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <p class="text-muted mb-1">
+                                    Active Accounts
+                                </p>
+
+                                <h4 class="mb-0 fw-bold text-info">
+                                    <%= Number(stats && stats.totalBanks) || 0 %>
+                                </h4>
+
+                                <small class="text-muted">
+                                    Your active bank/accounts
+                                </small>
+
+                            </div>
+
+                            <span class="finance-stat-icon bg-soft-info text-info">
+                                <i class="ti ti-wallet"></i>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================================
+             ACCOUNTS
+        ========================================================== -->
+
+        <div
+            class="card border-0 rounded-0 mb-4"
+            id="accounts"
+        >
+
+            <!-- Header -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+                <div>
+
+                    <h5 class="mb-1">
+                        My Accounts
+                    </h5>
+
+                    <p class="text-muted mb-0">
+                        <%= totalBankCount %>
+                        account<%= totalBankCount === 1 ? '' : 's' %>
+                        available
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addBankModal"
+                >
+
+                    <i class="ti ti-square-rounded-plus-filled me-1"></i>
+
+                    Add Account
+
+                </button>
+
+            </div>
+
+
+            <!-- Accounts Body -->
+
+            <div class="card-body">
+
+                <% if (bankList.length) { %>
+
+                    <div class="row">
+
+                        <% bankList.forEach(function(bank, bankIndex) { %>
+
+                            <%
+                                const theme =
+                                    cardThemes[
+                                        Number(bank.id) %
+                                        cardThemes.length
+                                    ];
+                            %>
+
+
+                            <div class="col-xl-4 col-md-6 mb-4">
+
+                                <div
+                                    class="finance-account-card <%= theme %> p-4 h-100"
+                                >
+
+
+                                    <!-- Top -->
+
+                                    <div class="d-flex align-items-start justify-content-between mb-4">
+
+                                        <div>
+
+                                            <div
+                                                class="text-white-50 text-uppercase small fw-semibold mb-1"
+                                            >
+                                                Account
+                                            </div>
+
+                                            <h5 class="text-white mb-0">
+                                                <%= bank.name %>
+                                            </h5>
+
+                                        </div>
+
+
+                                        <div class="dropdown">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-icon text-white"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                            >
+
+                                                <i class="ti ti-dots-vertical"></i>
+
+                                            </button>
+
+
+                                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                                <li>
+
+                                                    <a
+                                                        href="javascript:void(0);"
+                                                        class="dropdown-item editBankBtn"
+                                                        data-id="<%= bank.id %>"
+                                                        data-name="<%= bank.name %>"
+                                                        data-account="<%= bank.account_number || '' %>"
+                                                        data-balance="<%= bank.opening_balance || 0 %>"
+                                                        data-active="<%= bank.is_active ? '1' : '0' %>"
+                                                    >
+
+                                                        <i class="ti ti-edit me-2"></i>
+
+                                                        Edit
+
+                                                    </a>
+
+                                                </li>
+
+
+                                                <li>
+
+                                                    <a
+                                                        href="javascript:void(0);"
+                                                        class="dropdown-item text-danger deleteBankBtn"
+                                                        data-id="<%= bank.id %>"
+                                                        data-name="<%= bank.name %>"
+                                                    >
+
+                                                        <i class="ti ti-trash me-2"></i>
+
+                                                        Remove
+
+                                                    </a>
+
+                                                </li>
+
+                                            </ul>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- Card Chip -->
+
+                                    <div
+                                        class="mb-3"
+                                        style="
+                                            width:42px;
+                                            height:30px;
+                                            border-radius:6px;
+                                            background:linear-gradient(135deg,#f7d774,#b7891c);
+                                        "
+                                    ></div>
+
+
+                                    <!-- Account Number -->
+
+                                    <div class="mb-4">
+
+                                        <div class="account-number text-white fw-semibold">
+
+                                            <%= maskAccount(bank.account_number) %>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- Bottom -->
+
+                                    <div class="d-flex align-items-end justify-content-between gap-3">
+
+                                        <div class="min-w-0">
+
+                                            <small class="text-white-50 d-block text-uppercase">
+                                                Account Holder
+                                            </small>
+
+                                            <strong class="text-white d-block text-truncate">
+                                                <%= bank.User ? bank.User.name : 'My Account' %>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div class="text-end">
+
+                                            <small class="text-white-50 d-block text-uppercase">
+                                                Current Balance
+                                            </small>
+
+                                            <strong class="text-white d-block">
+                                                <%= money(bank.current_balance) %>
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        <% }) %>
+
+                    </div>
+
+
+                    <!-- Account Pagination -->
+
+                    <% if (totalBankPages > 1) { %>
+
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2">
+
+                            <div class="text-muted small">
+
+                                Page
+                                <strong><%= Number(bankPage) || 1 %></strong>
+                                of
+                                <strong><%= totalBankPages %></strong>
+
+                            </div>
+
+
+                            <ul class="pagination pagination-sm mb-0">
+
+                                <% if (Number(bankPage) > 1) { %>
+
+                                    <li class="page-item">
+
+                                        <a
+                                            class="page-link"
+                                            href="/admin/income-expense?<%= buildQuery({
+                                                bank_page: Number(bankPage) - 1,
+                                                search: currentSearch,
+                                                type: currentType
+                                            }) %>#accounts"
+                                        >
+
+                                            <i class="ti ti-chevron-left"></i>
+
+                                        </a>
+
+                                    </li>
+
+                                <% } %>
+
+
+                                <%
+                                    const bankStart =
+                                        Math.max(
+                                            1,
+                                            (Number(bankPage) || 1) - 2
+                                        );
+
+                                    const bankEnd =
+                                        Math.min(
+                                            totalBankPages,
+                                            (Number(bankPage) || 1) + 2
+                                        );
+                                %>
+
+
+                                <% for (let bp = bankStart; bp <= bankEnd; bp++) { %>
+
+                                    <li
+                                        class="page-item <%= bp === Number(bankPage) ? 'active' : '' %>"
+                                    >
+
+                                        <a
+                                            class="page-link"
+                                            href="/admin/income-expense?<%= buildQuery({
+                                                bank_page: bp,
+                                                search: currentSearch,
+                                                type: currentType
+                                            }) %>#accounts"
+                                        >
+                                            <%= bp %>
+                                        </a>
+
+                                    </li>
+
+                                <% } %>
+
+
+                                <% if (Number(bankPage) < totalBankPages) { %>
+
+                                    <li class="page-item">
+
+                                        <a
+                                            class="page-link"
+                                            href="/admin/income-expense?<%= buildQuery({
+                                                bank_page: Number(bankPage) + 1,
+                                                search: currentSearch,
+                                                type: currentType
+                                            }) %>#accounts"
+                                        >
+
+                                            <i class="ti ti-chevron-right"></i>
+
+                                        </a>
+
+                                    </li>
+
+                                <% } %>
+
+                            </ul>
+
+                        </div>
+
+                    <% } %>
+
+
                 <% } else { %>
-                    <tr><td colspan="7" class="px-6 py-10 text-center text-gray-500 bg-white">No entries found.</td></tr>
+
+
+                    <!-- Empty Accounts -->
+
+                    <div class="finance-empty-state">
+
+                        <div class="finance-empty-icon bg-soft-primary text-primary">
+
+                            <i class="ti ti-wallet"></i>
+
+                        </div>
+
+                        <h5 class="mb-1">
+                            No Accounts Found
+                        </h5>
+
+                        <p class="text-muted mb-3">
+                            You have not added any bank or wallet account yet.
+                        </p>
+
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addBankModal"
+                        >
+
+                            <i class="ti ti-plus me-1"></i>
+
+                            Add Your First Account
+
+                        </button>
+
+                    </div>
+
+
                 <% } %>
-            </tbody>
-        </table>
-    </div>
 
-    <% var totalPages = Math.max(1, Math.ceil(total / perPage)); %>
-    <% if (totalPages > 1) { %>
-    <div class="flex items-center justify-between flex-wrap gap-3 p-4 border-t border-border-color">
-        <p class="text-sm text-gray-600 mb-0">Page <%= page %> of <%= totalPages %> &middot; <%= total %> total entries</p>
-        <div class="flex items-center gap-1">
-            <% if (page > 1) { %>
-                <a href="/admin/income-expense?page=<%= page - 1 %>&search=<%= filters.search %>&type=<%= filters.type %>&user=<%= filters.user %>#transactions" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a>
-            <% } %>
-            <% var pStart = Math.max(1, page - 2); var pEnd = Math.min(totalPages, page + 2); %>
-            <% for (var p = pStart; p <= pEnd; p++) { %>
-                <a href="/admin/income-expense?page=<%= p %>&search=<%= filters.search %>&type=<%= filters.type %>&user=<%= filters.user %>#transactions" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a>
-            <% } %>
-            <% if (page < totalPages) { %>
-                <a href="/admin/income-expense?page=<%= page + 1 %>&search=<%= filters.search %>&type=<%= filters.type %>&user=<%= filters.user %>#transactions" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a>
-            <% } %>
+            </div>
+
         </div>
-    </div>
-    <% } %>
-</div>
 
-<!-- Add Bank Modal -->
-<div id="addBankModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" action="/admin/income-expense/bank">
-                    <div class="flex items-center justify-between p-4 border-b border-border-color">
-                        <h3 class="text-lg font-bold text-gray-900">Add Account</h3>
-                        <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200" aria-label="Close" data-hs-overlay="#addBankModal">
-                            <i class="icon-x"></i>
+
+        <!-- =========================================================
+             TRANSACTIONS
+        ========================================================== -->
+
+        <div
+            class="card border-0 rounded-0"
+            id="transactions"
+        >
+
+
+            <!-- Header -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+                <div>
+
+                    <h5 class="mb-1">
+                        Transactions
+                    </h5>
+
+                    <p class="text-muted mb-0">
+
+                        <%= totalEntries %>
+
+                        transaction<%= totalEntries === 1 ? '' : 's' %>
+                        recorded
+
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addEntryModal"
+                >
+
+                    <i class="ti ti-square-rounded-plus-filled me-1"></i>
+
+                    Add Entry
+
+                </button>
+
+            </div>
+
+
+            <!-- =====================================================
+                 FILTER TOOLBAR
+            ====================================================== -->
+
+            <div class="card-body border-bottom">
+
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+
+                    <!-- Search -->
+
+                    <form
+                        method="GET"
+                        action="/admin/income-expense"
+                        class="mb-0 d-flex align-items-center gap-2 flex-wrap"
+                    >
+
+                        <div class="input-icon input-icon-start position-relative">
+
+                            <span class="input-icon-addon text-dark">
+
+                                <i class="ti ti-search"></i>
+
+                            </span>
+
+
+                            <input
+                                type="text"
+                                name="search"
+                                value="<%= currentSearch %>"
+                                class="form-control"
+                                placeholder="Search transactions..."
+                            >
+
+                        </div>
+
+
+                        <!-- Preserve type -->
+
+                        <input
+                            type="hidden"
+                            name="type"
+                            value="<%= currentType %>"
+                        >
+
+
+                        <!-- Search button -->
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+
+                            Search
+
                         </button>
+
+
+                        <% if (currentSearch || currentType) { %>
+
+                            <a
+                                href="/admin/income-expense"
+                                class="btn btn-link text-muted text-decoration-none"
+                            >
+
+                                Clear
+
+                            </a>
+
+                        <% } %>
+
+                    </form>
+
+
+                    <!-- Filter / Columns -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+
+                        <!-- Filter -->
+
+                        <div class="dropdown">
+
+                            <a
+                                href="javascript:void(0);"
+                                class="btn btn-outline-light shadow dropdown-toggle"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                            >
+
+                                <i class="ti ti-filter me-2"></i>
+
+                                Filter
+
+                                <% if (currentType) { %>
+
+                                    <span class="badge bg-primary ms-1">
+                                        1
+                                    </span>
+
+                                <% } %>
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-end p-3">
+
+                                <form
+                                    method="GET"
+                                    action="/admin/income-expense"
+                                >
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Transaction Type
+                                        </label>
+
+                                        <select
+                                            name="type"
+                                            class="form-select"
+                                        >
+
+                                            <option value="">
+                                                All Types
+                                            </option>
+
+                                            <option
+                                                value="1"
+                                                <%= currentType === '1' ? 'selected' : '' %>
+                                            >
+                                                Income
+                                            </option>
+
+                                            <option
+                                                value="2"
+                                                <%= currentType === '2' ? 'selected' : '' %>
+                                            >
+                                                Expense
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <input
+                                        type="hidden"
+                                        name="search"
+                                        value="<%= currentSearch %>"
+                                    >
+
+
+                                    <div class="d-flex gap-2">
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-primary flex-fill"
+                                        >
+
+                                            Apply
+
+                                        </button>
+
+
+                                        <a
+                                            href="/admin/income-expense"
+                                            class="btn btn-light flex-fill"
+                                        >
+
+                                            Clear
+
+                                        </a>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Manage Columns -->
+
+                        <div class="dropdown">
+
+                            <a
+                                href="javascript:void(0);"
+                                class="btn bg-soft-indigo border-0"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                            >
+
+                                <i class="ti ti-columns-3 me-2"></i>
+
+                                Manage Columns
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-3">
+
+                                <ul class="list-unstyled mb-0">
+
+
+                                    <!-- Date -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-calendar me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Date</span>
+
+                                                <input
+                                                    class="form-check-input column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="0"
+                                                    data-key="date"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Title -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-file-description me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Title</span>
+
+                                                <input
+                                                    class="form-check-input column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="1"
+                                                    data-key="title"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Category -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-category me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Category</span>
+
+                                                <input
+                                                    class="form-check-input column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="2"
+                                                    data-key="category"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Account -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-wallet me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Account</span>
+
+                                                <input
+                                                    class="form-check-input column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="3"
+                                                    data-key="account"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Type -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-arrows-transfer-up me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Type</span>
+
+                                                <input
+                                                    class="form-check-input column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="4"
+                                                    data-key="type"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Amount -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-currency-rupee me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Amount</span>
+
+                                                <input
+                                                    class="form-check-input column-toggle ms-auto"
+                                                    type="checkbox"
+                                                    data-column="5"
+                                                    data-key="amount"
+                                                    checked
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- Action -->
+
+                                    <li class="gap-1 d-flex align-items-center">
+
+                                        <i class="ti ti-settings me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>Action</span>
+
+                                                <input
+                                                    class="form-check-input"
+                                                    type="checkbox"
+                                                    checked
+                                                    disabled
+                                                >
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
                     </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">User <span class="text-danger">*</span></label>
-                            <select name="user_id" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                <option value="">Select user</option>
-                                <% users.forEach(function(u) { %>
-                                    <option value="<%= u.id %>"><%= u.name %></option>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 TABLE
+            ====================================================== -->
+
+            <div class="card-body pt-0">
+
+                <div class="table-responsive custom-table">
+
+                    <table
+                        class="table table-nowrap"
+                        id="income-expense-table"
+                    >
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>
+                                    Date
+                                </th>
+
+                                <th>
+                                    Title
+                                </th>
+
+                                <th>
+                                    Category
+                                </th>
+
+                                <th>
+                                    Account
+                                </th>
+
+                                <th>
+                                    Type
+                                </th>
+
+                                <th class="text-end">
+                                    Amount
+                                </th>
+
+                                <th class="text-end no-sort">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            <% if (entryList.length) { %>
+
+
+                                <% entryList.forEach(function(entry) { %>
+
+                                    <tr>
+
+
+                                        <!-- DATE -->
+
+                                        <td>
+
+                                            <span class="text-muted">
+
+                                                <i class="ti ti-calendar-event me-1"></i>
+
+                                                <%= displayDate(entry.transaction_date) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- TITLE -->
+
+                                        <td>
+
+                                            <div class="d-flex align-items-center gap-3 finance-title">
+
+
+                                                <span
+                                                    class="avatar avatar-sm rounded-circle
+                                                    <%= Number(entry.type) === 1
+                                                        ? 'bg-soft-success text-success'
+                                                        : 'bg-soft-danger text-danger'
+                                                    %>"
+                                                >
+
+                                                    <i
+                                                        class="ti
+                                                        <%= Number(entry.type) === 1
+                                                            ? 'ti-arrow-up'
+                                                            : 'ti-arrow-down'
+                                                        %>"
+                                                    ></i>
+
+                                                </span>
+
+
+                                                <div>
+
+                                                    <h6 class="mb-0 fw-semibold">
+
+                                                        <span
+                                                            class="title-text"
+                                                            title="<%= entry.title %>"
+                                                        >
+
+                                                            <%= entry.title %>
+
+                                                        </span>
+
+                                                    </h6>
+
+
+                                                    <% if (entry.note) { %>
+
+                                                        <small
+                                                            class="text-muted d-block text-truncate"
+                                                            style="max-width:240px;"
+                                                            title="<%= entry.note %>"
+                                                        >
+
+                                                            <%= entry.note %>
+
+                                                        </small>
+
+                                                    <% } %>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- CATEGORY -->
+
+                                        <td>
+
+                                            <% if (entry.IncomeExpenseCategory) { %>
+
+                                                <span class="badge bg-soft-primary text-primary">
+
+                                                    <i class="ti ti-category me-1"></i>
+
+                                                    <%= entry.IncomeExpenseCategory.name %>
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="text-muted">
+                                                    -
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- ACCOUNT -->
+
+                                        <td>
+
+                                            <% if (entry.Bank) { %>
+
+                                                <div>
+
+                                                    <span class="fw-medium">
+                                                        <%= entry.Bank.name %>
+                                                    </span>
+
+                                                    <% if (entry.Bank.account_number) { %>
+
+                                                        <small class="text-muted d-block">
+
+                                                            <%= maskAccount(entry.Bank.account_number) %>
+
+                                                        </small>
+
+                                                    <% } %>
+
+                                                </div>
+
+                                            <% } else { %>
+
+                                                <span class="badge bg-soft-secondary text-secondary">
+
+                                                    <i class="ti ti-cash me-1"></i>
+
+                                                    Cash / No Account
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- TYPE -->
+
+                                        <td>
+
+                                            <% if (Number(entry.type) === 1) { %>
+
+                                                <span class="badge bg-soft-success text-success">
+
+                                                    <i class="ti ti-arrow-up me-1"></i>
+
+                                                    Income
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="badge bg-soft-danger text-danger">
+
+                                                    <i class="ti ti-arrow-down me-1"></i>
+
+                                                    Expense
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- AMOUNT -->
+
+                                        <td class="text-end">
+
+                                            <span
+                                                class="fw-bold
+                                                <%= Number(entry.type) === 1
+                                                    ? 'text-success'
+                                                    : 'text-danger'
+                                                %>"
+                                            >
+
+                                                <%= Number(entry.type) === 1 ? '+' : '-' %>
+
+                                                <%= money(entry.amount) %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- ACTION -->
+
+                                        <td class="text-end">
+
+                                            <div class="dropdown">
+
+                                                <a
+                                                    href="javascript:void(0);"
+                                                    class="btn btn-icon btn-sm"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                >
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+
+                                                    <!-- EDIT -->
+
+                                                    <li>
+
+                                                        <a
+                                                            href="javascript:void(0);"
+                                                            class="dropdown-item editEntryBtn"
+
+                                                            data-id="<%= entry.id %>"
+
+                                                            data-type="<%= entry.type %>"
+
+                                                            data-category="<%= entry.category_id %>"
+
+                                                            data-bank="<%= entry.bank_id || '' %>"
+
+                                                            data-title="<%= entry.title %>"
+
+                                                            data-amount="<%= entry.amount %>"
+
+                                                            data-date="<%= entry.transaction_date %>"
+
+                                                            data-note="<%= entry.note || '' %>"
+                                                        >
+
+                                                            <i class="ti ti-edit me-2"></i>
+
+                                                            Edit
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- DELETE -->
+
+                                                    <li>
+
+                                                        <a
+                                                            href="javascript:void(0);"
+                                                            class="dropdown-item text-danger deleteEntryBtn"
+
+                                                            data-id="<%= entry.id %>"
+
+                                                            data-title="<%= entry.title %>"
+                                                        >
+
+                                                            <i class="ti ti-trash me-2"></i>
+
+                                                            Delete
+
+                                                        </a>
+
+                                                    </li>
+
+                                                </ul>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
                                 <% }) %>
-                            </select>
+
+
+                            <% } else { %>
+
+
+                                <!-- EMPTY -->
+
+                                <tr>
+
+                                    <td
+                                        colspan="7"
+                                        class="text-center py-5"
+                                    >
+
+                                        <div class="text-muted">
+
+                                            <i class="ti ti-report-money fs-40 d-block mb-2"></i>
+
+                                            <h5>
+                                                No Transactions Found
+                                            </h5>
+
+                                            <p class="mb-3">
+                                                No income or expense entries match your current filters.
+                                            </p>
+
+
+                                            <% if (currentSearch || currentType) { %>
+
+                                                <a
+                                                    href="/admin/income-expense"
+                                                    class="btn btn-light btn-sm me-1"
+                                                >
+
+                                                    Clear Filters
+
+                                                </a>
+
+                                            <% } %>
+
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-primary btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#addEntryModal"
+                                            >
+
+                                                <i class="ti ti-plus me-1"></i>
+
+                                                Add Entry
+
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            <% } %>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+
+                <% if (totalEntryPages > 1) { %>
+
+                    <div class="row align-items-center mt-3">
+
+
+                        <!-- Info -->
+
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Page
+                                <%= currentPage %>
+                                of
+                                <%= totalEntryPages %>
+
+                                &nbsp;·&nbsp;
+
+                                <%= totalEntries %>
+                                total entries
+
+                            </div>
+
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Account Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" required placeholder="e.g. HDFC Savings" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+
+                        <!-- Pagination -->
+
+                        <div class="col-md-6">
+
+                            <div class="d-flex justify-content-end">
+
+                                <ul class="pagination mb-0">
+
+
+                                    <!-- Previous -->
+
+                                    <% if (currentPage > 1) { %>
+
+                                        <li class="page-item">
+
+                                            <a
+                                                class="page-link"
+                                                href="/admin/income-expense?<%= buildQuery({
+                                                    page: currentPage - 1,
+                                                    search: currentSearch,
+                                                    type: currentType
+                                                }) %>#transactions"
+                                            >
+
+                                                <i class="ti ti-chevron-left"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                    <%
+                                        const pageStart =
+                                            Math.max(
+                                                1,
+                                                currentPage - 2
+                                            );
+
+                                        const pageEnd =
+                                            Math.min(
+                                                totalEntryPages,
+                                                currentPage + 2
+                                            );
+                                    %>
+
+
+                                    <% for (let pg = pageStart; pg <= pageEnd; pg++) { %>
+
+                                        <li
+                                            class="page-item <%= pg === currentPage ? 'active' : '' %>"
+                                        >
+
+                                            <a
+                                                class="page-link"
+                                                href="/admin/income-expense?<%= buildQuery({
+                                                    page: pg,
+                                                    search: currentSearch,
+                                                    type: currentType
+                                                }) %>#transactions"
+                                            >
+
+                                                <%= pg %>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                    <!-- Next -->
+
+                                    <% if (currentPage < totalEntryPages) { %>
+
+                                        <li class="page-item">
+
+                                            <a
+                                                class="page-link"
+                                                href="/admin/income-expense?<%= buildQuery({
+                                                    page: currentPage + 1,
+                                                    search: currentSearch,
+                                                    type: currentType
+                                                }) %>#transactions"
+                                            >
+
+                                                <i class="ti ti-chevron-right"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+                                </ul>
+
+                            </div>
+
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Account Number <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <input type="text" name="account_number" placeholder="e.g. 000123452345" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Opening Balance</label>
-                            <input type="number" step="0.01" min="0" name="opening_balance" value="0" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label class="text-sm font-medium text-gray-900">Active</label>
-                            <input type="checkbox" name="is_active" checked class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                        </div>
+
                     </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#addBankModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover cursor-pointer">Add Account</button>
-                    </div>
-                </form>
+
+                <% } %>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Edit Bank Modal (shared, populated via JS) -->
-<div id="editBankModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" id="editBankForm" action="">
-                    <div class="flex items-center justify-between p-4 border-b border-border-color">
-                        <h3 class="text-lg font-bold text-gray-900">Edit Account</h3>
-                        <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200" aria-label="Close" data-hs-overlay="#editBankModal">
-                            <i class="icon-x"></i>
-                        </button>
+
+<!-- ================================================================
+     ADD ACCOUNT MODAL
+================================================================ -->
+
+<div
+    class="modal fade finance-modal"
+    id="addBankModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+            <form
+                method="POST"
+                action="/admin/income-expense/bank"
+            >
+
+
+                <div class="modal-header">
+
+                    <div>
+
+                        <h5 class="modal-title mb-1">
+                            Add Account
+                        </h5>
+
+                        <small class="text-muted">
+                            Add your bank, wallet or cash account.
+                        </small>
+
                     </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">User <span class="text-danger">*</span></label>
-                            <select name="user_id" id="editBankUser" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                <option value="">Select user</option>
-                                <% users.forEach(function(u) { %>
-                                    <option value="<%= u.id %>"><%= u.name %></option>
-                                <% }) %>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Account Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="editBankName" required class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Account Number</label>
-                            <input type="text" name="account_number" id="editBankAccount" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Opening Balance</label>
-                            <input type="number" step="0.01" min="0" name="opening_balance" id="editBankBalance" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label class="text-sm font-medium text-gray-900">Active</label>
-                            <input type="checkbox" name="is_active" id="editBankActive" class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                        </div>
+
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                    ></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+
+                    <!-- Account Name -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Account Name
+
+                            <span class="text-danger">
+                                *
+                            </span>
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            class="form-control"
+                            required
+                            maxlength="255"
+                            placeholder="e.g. HDFC Savings"
+                        >
+
                     </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#editBankModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover cursor-pointer">Save Changes</button>
+
+
+                    <!-- Account Number -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Account Number
+
+                            <span class="text-muted fw-normal">
+                                (Optional)
+                            </span>
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="account_number"
+                            class="form-control"
+                            maxlength="100"
+                            placeholder="Enter account number"
+                        >
+
                     </div>
-                </form>
-            </div>
+
+
+                    <!-- Opening Balance -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Opening Balance
+                        </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text">
+                                ₹
+                            </span>
+
+                            <input
+                                type="number"
+                                name="opening_balance"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                value="0"
+                                placeholder="0.00"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Active -->
+
+                    <div class="form-check form-switch">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="is_active"
+                            value="1"
+                            id="addBankActive"
+                            checked
+                        >
+
+                        <label
+                            class="form-check-label"
+                            for="addBankActive"
+                        >
+                            Active Account
+                        </label>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="ti ti-plus me-1"></i>
+
+                        Add Account
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Delete Bank Modal (shared, populated via JS) -->
-<div id="deleteBankModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" id="deleteBankForm" action="">
-                    <div class="p-4 sm:p-7">
-                        <div class="text-center">
-                            <div class="flex justify-center mb-4">
-                                <div class="flex items-center justify-center size-14 rounded-full bg-danger/10">
-                                    <i class="icon-trash-2 text-danger text-2xl!"></i>
-                                </div>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Remove Account</h3>
-                            <p class="text-sm text-gray-600 mb-0">Are you sure you want to remove "<span id="deleteBankName" class="font-semibold"></span>"? It will be hidden from the accounts list; past entries against it are kept.</p>
+
+<!-- ================================================================
+     EDIT ACCOUNT MODAL
+================================================================ -->
+
+<div
+    class="modal fade finance-modal"
+    id="editBankModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+            <form
+                method="POST"
+                id="editBankForm"
+                action=""
+            >
+
+
+                <div class="modal-header">
+
+                    <div>
+
+                        <h5 class="modal-title mb-1">
+                            Edit Account
+                        </h5>
+
+                        <small class="text-muted">
+                            Update your account information.
+                        </small>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                    ></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+
+                    <!-- Account Name -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Account Name
+
+                            <span class="text-danger">
+                                *
+                            </span>
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            id="editBankName"
+                            class="form-control"
+                            required
+                            maxlength="255"
+                        >
+
+                    </div>
+
+
+                    <!-- Account Number -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Account Number
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="account_number"
+                            id="editBankAccount"
+                            class="form-control"
+                            maxlength="100"
+                        >
+
+                    </div>
+
+
+                    <!-- Opening Balance -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Opening Balance
+                        </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text">
+                                ₹
+                            </span>
+
+                            <input
+                                type="number"
+                                name="opening_balance"
+                                id="editBankBalance"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                            >
+
                         </div>
+
                     </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#deleteBankModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-danger rounded-lg hover:bg-danger-hover cursor-pointer">Remove</button>
+
+
+                    <!-- Active -->
+
+                    <div class="form-check form-switch">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="is_active"
+                            value="1"
+                            id="editBankActive"
+                        >
+
+                        <label
+                            class="form-check-label"
+                            for="editBankActive"
+                        >
+                            Active Account
+                        </label>
+
                     </div>
-                </form>
-            </div>
+
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="ti ti-device-floppy me-1"></i>
+
+                        Save Changes
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Add Entry Modal -->
-<div id="addEntryModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" action="/admin/income-expense">
-                    <div class="flex items-center justify-between p-4 border-b border-border-color">
-                        <h3 class="text-lg font-bold text-gray-900">Add Entry</h3>
-                        <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200" aria-label="Close" data-hs-overlay="#addEntryModal">
-                            <i class="icon-x"></i>
-                        </button>
+
+<!-- ================================================================
+     DELETE ACCOUNT MODAL
+================================================================ -->
+
+<div
+    class="modal fade"
+    id="deleteBankModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+            <form
+                method="POST"
+                id="deleteBankForm"
+                action=""
+            >
+
+
+                <div class="modal-body text-center p-4 p-md-5">
+
+                    <div
+                        class="avatar avatar-xl bg-soft-danger text-danger rounded-circle mx-auto mb-3"
+                    >
+
+                        <i class="ti ti-trash fs-24"></i>
+
                     </div>
-                    <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">Type <span class="text-danger">*</span></label>
-                                <select name="type" id="addEntryType" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                    <option value="1">Income</option>
-                                    <option value="2">Expense</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">User <span class="text-danger">*</span></label>
-                                <select name="user_id" id="addEntryUser" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                    <option value="">Select user</option>
-                                    <% users.forEach(function(u) { %>
-                                        <option value="<%= u.id %>"><%= u.name %></option>
-                                    <% }) %>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Category <span class="text-danger">*</span></label>
-                            <select name="category_id" id="addEntryCategory" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                <option value="">Select user first</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Account <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <select name="bank_id" id="addEntryBank" class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                <option value="">Cash / no account</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Title <span class="text-danger">*</span></label>
-                            <input type="text" name="title" required placeholder="e.g. Course sale commission" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">Amount <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" min="0" name="amount" required placeholder="0.00" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">Date <span class="text-danger">*</span></label>
-                                <input type="date" name="transaction_date" required value="<%= new Date().toISOString().slice(0,10) %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Note <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <textarea name="note" rows="2" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"></textarea>
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#addEntryModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover cursor-pointer">Add Entry</button>
-                    </div>
-                </form>
-            </div>
+
+
+                    <h5 class="mb-2">
+                        Remove Account?
+                    </h5>
+
+
+                    <p class="text-muted mb-0">
+
+                        Are you sure you want to remove
+
+                        <strong id="deleteBankName">
+                        </strong>?
+
+                        The account will be hidden, but existing transactions will remain محفوظ.
+
+                    </p>
+
+                </div>
+
+
+                <div class="modal-footer justify-content-center">
+
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                    >
+
+                        <i class="ti ti-trash me-1"></i>
+
+                        Remove Account
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Edit Entry Modal (shared, populated via JS) -->
-<div id="editEntryModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" id="editEntryForm" action="">
-                    <div class="flex items-center justify-between p-4 border-b border-border-color">
-                        <h3 class="text-lg font-bold text-gray-900">Edit Entry</h3>
-                        <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200" aria-label="Close" data-hs-overlay="#editEntryModal">
-                            <i class="icon-x"></i>
-                        </button>
+
+<!-- ================================================================
+     ADD ENTRY MODAL
+================================================================ -->
+
+<div
+    class="modal fade finance-modal"
+    id="addEntryModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content">
+
+
+            <form
+                method="POST"
+                action="/admin/income-expense"
+            >
+
+
+                <div class="modal-header">
+
+                    <div>
+
+                        <h5 class="modal-title mb-1">
+                            Add Income / Expense
+                        </h5>
+
+                        <small class="text-muted">
+                            Record a transaction against your account.
+                        </small>
+
                     </div>
-                    <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">Type <span class="text-danger">*</span></label>
-                                <select name="type" id="editEntryType" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                    <option value="1">Income</option>
-                                    <option value="2">Expense</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">User <span class="text-danger">*</span></label>
-                                <select name="user_id" id="editEntryUser" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                    <option value="">Select user</option>
-                                    <% users.forEach(function(u) { %>
-                                        <option value="<%= u.id %>"><%= u.name %></option>
-                                    <% }) %>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Category <span class="text-danger">*</span></label>
-                            <select name="category_id" id="editEntryCategory" required class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                <option value="">Select category</option>
+
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                    ></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+
+                    <div class="row">
+
+
+                        <!-- TYPE -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Transaction Type
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <select
+                                name="type"
+                                id="addEntryType"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select type
+                                </option>
+
+                                <option value="1">
+                                    Income
+                                </option>
+
+                                <option value="2">
+                                    Expense
+                                </option>
+
                             </select>
+
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Account <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <select name="bank_id" id="editEntryBank" class="form-select w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                                <option value="">Cash / no account</option>
+
+
+                        <!-- CATEGORY -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Category
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <select
+                                name="category_id"
+                                id="addEntryCategory"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select category
+                                </option>
+
                             </select>
+
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Title <span class="text-danger">*</span></label>
-                            <input type="text" name="title" id="editEntryTitle" required class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+
+                        <!-- ACCOUNT -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Account
+
+                                <span class="text-muted fw-normal">
+                                    (Optional)
+                                </span>
+
+                            </label>
+
+                            <select
+                                name="bank_id"
+                                id="addEntryBank"
+                                class="form-select"
+                            >
+
+                                <option value="">
+                                    Cash / No Account
+                                </option>
+
+                            </select>
+
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">Amount <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" min="0" name="amount" id="editEntryAmount" required class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
+
+
+                        <!-- TITLE -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Title
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="title"
+                                class="form-control"
+                                required
+                                maxlength="255"
+                                placeholder="e.g. Course sale commission"
+                            >
+
+                        </div>
+
+
+                        <!-- AMOUNT -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Amount
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    ₹
+                                </span>
+
+                                <input
+                                    type="number"
+                                    name="amount"
+                                    class="form-control"
+                                    required
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                >
+
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-2">Date <span class="text-danger">*</span></label>
-                                <input type="date" name="transaction_date" id="editEntryDate" required class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                            </div>
+
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Note <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <textarea name="note" id="editEntryNote" rows="2" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"></textarea>
+
+
+                        <!-- DATE -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Transaction Date
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="transaction_date"
+                                class="form-control"
+                                required
+                                id="addEntryDate"
+                            >
+
                         </div>
+
+
+                        <!-- NOTE -->
+
+                        <div class="col-12 mb-0">
+
+                            <label class="form-label">
+
+                                Note
+
+                                <span class="text-muted fw-normal">
+                                    (Optional)
+                                </span>
+
+                            </label>
+
+                            <textarea
+                                name="note"
+                                rows="3"
+                                class="form-control"
+                                maxlength="2000"
+                                placeholder="Add any additional note..."
+                            ></textarea>
+
+                        </div>
+
                     </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#editEntryModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover cursor-pointer">Save Changes</button>
-                    </div>
-                </form>
-            </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="ti ti-plus me-1"></i>
+
+                        Add Entry
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Delete Entry Modal (shared, populated via JS) -->
-<div id="deleteEntryModal" class="hs-overlay hidden w-full h-full fixed top-0 start-0 z-[80] bg-gray-900/50 overflow-x-hidden overflow-y-auto">
-    <div>
-        <div class="p-3 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full sm:mx-auto min-h-screen flex items-center justify-center">
-            <div class="bg-white border border-border-color rounded-lg shadow-sm w-full focus:outline-none">
-                <form method="POST" id="deleteEntryForm" action="">
-                    <div class="p-4 sm:p-7">
-                        <div class="text-center">
-                            <div class="flex justify-center mb-4">
-                                <div class="flex items-center justify-center size-14 rounded-full bg-danger/10">
-                                    <i class="icon-trash-2 text-danger text-2xl!"></i>
-                                </div>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Entry</h3>
-                            <p class="text-sm text-gray-600 mb-0">Are you sure you want to delete "<span id="deleteEntryTitle" class="font-semibold"></span>"? This action cannot be undone.</p>
+
+<!-- ================================================================
+     EDIT ENTRY MODAL
+================================================================ -->
+
+<div
+    class="modal fade finance-modal"
+    id="editEntryModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content">
+
+
+            <form
+                method="POST"
+                id="editEntryForm"
+                action=""
+            >
+
+
+                <div class="modal-header">
+
+                    <div>
+
+                        <h5 class="modal-title mb-1">
+                            Edit Income / Expense
+                        </h5>
+
+                        <small class="text-muted">
+                            Update transaction details.
+                        </small>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                    ></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+                    <div class="row">
+
+
+                        <!-- TYPE -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Transaction Type
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <select
+                                name="type"
+                                id="editEntryType"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="1">
+                                    Income
+                                </option>
+
+                                <option value="2">
+                                    Expense
+                                </option>
+
+                            </select>
+
                         </div>
+
+
+                        <!-- CATEGORY -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Category
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <select
+                                name="category_id"
+                                id="editEntryCategory"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select category
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- ACCOUNT -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Account
+
+                                <span class="text-muted fw-normal">
+                                    (Optional)
+                                </span>
+
+                            </label>
+
+                            <select
+                                name="bank_id"
+                                id="editEntryBank"
+                                class="form-select"
+                            >
+
+                                <option value="">
+                                    Cash / No Account
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- TITLE -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Title
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="title"
+                                id="editEntryTitle"
+                                class="form-control"
+                                required
+                                maxlength="255"
+                            >
+
+                        </div>
+
+
+                        <!-- AMOUNT -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Amount
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    ₹
+                                </span>
+
+                                <input
+                                    type="number"
+                                    name="amount"
+                                    id="editEntryAmount"
+                                    class="form-control"
+                                    required
+                                    min="0.01"
+                                    step="0.01"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DATE -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Transaction Date
+
+                                <span class="text-danger">
+                                    *
+                                </span>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="transaction_date"
+                                id="editEntryDate"
+                                class="form-control"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- NOTE -->
+
+                        <div class="col-12">
+
+                            <label class="form-label">
+
+                                Note
+
+                                <span class="text-muted fw-normal">
+                                    (Optional)
+                                </span>
+
+                            </label>
+
+                            <textarea
+                                name="note"
+                                id="editEntryNote"
+                                rows="3"
+                                class="form-control"
+                                maxlength="2000"
+                            ></textarea>
+
+                        </div>
+
                     </div>
-                    <div class="flex justify-end gap-2 p-4 border-t border-border-color">
-                        <button type="button" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-border-color rounded-lg hover:bg-gray-50 cursor-pointer" data-hs-overlay="#deleteEntryModal">Cancel</button>
-                        <button type="submit" class="py-2 px-4 text-sm font-medium text-white bg-danger rounded-lg hover:bg-danger-hover cursor-pointer">Delete</button>
-                    </div>
-                </form>
-            </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="ti ti-device-floppy me-1"></i>
+
+                        Save Changes
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
+
     </div>
+
 </div>
 
+
+<!-- ================================================================
+     DELETE ENTRY MODAL
+================================================================ -->
+
+<div
+    class="modal fade"
+    id="deleteEntryModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+            <form
+                method="POST"
+                id="deleteEntryForm"
+                action=""
+            >
+
+
+                <div class="modal-body text-center p-4 p-md-5">
+
+                    <div
+                        class="avatar avatar-xl bg-soft-danger text-danger rounded-circle mx-auto mb-3"
+                    >
+
+                        <i class="ti ti-trash fs-24"></i>
+
+                    </div>
+
+
+                    <h5 class="mb-2">
+                        Delete Transaction?
+                    </h5>
+
+
+                    <p class="text-muted mb-0">
+
+                        Are you sure you want to delete
+
+                        <strong id="deleteEntryTitle">
+                        </strong>?
+
+                        This action cannot be undone.
+
+                    </p>
+
+                </div>
+
+
+                <div class="modal-footer justify-content-center">
+
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                    >
+
+                        <i class="ti ti-trash me-1"></i>
+
+                        Delete Entry
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
 
 
 <script>
-var ALL_BANKS = <%- bankOptionsJson %>;
-var ALL_CATEGORIES = <%- categoryOptionsJson %>;
 
-function feFilterBank(prefix) {
-  var userSel = document.getElementById(prefix + 'EntryUser');
-  var bankSel = document.getElementById(prefix + 'EntryBank');
-  if (!userSel || !bankSel) return;
-  var userId = userSel.value ? parseInt(userSel.value, 10) : null;
-  var keep = bankSel.value;
-  bankSel.innerHTML = '';
-  var blank = document.createElement('option');
-  blank.value = '';
-  blank.textContent = 'Cash / no account';
-  bankSel.appendChild(blank);
-  ALL_BANKS.filter(function (b) { return !userId || b.user_id === userId; }).forEach(function (b) {
-    var opt = document.createElement('option');
-    opt.value = b.id;
-    opt.textContent = b.name;
-    bankSel.appendChild(opt);
-  });
-  bankSel.value = keep;
-}
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
 
-function feFilterCategory(prefix) {
-  var userSel = document.getElementById(prefix + 'EntryUser');
-  var typeSel = document.getElementById(prefix + 'EntryType');
-  var catSel = document.getElementById(prefix + 'EntryCategory');
-  if (!userSel || !typeSel || !catSel) return;
-  var userId = userSel.value ? parseInt(userSel.value, 10) : null;
-  var type = typeSel.value ? parseInt(typeSel.value, 10) : null;
-  var keep = catSel.value;
-  catSel.innerHTML = '';
-  var blank = document.createElement('option');
-  blank.value = '';
-  blank.textContent = userId ? 'Select category' : 'Select user first';
-  catSel.appendChild(blank);
-  ALL_CATEGORIES.filter(function (c) {
-    return (!userId || c.user_id === userId) && (!type || Number(c.type) === type);
-  }).forEach(function (c) {
-    var opt = document.createElement('option');
-    opt.value = c.id;
-    opt.textContent = c.name;
-    catSel.appendChild(opt);
-  });
-  catSel.value = keep;
-}
 
-['add', 'edit'].forEach(function (prefix) {
-  var userEl = document.getElementById(prefix + 'EntryUser');
-  var typeEl = document.getElementById(prefix + 'EntryType');
-  if (userEl) userEl.addEventListener('change', function () { feFilterBank(prefix); feFilterCategory(prefix); });
-  if (typeEl) typeEl.addEventListener('change', function () { feFilterCategory(prefix); });
-});
-feFilterBank('add');
-feFilterCategory('add');
+        /*
+        |--------------------------------------------------------------------------
+        | Data
+        |--------------------------------------------------------------------------
+        */
 
-document.querySelectorAll('.editBankBtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.getElementById('editBankForm').action = '/admin/income-expense/bank/' + btn.dataset.id + '/update';
-    document.getElementById('editBankUser').value = btn.dataset.user || '';
-    document.getElementById('editBankName').value = btn.dataset.name || '';
-    document.getElementById('editBankAccount').value = btn.dataset.account || '';
-    document.getElementById('editBankBalance').value = btn.dataset.balance || 0;
-    document.getElementById('editBankActive').checked = btn.dataset.active === '1';
-  });
-});
+        const ALL_BANKS =
+            <%- bankOptionsJson %>;
 
-document.querySelectorAll('.deleteBankBtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.getElementById('deleteBankForm').action = '/admin/income-expense/bank/' + btn.dataset.id + '/delete';
-    document.getElementById('deleteBankName').textContent = btn.dataset.name || '';
-  });
-});
+        const ALL_CATEGORIES =
+            <%- categoryOptionsJson %>;
 
-document.querySelectorAll('.editEntryBtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.getElementById('editEntryForm').action = '/admin/income-expense/' + btn.dataset.id + '/update';
-    document.getElementById('editEntryUser').value = btn.dataset.user || '';
-    document.getElementById('editEntryType').value = btn.dataset.type || '1';
-    feFilterBank('edit');
-    feFilterCategory('edit');
-    document.getElementById('editEntryCategory').value = btn.dataset.category || '';
-    document.getElementById('editEntryBank').value = btn.dataset.bank || '';
-    document.getElementById('editEntryTitle').value = btn.dataset.title || '';
-    document.getElementById('editEntryAmount').value = btn.dataset.amount || '';
-    document.getElementById('editEntryDate').value = btn.dataset.date || '';
-    document.getElementById('editEntryNote').value = btn.dataset.note || '';
-  });
-});
 
-document.querySelectorAll('.deleteEntryBtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.getElementById('deleteEntryForm').action = '/admin/income-expense/' + btn.dataset.id + '/delete';
-    document.getElementById('deleteEntryTitle').textContent = btn.dataset.title || '';
-  });
-});
+        /*
+        |--------------------------------------------------------------------------
+        | Today's Date
+        |--------------------------------------------------------------------------
+        */
+
+        const addDate =
+            document.getElementById(
+                'addEntryDate'
+            );
+
+        if (addDate && !addDate.value) {
+
+            const today =
+                new Date();
+
+            const year =
+                today.getFullYear();
+
+            const month =
+                String(
+                    today.getMonth() + 1
+                ).padStart(2, '0');
+
+            const day =
+                String(
+                    today.getDate()
+                ).padStart(2, '0');
+
+            addDate.value =
+                year +
+                '-' +
+                month +
+                '-' +
+                day;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Bootstrap Modal Helper
+        |--------------------------------------------------------------------------
+        */
+
+        function openModal(id) {
+
+            const element =
+                document.getElementById(id);
+
+            if (!element) {
+                return;
+            }
+
+            const modal =
+                bootstrap.Modal.getOrCreateInstance(
+                    element
+                );
+
+            modal.show();
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Populate Bank Select
+        |--------------------------------------------------------------------------
+        */
+
+        function populateBanks(
+            selectId,
+            selectedValue
+        ) {
+
+            const select =
+                document.getElementById(
+                    selectId
+                );
+
+            if (!select) {
+                return;
+            }
+
+
+            select.innerHTML = '';
+
+
+            const blank =
+                document.createElement(
+                    'option'
+                );
+
+            blank.value = '';
+
+            blank.textContent =
+                'Cash / No Account';
+
+            select.appendChild(blank);
+
+
+            ALL_BANKS.forEach(
+                function (bank) {
+
+                    const option =
+                        document.createElement(
+                            'option'
+                        );
+
+                    option.value =
+                        bank.id;
+
+                    option.textContent =
+                        bank.name;
+
+                    if (
+                        String(bank.id) ===
+                        String(selectedValue || '')
+                    ) {
+
+                        option.selected =
+                            true;
+
+                    }
+
+                    select.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Populate Categories
+        |--------------------------------------------------------------------------
+        */
+
+        function populateCategories(
+            selectId,
+            type,
+            selectedValue
+        ) {
+
+            const select =
+                document.getElementById(
+                    selectId
+                );
+
+            if (!select) {
+                return;
+            }
+
+
+            select.innerHTML = '';
+
+
+            const blank =
+                document.createElement(
+                    'option'
+                );
+
+            blank.value = '';
+
+            blank.textContent =
+                'Select category';
+
+            select.appendChild(
+                blank
+            );
+
+
+            ALL_CATEGORIES
+                .filter(
+                    function (category) {
+
+                        return (
+                            !type ||
+                            Number(category.type) ===
+                            Number(type)
+                        );
+
+                    }
+                )
+                .forEach(
+                    function (category) {
+
+                        const option =
+                            document.createElement(
+                                'option'
+                            );
+
+                        option.value =
+                            category.id;
+
+                        option.textContent =
+                            category.name;
+
+
+                        if (
+                            String(category.id) ===
+                            String(selectedValue || '')
+                        ) {
+
+                            option.selected =
+                                true;
+
+                        }
+
+
+                        select.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Add Entry Type
+        |--------------------------------------------------------------------------
+        */
+
+        const addType =
+            document.getElementById(
+                'addEntryType'
+            );
+
+        if (addType) {
+
+            addType.addEventListener(
+                'change',
+                function () {
+
+                    populateCategories(
+                        'addEntryCategory',
+                        this.value,
+                        ''
+                    );
+
+                }
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Initial Add Selects
+        |--------------------------------------------------------------------------
+        */
+
+        populateBanks(
+            'addEntryBank',
+            ''
+        );
+
+        populateCategories(
+            'addEntryCategory',
+            addType
+                ? addType.value
+                : '',
+            ''
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Edit Bank
+        |--------------------------------------------------------------------------
+        */
+
+        document
+            .querySelectorAll(
+                '.editBankBtn'
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        'click',
+                        function () {
+
+                            const id =
+                                this.dataset.id;
+
+                            document
+                                .getElementById(
+                                    'editBankForm'
+                                )
+                                .action =
+                                '/admin/income-expense/bank/' +
+                                id +
+                                '/update';
+
+
+                            document
+                                .getElementById(
+                                    'editBankName'
+                                )
+                                .value =
+                                this.dataset.name ||
+                                '';
+
+
+                            document
+                                .getElementById(
+                                    'editBankAccount'
+                                )
+                                .value =
+                                this.dataset.account ||
+                                '';
+
+
+                            document
+                                .getElementById(
+                                    'editBankBalance'
+                                )
+                                .value =
+                                this.dataset.balance ||
+                                '0';
+
+
+                            document
+                                .getElementById(
+                                    'editBankActive'
+                                )
+                                .checked =
+                                this.dataset.active ===
+                                '1';
+
+
+                            openModal(
+                                'editBankModal'
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Bank
+        |--------------------------------------------------------------------------
+        */
+
+        document
+            .querySelectorAll(
+                '.deleteBankBtn'
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        'click',
+                        function () {
+
+                            document
+                                .getElementById(
+                                    'deleteBankForm'
+                                )
+                                .action =
+                                '/admin/income-expense/bank/' +
+                                this.dataset.id +
+                                '/delete';
+
+
+                            document
+                                .getElementById(
+                                    'deleteBankName'
+                                )
+                                .textContent =
+                                this.dataset.name ||
+                                'this account';
+
+
+                            openModal(
+                                'deleteBankModal'
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Edit Entry
+        |--------------------------------------------------------------------------
+        */
+
+        document
+            .querySelectorAll(
+                '.editEntryBtn'
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        'click',
+                        function () {
+
+                            const type =
+                                this.dataset.type ||
+                                '1';
+
+                            const category =
+                                this.dataset.category ||
+                                '';
+
+                            const bank =
+                                this.dataset.bank ||
+                                '';
+
+
+                            document
+                                .getElementById(
+                                    'editEntryForm'
+                                )
+                                .action =
+                                '/admin/income-expense/' +
+                                this.dataset.id +
+                                '/update';
+
+
+                            document
+                                .getElementById(
+                                    'editEntryType'
+                                )
+                                .value =
+                                type;
+
+
+                            populateCategories(
+                                'editEntryCategory',
+                                type,
+                                category
+                            );
+
+
+                            populateBanks(
+                                'editEntryBank',
+                                bank
+                            );
+
+
+                            document
+                                .getElementById(
+                                    'editEntryTitle'
+                                )
+                                .value =
+                                this.dataset.title ||
+                                '';
+
+
+                            document
+                                .getElementById(
+                                    'editEntryAmount'
+                                )
+                                .value =
+                                this.dataset.amount ||
+                                '';
+
+
+                            document
+                                .getElementById(
+                                    'editEntryDate'
+                                )
+                                .value =
+                                this.dataset.date ||
+                                '';
+
+
+                            document
+                                .getElementById(
+                                    'editEntryNote'
+                                )
+                                .value =
+                                this.dataset.note ||
+                                '';
+
+
+                            openModal(
+                                'editEntryModal'
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Edit Entry Type Change
+        |--------------------------------------------------------------------------
+        */
+
+        const editType =
+            document.getElementById(
+                'editEntryType'
+            );
+
+        if (editType) {
+
+            editType.addEventListener(
+                'change',
+                function () {
+
+                    populateCategories(
+                        'editEntryCategory',
+                        this.value,
+                        ''
+                    );
+
+                }
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Entry
+        |--------------------------------------------------------------------------
+        */
+
+        document
+            .querySelectorAll(
+                '.deleteEntryBtn'
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        'click',
+                        function () {
+
+                            document
+                                .getElementById(
+                                    'deleteEntryForm'
+                                )
+                                .action =
+                                '/admin/income-expense/' +
+                                this.dataset.id +
+                                '/delete';
+
+
+                            document
+                                .getElementById(
+                                    'deleteEntryTitle'
+                                )
+                                .textContent =
+                                this.dataset.title ||
+                                'this transaction';
+
+
+                            openModal(
+                                'deleteEntryModal'
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Manage Columns
+        |--------------------------------------------------------------------------
+        */
+
+        const table =
+            document.getElementById(
+                'income-expense-table'
+            );
+
+        const toggles =
+            document.querySelectorAll(
+                '#income-expense-table ~ * .column-toggle'
+            );
+
+
+        /*
+         * Better selector because Manage Columns
+         * is outside the table.
+         */
+
+        const columnToggles =
+            document.querySelectorAll(
+                '.column-toggle[data-column]'
+            );
+
+
+        function applyColumn(
+            columnIndex,
+            visible
+        ) {
+
+            if (!table) {
+                return;
+            }
+
+
+            const display =
+                visible
+                    ? ''
+                    : 'none';
+
+
+            table
+                .querySelectorAll(
+                    'tr'
+                )
+                .forEach(
+                    function (row) {
+
+                        const cell =
+                            row.children[
+                                columnIndex
+                            ];
+
+
+                        if (!cell) {
+                            return;
+                        }
+
+
+                        if (visible) {
+
+                            cell.style.removeProperty(
+                                'display'
+                            );
+
+                        } else {
+
+                            cell.style.setProperty(
+                                'display',
+                                'none',
+                                'important'
+                            );
+
+                        }
+
+                    }
+                );
+
+        }
+
+
+        columnToggles.forEach(
+            function (toggle) {
+
+                const column =
+                    parseInt(
+                        toggle.dataset.column,
+                        10
+                    );
+
+                const key =
+                    toggle.dataset.key ||
+                    column;
+
+
+                const storageKey =
+                    'income_expense_column_' +
+                    key;
+
+
+                const saved =
+                    localStorage.getItem(
+                        storageKey
+                    );
+
+
+                if (
+                    saved === '0'
+                ) {
+
+                    toggle.checked =
+                        false;
+
+                    applyColumn(
+                        column,
+                        false
+                    );
+
+                }
+
+
+                toggle.addEventListener(
+                    'change',
+                    function () {
+
+                        const visible =
+                            this.checked;
+
+
+                        localStorage.setItem(
+                            storageKey,
+                            visible
+                                ? '1'
+                                : '0'
+                        );
+
+
+                        applyColumn(
+                            column,
+                            visible
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    }
+);
+
 </script>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+
+<%- include('../../adminlayout/footer') %>

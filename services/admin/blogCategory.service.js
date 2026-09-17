@@ -6,6 +6,10 @@ async function getList(search) {
   return repo.list(search);
 }
 
+async function getById(id) {
+  return repo.findById(id);
+}
+
 async function allForSelect() {
   return repo.allForSelect();
 }
@@ -59,4 +63,4 @@ async function deleteCategory(id) {
   return repo.destroy(cat);
 }
 
-module.exports = { getList, allForSelect, createCategory, updateCategory, deleteCategory };
+module.exports = { getList, allForSelect, getById, createCategory, updateCategory, deleteCategory };

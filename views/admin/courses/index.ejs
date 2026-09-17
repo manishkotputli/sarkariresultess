@@ -1,74 +1,1463 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">Courses</h1>
-    <a href="/admin/courses/create" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-        <span class="flex"><i class="icon-plus"></i></span> Add Course
-    </a>
-</div>
 
-<div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-4 mb-6">
-    <form method="GET" action="/admin/courses" class="flex items-center justify-between flex-wrap gap-3">
-        <div class="relative w-full sm:w-72">
-            <input type="text" name="search" value="<%= filters.search %>" placeholder="Search courses..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-            <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0"><i class="icon-search"></i></button>
-        </div>
-        <select name="status" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-            <option value="">All Status</option>
-            <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
-            <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
-        </select>
-    </form>
-</div>
+<div class="page-wrapper">
 
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-    <% if (courses && courses.length) { %>
-        <% courses.forEach(function(c) { %>
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden flex flex-col">
-            <img src="<%= c.thumbnail || '/admin-assets/logo-small.svg' %>" class="w-full h-40 object-cover bg-light" alt="<%= c.title %>">
-            <div class="p-4 flex flex-col grow">
-                <div class="flex items-start justify-between gap-2 mb-2">
-                    <h3 class="text-gray-900 text-base font-bold mb-0"><%= c.title %></h3>
-                    <span class="shrink-0 inline-flex items-center text-xs font-bold rounded-lg px-2.5 py-1 border <%= c.is_active ? 'text-success border-success' : 'text-gray-500 border-gray-300' %>"><%= c.is_active ? 'Active' : 'Inactive' %></span>
-                </div>
-                <p class="text-sm text-gray-500 mb-3 line-clamp-2 grow"><%= (c.description || '').slice(0, 100) %></p>
-<div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mb-3">
-    <span class="inline-flex items-center gap-1"><i class="icon-play-circle"></i> <%= c.lessonCount %> lesson<%= c.lessonCount === 1 ? '' : 's' %></span>
-    <% if (c.duration_hours) { %><span class="inline-flex items-center gap-1"><i class="icon-timer"></i> <%= c.duration_hours %> hrs</span><% } %>
-</div>
-<div class="flex items-center gap-2 mb-4">
-                    <% if (c.discount_price) { %>
-                        <span class="text-lg font-bold text-gray-900">₹<%= c.discount_price %></span>
-                        <span class="text-sm text-gray-400 line-through">₹<%= c.price %></span>
-                    <% } else { %>
-                        <span class="text-lg font-bold text-gray-900">₹<%= c.price %></span>
-                    <% } %>
-                </div>
-                
-                <div class="flex items-center gap-2 mt-auto">
-                    <a href="/admin/courses/<%= c.id %>/lessons" class="block text-center py-2 mb-2 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20">Manage Lessons</a>
-                    <a href="/admin/courses/<%= c.id %>/edit" class="flex-1 text-center py-2 rounded-full bg-white border border-border-color text-gray-900 text-sm font-medium hover:bg-light">Edit</a>
-                    <form method="POST" action="/admin/courses/<%= c.id %>/delete" onsubmit="return confirm('Delete this course? This cannot be undone.');" class="flex-1">
-                        <button type="submit" class="w-full py-2 rounded-full bg-white border border-border-color text-danger text-sm font-medium hover:bg-danger/5 cursor-pointer">Delete</button>
-                    </form>
-                </div>
+    <div class="content pb-0">
+
+
+        <!-- =========================================================
+             ALERTS
+        ========================================================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <%= success %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
             </div>
+
+        <% } %>
+
+
+        <% if (typeof errors !== 'undefined' &&
+               errors &&
+               errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =========================================================
+             SAFE LOCALS
+        ========================================================== -->
+
+        <%
+            const courseList =
+                (typeof courses !== 'undefined' && Array.isArray(courses))
+                    ? courses
+                    : [];
+
+            const filterData =
+                (typeof filters !== 'undefined' && filters)
+                    ? filters
+                    : {};
+
+            const currentSearch =
+                filterData.search || '';
+
+            const currentStatus =
+                filterData.status || '';
+
+            const currentSort =
+                filterData.sort || '';
+
+            const totalCourses =
+                typeof total !== 'undefined'
+                    ? total
+                    : courseList.length;
+
+            const paginationData =
+                (typeof pagination !== 'undefined' && pagination)
+                    ? pagination
+                    : null;
+        %>
+
+
+        <!-- =========================================================
+             PAGE HEADER
+        ========================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    Courses
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            Courses
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+
+                <!-- =================================================
+                     EXPORT
+                ================================================== -->
+
+                <div class="dropdown">
+
+                    <a href="javascript:void(0);"
+                       class="dropdown-toggle btn btn-outline-light px-2 shadow"
+                       data-bs-toggle="dropdown">
+
+                        <i class="ti ti-package-export me-2"></i>
+
+                        Export
+
+                    </a>
+
+
+                    <div class="dropdown-menu dropdown-menu-end">
+
+                        <ul>
+
+                            <li>
+
+                                <a href="/admin/courses/export/pdf"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+
+                                    Export as PDF
+
+                                </a>
+
+                            </li>
+
+
+                            <li>
+
+                                <a href="/admin/courses/export/excel"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-xls me-1"></i>
+
+                                    Export as Excel
+
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     REFRESH
+                ================================================== -->
+
+                <a href="javascript:location.reload();"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Refresh"
+                   data-bs-original-title="Refresh">
+
+                    <i class="ti ti-refresh"></i>
+
+                </a>
+
+
+                <!-- =================================================
+                     COLLAPSE
+                ================================================== -->
+
+                <a href="javascript:void(0);"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Collapse"
+                   data-bs-original-title="Collapse"
+                   id="collapse-header">
+
+                    <i class="ti ti-transition-top"></i>
+
+                </a>
+
+
+            </div>
+
         </div>
-        <% }) %>
-    <% } else { %>
-        <div class="col-span-full text-center py-16 text-gray-500 bg-white-50 rounded-lg border border-border-color">No courses found. <a href="/admin/courses/create" class="text-primary font-medium">Add your first course</a>.</div>
-    <% } %>
-</div>
 
-<% if (pagination.totalPages > 1) { %>
-<div class="flex items-center justify-between flex-wrap gap-3 mt-6">
-    <p class="text-sm text-gray-600 mb-0">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= total %> total courses</p>
-    <div class="flex items-center gap-1">
-        <% if (pagination.hasPrev) { %><a href="/admin/courses?page=<%= pagination.page - 1 %>&search=<%= filters.search %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a><% } %>
-        <% pagination.pages.forEach(function(p) { %><a href="/admin/courses?page=<%= p %>&search=<%= filters.search %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === pagination.page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a><% }) %>
-        <% if (pagination.hasNext) { %><a href="/admin/courses?page=<%= pagination.page + 1 %>&search=<%= filters.search %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a><% } %>
+
+        <!-- =========================================================
+             COURSE CARD
+        ========================================================== -->
+
+        <div class="card border-0 rounded-0">
+
+
+            <!-- =====================================================
+                 CARD HEADER
+            ====================================================== -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+
+                <!-- =================================================
+                     SEARCH + FILTER
+                ================================================== -->
+
+                <form method="GET"
+                      action="/admin/courses"
+                      class="mb-0 d-flex align-items-center gap-2 flex-wrap">
+
+
+                    <!-- SEARCH -->
+
+                    <div class="input-icon input-icon-start position-relative">
+
+                        <span class="input-icon-addon text-dark">
+
+                            <i class="ti ti-search"></i>
+
+                        </span>
+
+
+                        <input type="text"
+                               name="search"
+                               value="<%= currentSearch %>"
+                               class="form-control"
+                               placeholder="Search courses...">
+
+                    </div>
+
+
+                    <!-- STATUS FILTER -->
+
+                    <select name="status"
+                            onchange="this.form.submit()"
+                            class="form-select w-auto">
+
+                        <option value="">
+                            All Status
+                        </option>
+
+
+                        <option value="active"
+                                <%= currentStatus === 'active'
+                                    ? 'selected'
+                                    : '' %>>
+
+                            Active
+
+                        </option>
+
+
+                        <option value="inactive"
+                                <%= currentStatus === 'inactive'
+                                    ? 'selected'
+                                    : '' %>>
+
+                            Inactive
+
+                        </option>
+
+                    </select>
+
+
+                    <!-- CLEAR FILTER -->
+
+                    <% if (currentSearch || currentStatus) { %>
+
+                        <a href="/admin/courses"
+                           class="btn btn-link text-decoration-none text-muted">
+
+                            Clear
+
+                        </a>
+
+                    <% } %>
+
+
+                </form>
+
+
+                <!-- =================================================
+                     ADD COURSE
+                ================================================== -->
+
+                <div class="d-inline-flex align-items-center gap-3">
+
+                    <a href="/admin/courses/create"
+                       class="btn btn-primary">
+
+                        <i class="ti ti-square-rounded-plus-filled me-1"></i>
+
+                        Add Course
+
+                    </a>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =====================================================
+                 CARD BODY
+            ====================================================== -->
+
+            <div class="card-body">
+
+
+                <!-- =================================================
+                     TABLE TOOLS
+                ================================================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+
+                    <!-- =================================================
+                         SORT
+                    ================================================== -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="dropdown-toggle btn btn-outline-light shadow"
+                               data-bs-toggle="dropdown">
+
+                                <i class="ti ti-sort-ascending-2 me-2"></i>
+
+                                Sort By
+
+                            </a>
+
+
+                            <div class="dropdown-menu">
+
+                                <ul>
+
+                                    <!-- TITLE A-Z -->
+
+                                    <li>
+
+                                        <a href="/admin/courses?sort=title_asc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-ascending-letters me-1"></i>
+
+                                            Course Title (A-Z)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- TITLE Z-A -->
+
+                                    <li>
+
+                                        <a href="/admin/courses?sort=title_desc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-descending-letters me-1"></i>
+
+                                            Course Title (Z-A)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- PRICE HIGH -->
+
+                                    <li>
+
+                                        <a href="/admin/courses?sort=price_desc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-ascending-numbers me-1"></i>
+
+                                            Price (High to Low)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- PRICE LOW -->
+
+                                    <li>
+
+                                        <a href="/admin/courses?sort=price_asc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-sort-descending-numbers me-1"></i>
+
+                                            Price (Low to High)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- NEWEST -->
+
+                                    <li>
+
+                                        <a href="/admin/courses?sort=newest&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-calendar-up me-1"></i>
+
+                                            Newest First
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <!-- OLDEST -->
+
+                                    <li>
+
+                                        <a href="/admin/courses?sort=oldest&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            <i class="ti ti-calendar-down me-1"></i>
+
+                                            Oldest First
+
+                                        </a>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         MANAGE COLUMNS
+                    ================================================== -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn bg-soft-indigo border-0"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-columns-3 me-2"></i>
+
+                                Manage Columns
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+
+                                <ul class="list-unstyled mb-0">
+
+
+                                    <!-- COURSE -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-book me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Course
+                                                </span>
+
+                                                <input class="form-check-input course-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="0"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- LESSONS -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-list-details me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Lessons
+                                                </span>
+
+                                                <input class="form-check-input course-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="1"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- DURATION -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-clock me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Duration
+                                                </span>
+
+                                                <input class="form-check-input course-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="2"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- PRICE -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-currency-rupee me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Price
+                                                </span>
+
+                                                <input class="form-check-input course-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="3"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                    <!-- STATUS -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+
+                                        <i class="ti ti-circle-check me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Status
+                                                </span>
+
+                                                <input class="form-check-input course-column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="4"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     COURSE TABLE
+                ================================================== -->
+
+                <div class="table-responsive custom-table">
+
+                    <table class="table table-nowrap"
+                           id="courses-table">
+
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>
+                                    Course
+                                </th>
+
+                                <th>
+                                    Lessons
+                                </th>
+
+                                <th>
+                                    Duration
+                                </th>
+
+                                <th>
+                                    Price
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th class="text-end no-sort">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="coursesTableBody">
+
+
+                            <% if (courseList.length) { %>
+
+
+                                <% courseList.forEach(function(c) { %>
+
+                                    <tr>
+
+
+                                        <!-- =================================================
+                                             COURSE
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <div class="d-flex align-items-center gap-3">
+
+
+                                                <!-- THUMBNAIL -->
+
+                                                <div class="flex-shrink-0">
+
+                                                    <% if (c.thumbnail) { %>
+
+                                                        <img src="<%= c.thumbnail %>"
+                                                             class="rounded object-cover"
+                                                             width="50"
+                                                             height="50"
+                                                             alt="<%= c.title %>"
+                                                             style="object-fit: cover;">
+
+                                                    <% } else { %>
+
+                                                        <div class="rounded d-flex align-items-center justify-content-center bg-light"
+                                                             style="width:50px;height:50px;">
+
+                                                            <i class="ti ti-book fs-20 text-muted"></i>
+
+                                                        </div>
+
+                                                    <% } %>
+
+                                                </div>
+
+
+                                                <!-- COURSE INFO -->
+
+                                                <div>
+
+                                                    <h6 class="mb-0 fw-semibold">
+
+                                                        <a href="/admin/courses/<%= c.id %>/edit"
+                                                           class="text-dark hover-primary">
+
+                                                            <%= c.title %>
+
+                                                        </a>
+
+                                                    </h6>
+
+
+                                                    <% if (c.slug) { %>
+
+                                                        <small class="text-muted">
+
+                                                            <%= c.slug %>
+
+                                                        </small>
+
+                                                    <% } %>
+
+                                                </div>
+
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             LESSONS
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <span class="badge bg-soft-primary text-primary">
+
+                                                <i class="ti ti-play-circle me-1"></i>
+
+                                                <%= c.lessonCount || 0 %>
+
+                                                <%= Number(c.lessonCount || 0) === 1
+                                                    ? 'Lesson'
+                                                    : 'Lessons' %>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             DURATION
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <% if (c.duration_hours) { %>
+
+                                                <span class="text-muted">
+
+                                                    <i class="ti ti-clock me-1"></i>
+
+                                                    <%= c.duration_hours %> hrs
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="text-muted">
+                                                    -
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             PRICE
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+
+
+                                                <% if (c.discount_price &&
+                                                       Number(c.discount_price) < Number(c.price)) { %>
+
+
+                                                    <span class="fw-semibold text-dark">
+
+                                                        ₹<%= Number(c.discount_price).toFixed(2) %>
+
+                                                    </span>
+
+
+                                                    <span class="text-muted text-decoration-line-through small">
+
+                                                        ₹<%= Number(c.price).toFixed(2) %>
+
+                                                    </span>
+
+
+                                                <% } else { %>
+
+
+                                                    <span class="fw-semibold text-dark">
+
+                                                        ₹<%= Number(c.price || 0).toFixed(2) %>
+
+                                                    </span>
+
+
+                                                <% } %>
+
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             STATUS
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <% if (c.is_active) { %>
+
+                                                <span class="badge bg-soft-success text-success">
+
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i>
+
+                                                    Active
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="badge bg-soft-secondary text-secondary">
+
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i>
+
+                                                    Inactive
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+                                        <!-- =================================================
+                                             ACTION
+                                        ================================================== -->
+
+                                        <td class="text-end">
+
+
+                                            <div class="dropdown">
+
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-icon btn-sm"
+                                                   data-bs-toggle="dropdown"
+                                                   aria-expanded="false">
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+
+                                                    <!-- MANAGE LESSONS -->
+
+                                                    <li>
+
+                                                        <a href="/admin/courses/<%= c.id %>/lessons"
+                                                           class="dropdown-item">
+
+                                                            <i class="ti ti-list-details me-1"></i>
+
+                                                            Manage Lessons
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- EDIT -->
+
+                                                    <li>
+
+                                                        <a href="/admin/courses/<%= c.id %>/edit"
+                                                           class="dropdown-item">
+
+                                                            <i class="ti ti-edit me-1"></i>
+
+                                                            Edit
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                    <!-- DELETE -->
+
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item text-danger"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#delete_course_<%= c.id %>">
+
+                                                            <i class="ti ti-trash me-1"></i>
+
+                                                            Delete
+
+                                                        </a>
+
+                                                    </li>
+
+
+                                                </ul>
+
+                                            </div>
+
+
+                                            <!-- =================================================
+                                                 DELETE MODAL
+                                            ================================================== -->
+
+                                            <div class="modal fade"
+                                                 id="delete_course_<%= c.id %>"
+                                                 tabindex="-1"
+                                                 aria-hidden="true">
+
+
+                                                <div class="modal-dialog modal-dialog-centered">
+
+                                                    <div class="modal-content">
+
+
+                                                        <div class="modal-header">
+
+                                                            <h5 class="modal-title">
+
+                                                                Delete Course
+
+                                                            </h5>
+
+
+                                                            <button type="button"
+                                                                    class="btn-close"
+                                                                    data-bs-dismiss="modal"
+                                                                    aria-label="Close">
+                                                            </button>
+
+                                                        </div>
+
+
+                                                        <div class="modal-body text-start">
+
+                                                            <p class="mb-0">
+
+                                                                Are you sure you want to delete
+
+                                                                <strong>
+                                                                    "<%= c.title %>"
+                                                                </strong>
+
+                                                                ?
+
+                                                                <br>
+
+                                                                <small class="text-danger">
+
+                                                                    This action cannot be undone.
+
+                                                                </small>
+
+                                                            </p>
+
+                                                        </div>
+
+
+                                                        <div class="modal-footer">
+
+                                                            <button type="button"
+                                                                    class="btn btn-light"
+                                                                    data-bs-dismiss="modal">
+
+                                                                Cancel
+
+                                                            </button>
+
+
+                                                            <form method="POST"
+                                                                  action="/admin/courses/<%= c.id %>/delete"
+                                                                  class="d-inline">
+
+
+                                                                <button type="submit"
+                                                                        class="btn btn-danger">
+
+                                                                    <i class="ti ti-trash me-1"></i>
+
+                                                                    Delete
+
+                                                                </button>
+
+
+                                                            </form>
+
+                                                        </div>
+
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+
+                                        </td>
+
+
+                                    </tr>
+
+
+                                <% }) %>
+
+
+                            <% } else { %>
+
+
+                                <!-- =================================================
+                                     EMPTY STATE
+                                ================================================== -->
+
+                                <tr>
+
+                                    <td colspan="6"
+                                        class="text-center py-5">
+
+
+                                        <div class="text-muted">
+
+                                            <i class="ti ti-books fs-40 d-block mb-2"></i>
+
+
+                                            <h5>
+                                                No Courses Found
+                                            </h5>
+
+
+                                            <p class="mb-2">
+
+                                                There are no courses available.
+
+                                            </p>
+
+
+                                            <a href="/admin/courses/create"
+                                               class="btn btn-primary btn-sm">
+
+                                                <i class="ti ti-plus me-1"></i>
+
+                                                Add Your First Course
+
+                                            </a>
+
+                                        </div>
+
+
+                                    </td>
+
+                                </tr>
+
+
+                            <% } %>
+
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+
+                <% if (paginationData &&
+                       paginationData.totalPages > 1) { %>
+
+
+                    <div class="row align-items-center mt-3">
+
+
+                        <!-- INFO -->
+
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Page
+
+                                <%= paginationData.page %>
+
+                                of
+
+                                <%= paginationData.totalPages %>
+
+                                &nbsp;·&nbsp;
+
+                                <%= totalCourses %>
+
+                                total courses
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PAGINATION -->
+
+                        <div class="col-md-6">
+
+                            <div class="d-flex justify-content-end">
+
+                                <ul class="pagination mb-0">
+
+
+                                    <!-- PREVIOUS -->
+
+                                    <% if (paginationData.hasPrev) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/courses?page=<%= paginationData.page - 1 %>&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>&sort=<%= encodeURIComponent(currentSort) %>">
+
+                                                <i class="ti ti-chevron-left"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                    <!-- PAGES -->
+
+                                    <% if (paginationData.pages &&
+                                           paginationData.pages.length) { %>
+
+
+                                        <% paginationData.pages.forEach(function(page) { %>
+
+                                            <li class="page-item <%= page === paginationData.page ? 'active' : '' %>">
+
+                                                <a class="page-link"
+                                                   href="/admin/courses?page=<%= page %>&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>&sort=<%= encodeURIComponent(currentSort) %>">
+
+                                                    <%= page %>
+
+                                                </a>
+
+                                            </li>
+
+                                        <% }) %>
+
+
+                                    <% } %>
+
+
+                                    <!-- NEXT -->
+
+                                    <% if (paginationData.hasNext) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/courses?page=<%= paginationData.page + 1 %>&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>&sort=<%= encodeURIComponent(currentSort) %>">
+
+                                                <i class="ti ti-chevron-right"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                <% } %>
+
+
+            </div>
+
+        </div>
+
+
     </div>
-</div>
-<% } %>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+</div>
+
+
+<!-- =========================================================
+     MANAGE COLUMNS
+========================================================= -->
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+
+        const table =
+            document.getElementById('courses-table');
+
+
+        const toggles =
+            document.querySelectorAll(
+                '.course-column-toggle'
+            );
+
+
+        if (!table || !toggles.length) {
+            return;
+        }
+
+
+        toggles.forEach(
+            function (toggle) {
+
+
+                toggle.addEventListener(
+                    'change',
+                    function () {
+
+
+                        const columnIndex =
+                            parseInt(
+                                this.getAttribute(
+                                    'data-column'
+                                ),
+                                10
+                            );
+
+
+                        if (Number.isNaN(columnIndex)) {
+                            return;
+                        }
+
+
+                        const isChecked =
+                            this.checked;
+
+
+                        /*
+                         * HEADER
+                         */
+
+                        const headerCell =
+                            table.querySelector(
+                                'thead tr th:nth-child(' +
+                                (columnIndex + 1) +
+                                ')'
+                            );
+
+
+                        if (headerCell) {
+
+                            if (isChecked) {
+
+                                headerCell.style.removeProperty(
+                                    'display'
+                                );
+
+                            } else {
+
+                                headerCell.style.setProperty(
+                                    'display',
+                                    'none',
+                                    'important'
+                                );
+
+                            }
+
+                        }
+
+
+                        /*
+                         * BODY
+                         */
+
+                        const rows =
+                            table.querySelectorAll(
+                                'tbody tr'
+                            );
+
+
+                        rows.forEach(
+                            function (row) {
+
+
+                                const cell =
+                                    row.children[
+                                        columnIndex
+                                    ];
+
+
+                                if (!cell) {
+                                    return;
+                                }
+
+
+                                if (isChecked) {
+
+                                    cell.style.removeProperty(
+                                        'display'
+                                    );
+
+                                } else {
+
+                                    cell.style.setProperty(
+                                        'display',
+                                        'none',
+                                        'important'
+                                    );
+
+                                }
+
+                            }
+                        );
+
+
+                    }
+                );
+
+
+            }
+        );
+
+
+    }
+);
+
+</script>
+
+
+<!-- =========================================================
+     SEARCH ENTER SUPPORT
+========================================================= -->
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+
+        const searchInput =
+            document.querySelector(
+                '#courses-table'
+            )
+            ? document.querySelector(
+                'form[action="/admin/courses"] input[name="search"]'
+            )
+            : null;
+
+
+        if (!searchInput) {
+            return;
+        }
+
+
+        searchInput.addEventListener(
+            'keydown',
+            function (event) {
+
+
+                if (event.key === 'Enter') {
+
+                    event.preventDefault();
+
+                    this.form.submit();
+
+                }
+
+            }
+        );
+
+
+    }
+);
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

@@ -1,77 +1,1645 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold">Test Series</h1>
-    <a href="/admin/test-series/create" class="btn px-4 py-2 rounded-full bg-primary text-white text-sm font-medium inline-flex items-center gap-2 hover:bg-primary-hover transition hover:text-white">
-        <span class="flex"><i class="icon-plus"></i></span> Add Test Series
-    </a>
-</div>
+<%
+    const currentFilters =
+        typeof filters !== 'undefined' && filters
+            ? filters
+            : {};
 
-<div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-4 mb-6">
-    <form method="GET" action="/admin/test-series" class="flex items-center justify-between flex-wrap gap-3">
-        <div class="relative w-full sm:w-72">
-            <input type="text" name="search" value="<%= filters.search %>" placeholder="Search test series..." class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-full py-2 pl-4 pr-10! focus:ring-0 focus:border-border-color">
-            <button type="submit" class="absolute top-1/2 -translate-y-1/2 right-3.5 text-base text-gray-500 leading-none cursor-pointer bg-transparent border-0"><i class="icon-search"></i></button>
-        </div>
-        <select name="status" onchange="this.form.submit()" class="form-select bg-white border border-border-color text-sm font-medium text-gray-900 rounded-full py-2 px-3 focus:ring-0">
-            <option value="">All Status</option>
-            <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
-            <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
-        </select>
-    </form>
-</div>
+    const currentSearch =
+        typeof currentFilters.search !== 'undefined'
+            ? currentFilters.search
+            : '';
 
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-    <% if (items && items.length) { %>
-        <% items.forEach(function(t) { %>
-        <div class="bg-white-50 rounded-lg border border-border-color shadow-xs overflow-hidden flex flex-col">
-            <img src="<%= t.thumbnail || '/admin-assets/logo-small.svg' %>" class="w-full h-40 object-cover bg-light" alt="<%= t.title %>">
-            <div class="p-4 flex flex-col grow">
-                <div class="flex items-start justify-between gap-2 mb-2">
-                    <h3 class="text-gray-900 text-base font-bold mb-0"><%= t.title %></h3>
-                    <span class="shrink-0 inline-flex items-center text-xs font-bold rounded-lg px-2.5 py-1 border <%= t.is_active ? 'text-success border-success' : 'text-gray-500 border-gray-300' %>"><%= t.is_active ? 'Active' : 'Inactive' %></span>
-                </div>
-                <p class="text-sm text-gray-500 mb-3 line-clamp-2 grow"><%= (t.description || '').slice(0, 100) %></p>
-<div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mb-3">
-    <span class="inline-flex items-center gap-1"><i class="icon-list-checks"></i> <%= t.testCount %> test<%= t.testCount === 1 ? '' : 's' %></span>
-    <% if (t.default_duration_minutes) { %><span class="inline-flex items-center gap-1"><i class="icon-timer"></i> <%= t.default_duration_minutes %> min</span><% } %>
-    <span class="inline-flex items-center gap-1"><i class="icon-minus-circle"></i> -<%= t.default_negative_marking %> per wrong</span>
-</div>
-<div class="flex items-center gap-2 mb-4">
-                    <% if (t.discount_price) { %>
-                        <span class="text-lg font-bold text-gray-900">₹<%= t.discount_price %></span>
-                        <span class="text-sm text-gray-400 line-through">₹<%= t.price %></span>
-                    <% } else { %>
-                        <span class="text-lg font-bold text-gray-900">₹<%= t.price %></span>
-                    <% } %>
-                </div>
-                <div class="flex items-center gap-2 mb-2">
-    <a href="/admin/test-series/<%= t.id %>/tests" class="flex-1 text-center py-2 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20">Manage Tests</a>
-    <a href="/admin/test-series/<%= t.id %>/results" class="flex-1 text-center py-2 rounded-full bg-white border border-border-color text-gray-900 text-sm font-medium hover:bg-light">Results</a>
-</div>
-                <div class="flex items-center gap-2 mt-auto">
-                    <a href="/admin/test-series/<%= t.id %>/edit" class="flex-1 text-center py-2 rounded-full bg-white border border-border-color text-gray-900 text-sm font-medium hover:bg-light">Edit</a>
-                    <form method="POST" action="/admin/test-series/<%= t.id %>/delete" onsubmit="return confirm('Delete this test series? This cannot be undone.');" class="flex-1">
-                        <button type="submit" class="w-full py-2 rounded-full bg-white border border-border-color text-danger text-sm font-medium hover:bg-danger/5 cursor-pointer">Delete</button>
-                    </form>
-                </div>
+    const currentStatus =
+        typeof currentFilters.status !== 'undefined'
+            ? currentFilters.status
+            : '';
+
+    const currentSort =
+        typeof currentFilters.sort !== 'undefined'
+            ? currentFilters.sort
+            : '';
+
+    const testSeriesItems =
+        Array.isArray(items)
+            ? items
+            : [];
+
+    const pageData =
+        typeof pagination !== 'undefined' && pagination
+            ? pagination
+            : {
+                page: 1,
+                totalPages: 1,
+                hasPrev: false,
+                hasNext: false,
+                pages: [1]
+            };
+
+    const totalItems =
+        typeof total !== 'undefined'
+            ? total
+            : testSeriesItems.length;
+%>
+
+
+<div class="page-wrapper">
+
+    <!-- Start Content -->
+    <div class="content pb-0">
+
+
+        <!-- =====================================================
+             ALERTS
+        ====================================================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <%= success %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+
             </div>
+
+        <% } %>
+
+
+        <% if (typeof errors !== 'undefined' &&
+               errors &&
+               errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= typeof error === 'string'
+                                ? error
+                                : (error.msg || error.message || 'Something went wrong.') %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+
+            </div>
+
+        <% } %>
+
+
+        <% if (typeof error !== 'undefined' && error) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <%= error %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+
+            </div>
+
+        <% } %>
+
+
+
+        <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    Test Series
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            Test Series
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <div class="gap-2 d-flex align-items-center flex-wrap">
+
+
+                <!-- =================================================
+                     EXPORT
+                ================================================== -->
+
+                <div class="dropdown">
+
+                    <a href="javascript:void(0);"
+                       class="dropdown-toggle btn btn-outline-light px-2 shadow"
+                       data-bs-toggle="dropdown">
+
+                        <i class="ti ti-package-export me-2"></i>
+
+                        Export
+
+                    </a>
+
+
+                    <div class="dropdown-menu dropdown-menu-end">
+
+                        <ul>
+
+                            <li>
+
+                                <a href="/admin/test-series/export/pdf"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+
+                                    Export as PDF
+
+                                </a>
+
+                            </li>
+
+
+                            <li>
+
+                                <a href="/admin/test-series/export/excel"
+                                   class="dropdown-item">
+
+                                    <i class="ti ti-file-type-xls me-1"></i>
+
+                                    Export as Excel
+
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     REFRESH
+                ================================================== -->
+
+                <a href="javascript:location.reload();"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Refresh"
+                   data-bs-original-title="Refresh">
+
+                    <i class="ti ti-refresh"></i>
+
+                </a>
+
+
+
+                <!-- =================================================
+                     COLLAPSE
+                ================================================== -->
+
+                <a href="javascript:void(0);"
+                   class="btn btn-icon btn-outline-light shadow"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   aria-label="Collapse"
+                   data-bs-original-title="Collapse"
+                   id="collapse-header">
+
+                    <i class="ti ti-transition-top"></i>
+
+                </a>
+
+            </div>
+
         </div>
-        <% }) %>
-    <% } else { %>
-        <div class="col-span-full text-center py-16 text-gray-500 bg-white-50 rounded-lg border border-border-color">No test series found. <a href="/admin/test-series/create" class="text-primary font-medium">Add your first test series</a>.</div>
-    <% } %>
-</div>
 
-<% if (pagination.totalPages > 1) { %>
-<div class="flex items-center justify-between flex-wrap gap-3 mt-6">
-    <p class="text-sm text-gray-600 mb-0">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= total %> total</p>
-    <div class="flex items-center gap-1">
-        <% if (pagination.hasPrev) { %><a href="/admin/test-series?page=<%= pagination.page - 1 %>&search=<%= filters.search %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-left"></i></a><% } %>
-        <% pagination.pages.forEach(function(p) { %><a href="/admin/test-series?page=<%= p %>&search=<%= filters.search %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border text-sm <%= p === pagination.page ? 'bg-primary text-white border-primary' : 'border-border-color hover:bg-light' %>"><%= p %></a><% }) %>
-        <% if (pagination.hasNext) { %><a href="/admin/test-series?page=<%= pagination.page + 1 %>&search=<%= filters.search %>&status=<%= filters.status %>" class="size-9 flex items-center justify-center rounded-full border border-border-color text-sm hover:bg-light"><i class="icon-chevron-right"></i></a><% } %>
+
+
+        <!-- =====================================================
+             TEST SERIES CARD
+        ====================================================== -->
+
+        <div class="card border-0 rounded-0">
+
+
+            <!-- =================================================
+                 CARD HEADER
+            ================================================== -->
+
+            <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+
+
+                <!-- SEARCH -->
+
+                <form method="GET"
+                      action="/admin/test-series"
+                      class="mb-0">
+
+                    <div class="input-icon input-icon-start position-relative">
+
+                        <span class="input-icon-addon text-dark">
+
+                            <i class="ti ti-search"></i>
+
+                        </span>
+
+
+                        <input type="text"
+                               name="search"
+                               value="<%= currentSearch %>"
+                               class="form-control"
+                               id="testSeriesSearch"
+                               placeholder="Search test series...">
+
+                    </div>
+
+
+                    <input type="hidden"
+                           name="status"
+                           value="<%= currentStatus %>">
+
+                    <input type="hidden"
+                           name="sort"
+                           value="<%= currentSort %>">
+
+                </form>
+
+
+
+                <!-- ADD -->
+
+                <div class="d-inline-flex align-items-center gap-3">
+
+                    <a href="/admin/test-series/create"
+                       class="btn btn-primary">
+
+                        <i class="ti ti-square-rounded-plus-filled me-1"></i>
+
+                        Add Test Series
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 CARD BODY
+            ================================================== -->
+
+            <div class="card-body">
+
+
+                <!-- =================================================
+                     TABLE TOOLS
+                ================================================== -->
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+
+
+                    <!-- =================================================
+                         SORT
+                    ================================================== -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="dropdown-toggle btn btn-outline-light shadow"
+                               data-bs-toggle="dropdown">
+
+                                <i class="ti ti-sort-ascending-2 me-2"></i>
+
+                                Sort By
+
+                            </a>
+
+
+                            <div class="dropdown-menu">
+
+                                <ul>
+
+                                    <li>
+
+                                        <a href="/admin/test-series?sort=title_asc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            Title (A-Z)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a href="/admin/test-series?sort=title_desc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            Title (Z-A)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a href="/admin/test-series?sort=price_asc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            Price (Low to High)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a href="/admin/test-series?sort=price_desc&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            Price (High to Low)
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a href="/admin/test-series?sort=newest&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            Newest First
+
+                                        </a>
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <a href="/admin/test-series?sort=oldest&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>"
+                                           class="dropdown-item">
+
+                                            Oldest First
+
+                                        </a>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         RIGHT TOOLS
+                    ================================================== -->
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+
+                        <!-- =================================================
+                             FILTER
+                        ================================================== -->
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="dropdown-toggle btn bg-soft-indigo border-0"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-filter me-2"></i>
+
+                                Filter
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-menu-end p-3">
+
+                                <form method="GET"
+                                      action="/admin/test-series">
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Search
+                                        </label>
+
+                                        <input type="text"
+                                               name="search"
+                                               class="form-control"
+                                               value="<%= currentSearch %>"
+                                               placeholder="Search test series...">
+
+                                    </div>
+
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Status
+                                        </label>
+
+                                        <select name="status"
+                                                class="form-select">
+
+                                            <option value="">
+                                                All Status
+                                            </option>
+
+                                            <option value="active"
+                                                <%= currentStatus === 'active' ? 'selected' : '' %>>
+
+                                                Active
+
+                                            </option>
+
+                                            <option value="inactive"
+                                                <%= currentStatus === 'inactive' ? 'selected' : '' %>>
+
+                                                Inactive
+
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <input type="hidden"
+                                           name="sort"
+                                           value="<%= currentSort %>">
+
+
+                                    <div class="d-flex align-items-center justify-content-end gap-2">
+
+                                        <a href="/admin/test-series"
+                                           class="btn btn-light">
+
+                                            Reset
+
+                                        </a>
+
+
+                                        <button type="submit"
+                                                class="btn btn-primary">
+
+                                            Apply
+
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- =================================================
+                             MANAGE COLUMNS
+                        ================================================== -->
+
+                        <div class="dropdown">
+
+                            <a href="javascript:void(0);"
+                               class="btn bg-soft-indigo border-0"
+                               data-bs-toggle="dropdown"
+                               data-bs-auto-close="outside">
+
+                                <i class="ti ti-columns-3 me-2"></i>
+
+                                Manage Columns
+
+                            </a>
+
+
+                            <div class="dropdown-menu dropdown-menu-md dropdown-md p-3">
+
+                                <ul class="list-unstyled mb-0">
+
+
+                                    <!-- TEST SERIES -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Test Series
+                                                </span>
+
+                                                <input class="form-check-input column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="0"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+
+                                    <!-- TESTS -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Tests
+                                                </span>
+
+                                                <input class="form-check-input column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="1"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+
+                                    <!-- DURATION -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Duration
+                                                </span>
+
+                                                <input class="form-check-input column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="2"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+
+                                    <!-- NEGATIVE MARKING -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Negative Marking
+                                                </span>
+
+                                                <input class="form-check-input column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="3"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+
+                                    <!-- PRICE -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-2">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Price
+                                                </span>
+
+                                                <input class="form-check-input column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="4"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+
+
+                                    <!-- STATUS -->
+
+                                    <li class="gap-1 d-flex align-items-center mb-0">
+
+                                        <i class="ti ti-columns me-1"></i>
+
+                                        <div class="form-check form-switch w-100 ps-0">
+
+                                            <label class="form-check-label d-flex align-items-center gap-2 w-100">
+
+                                                <span>
+                                                    Status
+                                                </span>
+
+                                                <input class="form-check-input column-toggle ms-auto"
+                                                       type="checkbox"
+                                                       data-column="5"
+                                                       checked>
+
+                                            </label>
+
+                                        </div>
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     TEST SERIES TABLE
+                ================================================== -->
+
+                <div class="table-responsive custom-table">
+
+                    <table class="table table-nowrap"
+                           id="test-series-table">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>
+                                    Test Series
+                                </th>
+
+                                <th>
+                                    Tests
+                                </th>
+
+                                <th>
+                                    Duration
+                                </th>
+
+                                <th>
+                                    Negative Marking
+                                </th>
+
+                                <th>
+                                    Price
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th class="text-end no-sort">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+
+                            <% if (testSeriesItems.length) { %>
+
+
+                                <% testSeriesItems.forEach(function(t) { %>
+
+                                    <tr>
+
+
+                                        <!-- =================================================
+                                             TEST SERIES
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <div class="d-flex align-items-center">
+
+                                                <a href="/admin/test-series/<%= t.id %>/edit"
+                                                   class="avatar avatar-md me-2">
+
+                                                    <img src="<%= t.thumbnail || '/admin-assets/logo-small.svg' %>"
+                                                         alt="<%= t.title %>"
+                                                         class="img-fluid">
+
+                                                </a>
+
+
+                                                <div>
+
+                                                    <h6 class="mb-1">
+
+                                                        <a href="/admin/test-series/<%= t.id %>/edit"
+                                                           class="text-dark fw-semibold">
+
+                                                            <%= t.title %>
+
+                                                        </a>
+
+                                                    </h6>
+
+
+                                                    <p class="mb-0 text-muted fs-12">
+
+                                                        <%
+                                                            const cleanDescription =
+                                                                (t.description || '')
+                                                                    .replace(/<[^>]*>/g, '')
+                                                                    .trim();
+                                                        %>
+
+                                                        <%= cleanDescription.slice(0, 80) %><%= cleanDescription.length > 80 ? '...' : '' %>
+
+                                                    </p>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+
+                                        <!-- =================================================
+                                             TEST COUNT
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <span class="badge bg-soft-primary text-primary">
+
+                                                <i class="ti ti-list-check me-1"></i>
+
+                                                <%= typeof t.testCount !== 'undefined'
+                                                    ? t.testCount
+                                                    : 0 %>
+
+                                            </span>
+
+                                        </td>
+
+
+
+                                        <!-- =================================================
+                                             DURATION
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <% if (t.default_duration_minutes) { %>
+
+                                                <span class="text-dark">
+
+                                                    <i class="ti ti-clock me-1 text-muted"></i>
+
+                                                    <%= t.default_duration_minutes %>
+                                                    min
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="text-muted">
+                                                    —
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+
+                                        <!-- =================================================
+                                             NEGATIVE MARKING
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <span class="text-dark">
+
+                                                -<%= typeof t.default_negative_marking !== 'undefined'
+                                                    ? t.default_negative_marking
+                                                    : 0 %>
+
+                                            </span>
+
+                                            <span class="text-muted fs-12">
+                                                / wrong
+                                            </span>
+
+                                        </td>
+
+
+
+                                        <!-- =================================================
+                                             PRICE
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <% if (t.discount_price) { %>
+
+                                                <span class="fw-semibold text-dark">
+
+                                                    ₹<%= t.discount_price %>
+
+                                                </span>
+
+
+                                                <span class="text-muted text-decoration-line-through fs-12 ms-1">
+
+                                                    ₹<%= t.price %>
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="fw-semibold text-dark">
+
+                                                    ₹<%= t.price || 0 %>
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+
+                                        <!-- =================================================
+                                             STATUS
+                                        ================================================== -->
+
+                                        <td>
+
+                                            <% if (t.is_active) { %>
+
+                                                <span class="badge bg-soft-success text-success">
+
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i>
+
+                                                    Active
+
+                                                </span>
+
+                                            <% } else { %>
+
+                                                <span class="badge bg-soft-danger text-danger">
+
+                                                    <i class="ti ti-circle-filled fs-7 me-1"></i>
+
+                                                    Inactive
+
+                                                </span>
+
+                                            <% } %>
+
+                                        </td>
+
+
+
+                                        <!-- =================================================
+                                             ACTION
+                                        ================================================== -->
+
+                                        <td class="text-end">
+
+                                            <div class="dropdown">
+
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-icon btn-sm"
+                                                   data-bs-toggle="dropdown"
+                                                   aria-expanded="false">
+
+                                                    <i class="ti ti-dots-vertical"></i>
+
+                                                </a>
+
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+
+
+                                                    <!-- MANAGE TESTS -->
+
+                                                    <li>
+
+                                                        <a href="/admin/test-series/<%= t.id %>/tests"
+                                                           class="dropdown-item">
+
+                                                            <i class="ti ti-list-check me-1"></i>
+
+                                                            Manage Tests
+
+                                                        </a>
+
+                                                    </li>
+
+
+
+                                                    <!-- RESULTS -->
+
+                                                    <li>
+
+                                                        <a href="/admin/test-series/<%= t.id %>/results"
+                                                           class="dropdown-item">
+
+                                                            <i class="ti ti-chart-bar me-1"></i>
+
+                                                            Results
+
+                                                        </a>
+
+                                                    </li>
+
+
+
+                                                    <!-- EDIT -->
+
+                                                    <li>
+
+                                                        <a href="/admin/test-series/<%= t.id %>/edit"
+                                                           class="dropdown-item">
+
+                                                            <i class="ti ti-edit me-1"></i>
+
+                                                            Edit
+
+                                                        </a>
+
+                                                    </li>
+
+
+
+                                                    <!-- DELETE -->
+
+                                                    <li>
+
+                                                        <a href="javascript:void(0);"
+                                                           class="dropdown-item text-danger"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#delete_test_series_<%= t.id %>">
+
+                                                            <i class="ti ti-trash me-1"></i>
+
+                                                            Delete
+
+                                                        </a>
+
+                                                    </li>
+
+                                                </ul>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+
+                                <% }) %>
+
+
+                            <% } else { %>
+
+
+                                <!-- =================================================
+                                     EMPTY
+                                ================================================== -->
+
+                                <tr id="noTestSeriesRow">
+
+                                    <td colspan="7"
+                                        class="text-center py-5">
+
+                                        <div class="text-muted">
+
+                                            <i class="ti ti-notes fs-40 d-block mb-2"></i>
+
+                                            <h5>
+                                                No Test Series Found
+                                            </h5>
+
+                                            <p class="mb-2">
+
+                                                There are no test series available.
+
+                                            </p>
+
+                                            <a href="/admin/test-series/create"
+                                               class="btn btn-primary btn-sm">
+
+                                                <i class="ti ti-plus me-1"></i>
+
+                                                Add Your First Test Series
+
+                                            </a>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+
+                            <% } %>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+
+                <% if (pageData.totalPages > 1) { %>
+
+                    <div class="row align-items-center mt-3">
+
+
+                        <!-- INFO -->
+
+                        <div class="col-md-6">
+
+                            <div class="text-muted">
+
+                                Page
+
+                                <%= pageData.page %>
+
+                                of
+
+                                <%= pageData.totalPages %>
+
+                                &nbsp;·&nbsp;
+
+                                <%= totalItems %>
+
+                                total Test Series
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- PAGINATION -->
+
+                        <div class="col-md-6">
+
+                            <div class="d-flex justify-content-end">
+
+                                <ul class="pagination mb-0">
+
+
+                                    <!-- PREVIOUS -->
+
+                                    <% if (pageData.hasPrev) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/test-series?page=<%= pageData.page - 1 %>&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>&sort=<%= encodeURIComponent(currentSort) %>">
+
+                                                <i class="ti ti-chevron-left"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+
+
+                                    <!-- PAGES -->
+
+                                    <% if (Array.isArray(pageData.pages)) { %>
+
+                                        <% pageData.pages.forEach(function(page) { %>
+
+                                            <li class="page-item <%= page === pageData.page ? 'active' : '' %>">
+
+                                                <a class="page-link"
+                                                   href="/admin/test-series?page=<%= page %>&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>&sort=<%= encodeURIComponent(currentSort) %>">
+
+                                                    <%= page %>
+
+                                                </a>
+
+                                            </li>
+
+                                        <% }) %>
+
+                                    <% } %>
+
+
+
+                                    <!-- NEXT -->
+
+                                    <% if (pageData.hasNext) { %>
+
+                                        <li class="page-item">
+
+                                            <a class="page-link"
+                                               href="/admin/test-series?page=<%= pageData.page + 1 %>&search=<%= encodeURIComponent(currentSearch) %>&status=<%= encodeURIComponent(currentStatus) %>&sort=<%= encodeURIComponent(currentSort) %>">
+
+                                                <i class="ti ti-chevron-right"></i>
+
+                                            </a>
+
+                                        </li>
+
+                                    <% } %>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                <% } %>
+
+            </div>
+
+        </div>
+
     </div>
-</div>
-<% } %>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+</div>
+
+
+
+<!-- =========================================================
+     DELETE MODALS
+========================================================= -->
+
+<% testSeriesItems.forEach(function(t) { %>
+
+    <div class="modal fade"
+         id="delete_test_series_<%= t.id %>"
+         tabindex="-1"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+                        Delete Test Series
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+                    <div class="text-center">
+
+                        <div class="mb-3">
+
+                            <div class="avatar avatar-xl bg-soft-danger text-danger rounded-circle mx-auto">
+
+                                <i class="ti ti-trash fs-30"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <h5 class="mb-2">
+                            Delete Test Series?
+                        </h5>
+
+
+                        <p class="text-muted mb-0">
+
+                            Are you sure you want to delete
+
+                            <strong>
+                                <%= t.title %>
+                            </strong>?
+
+                            <br>
+
+                            This action cannot be undone.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer justify-content-center">
+
+                    <button type="button"
+                            class="btn btn-light"
+                            data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+
+                    <form method="POST"
+                          action="/admin/test-series/<%= t.id %>/delete">
+
+                        <button type="submit"
+                                class="btn btn-danger">
+
+                            <i class="ti ti-trash me-1"></i>
+
+                            Delete
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+<% }) %>
+
+
+
+<!-- =========================================================
+     MANAGE COLUMNS SCRIPT
+========================================================= -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const toggles =
+        document.querySelectorAll(
+            '#test-series-table .column-toggle'
+        );
+
+    const table =
+        document.getElementById(
+            'test-series-table'
+        );
+
+
+    if (!table) {
+        return;
+    }
+
+
+    /*
+     * -----------------------------------------
+     * Update Column Visibility
+     * -----------------------------------------
+     */
+
+    function updateColumnVisibility(
+        colIndex,
+        isVisible
+    ) {
+
+        /*
+         * Header
+         */
+
+        const th =
+            table.querySelector(
+                `thead tr th:nth-child(${colIndex + 1})`
+            );
+
+
+        if (th) {
+
+            th.classList.toggle(
+                'd-none',
+                !isVisible
+            );
+
+        }
+
+
+        /*
+         * Body
+         */
+
+        const rows =
+            table.querySelectorAll(
+                'tbody tr'
+            );
+
+
+        rows.forEach(function (row) {
+
+            /*
+             * Empty row ignore
+             */
+
+            if (
+                row.id ===
+                'noTestSeriesRow'
+            ) {
+
+                return;
+
+            }
+
+
+            const td =
+                row.querySelector(
+                    `td:nth-child(${colIndex + 1})`
+                );
+
+
+            if (td) {
+
+                td.classList.toggle(
+                    'd-none',
+                    !isVisible
+                );
+
+            }
+
+        });
+
+
+        /*
+         * Empty state colspan
+         */
+
+        const emptyTd =
+            table.querySelector(
+                '#noTestSeriesRow td'
+            );
+
+
+        if (emptyTd) {
+
+            const visibleColumns =
+                table.querySelectorAll(
+                    'thead tr th:not(.d-none)'
+                ).length;
+
+
+            emptyTd.setAttribute(
+                'colspan',
+                visibleColumns || 1
+            );
+
+        }
+
+    }
+
+
+
+    /*
+     * -----------------------------------------
+     * Restore + Listeners
+     * -----------------------------------------
+     */
+
+    toggles.forEach(function (toggle) {
+
+        const colIndex =
+            parseInt(
+                toggle.getAttribute(
+                    'data-column'
+                ),
+                10
+            );
+
+
+        const storageKey =
+            'test_series_col_' +
+            colIndex;
+
+
+        /*
+         * Restore saved state
+         */
+
+        const savedState =
+            localStorage.getItem(
+                storageKey
+            );
+
+
+        if (savedState !== null) {
+
+            const isChecked =
+                savedState === 'true';
+
+
+            toggle.checked =
+                isChecked;
+
+
+            updateColumnVisibility(
+                colIndex,
+                isChecked
+            );
+
+        }
+
+
+        /*
+         * Change
+         */
+
+        toggle.addEventListener(
+            'change',
+            function () {
+
+                const isChecked =
+                    this.checked;
+
+
+                updateColumnVisibility(
+                    colIndex,
+                    isChecked
+                );
+
+
+                localStorage.setItem(
+                    storageKey,
+                    isChecked
+                );
+
+            }
+        );
+
+    });
+
+
+
+    /*
+     * -----------------------------------------
+     * Search On Enter
+     * -----------------------------------------
+     */
+
+    const searchInput =
+        document.getElementById(
+            'testSeriesSearch'
+        );
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            'keydown',
+            function (event) {
+
+                if (
+                    event.key ===
+                    'Enter'
+                ) {
+
+                    event.preventDefault();
+
+                    this.form.submit();
+
+                }
+
+            }
+        );
+
+    }
+
+
+
+    /*
+     * -----------------------------------------
+     * Feather Icons
+     * -----------------------------------------
+     */
+
+    if (
+        typeof feather !==
+        'undefined'
+    ) {
+
+        feather.replace();
+
+    }
+
+});
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

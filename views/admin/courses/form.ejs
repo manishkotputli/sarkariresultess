@@ -1,67 +1,1660 @@
-<%- include('../../adminlayout/admin-layout-top') %>
+<%- include('../../adminlayout/header') %>
 
-<div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-    <h1 class="text-gray-900 text-xl lg:text-[28px] font-bold"><%= mode === 'edit' ? 'Edit Course' : 'Add Course' %></h1>
-    <a href="/admin/courses" class="text-sm font-medium text-gray-600 hover:text-primary flex items-center gap-1"><i class="icon-arrow-left"></i> Back to Courses</a>
-</div>
+<style>
+    /* =========================================================
+       COURSE FORM
+    ========================================================= */
 
-<form method="POST" action="<%= formAction %>" enctype="multipart/form-data">
-    <div class="grid grid-cols-12 gap-4 lg:gap-6">
-        <div class="col-span-12 xxl:col-span-8 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Course Details</h2>
+    .course-thumbnail-preview {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+    }
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Title <span class="text-danger">*</span></label>
-                    <input type="text" name="title" required value="<%= course ? course.title : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
+    .course-thumbnail-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Slug <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <input type="text" name="slug" value="<%= course ? course.slug : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
+    .course-thumbnail-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #98a2b3;
+    }
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Description</label>
-                    <textarea name="description" rows="8" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary"><%= course ? (course.description || '') : '' %></textarea>
-                </div>
+    .course-thumbnail-placeholder i {
+        font-size: 42px;
+        margin-bottom: 8px;
+    }
+
+    .price-preview {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 14px 16px;
+    }
+
+    .price-preview .current-price {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0d6efd;
+    }
+
+    .price-preview .old-price {
+        font-size: 14px;
+        color: #98a2b3;
+        text-decoration: line-through;
+    }
+
+    .price-preview .discount-badge {
+        font-size: 11px;
+        padding: 4px 7px;
+    }
+
+    .course-info-box {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .course-info-box .info-label {
+        font-size: 12px;
+        color: #98a2b3;
+        margin-bottom: 3px;
+    }
+
+    .course-info-box .info-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #344054;
+    }
+
+    .description-counter {
+        font-size: 12px;
+        color: #98a2b3;
+        text-align: right;
+        margin-top: 5px;
+    }
+</style>
+
+
+<!-- =========================================================
+     PAGE WRAPPER
+========================================================= -->
+
+<div class="page-wrapper">
+
+    <div class="content pb-0">
+
+        <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+
+                    <%= mode === 'edit'
+                        ? 'Edit Course'
+                        : 'Add Course' %>
+
+                </h4>
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin/courses">
+                                Courses
+                            </a>
+
+                        </li>
+
+                        <li class="breadcrumb-item active"
+                            aria-current="page">
+
+                            <%= mode === 'edit'
+                                ? 'Edit'
+                                : 'Add' %>
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
             </div>
+
+
+            <div>
+
+                <a href="/admin/courses"
+                   class="btn btn-outline-light">
+
+                    <i class="ti ti-arrow-left me-1"></i>
+
+                    Back to Courses
+
+                </a>
+
+            </div>
+
         </div>
 
-        <div class="col-span-12 xxl:col-span-4 space-y-4 lg:space-y-6">
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Thumbnail</h2>
-                <% if (course && course.thumbnail) { %>
-                    <img src="<%= course.thumbnail %>" class="w-full h-40 object-cover rounded-lg mb-3 bg-light" alt="">
-                <% } %>
-                <input type="file" name="thumbnail" accept="image/*" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                <p class="text-xs text-gray-400 mt-1 mb-0">JPG/PNG/WEBP, max 5MB<%= course && course.thumbnail ? '. Leave blank to keep current image.' : '' %></p>
-            </div>
 
-            <div class="bg-white-50 rounded-lg border border-border-color shadow-xs p-5">
-                <h2 class="text-gray-900 text-lg font-bold mb-4">Pricing &amp; Status</h2>
-                <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-900 mb-2">Total Duration (hours)</label>
-    <input type="number" step="0.5" min="0" name="duration_hours" value="<%= course && course.duration_hours ? course.duration_hours : '' %>" placeholder="e.g. 12.5" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-</div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Price (₹) <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" name="price" required value="<%= course ? course.price : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Discount Price (₹)</label>
-                    <input type="number" step="0.01" name="discount_price" value="<%= course && course.discount_price ? course.discount_price : '' %>" class="form-input w-full bg-white border border-border-color text-sm text-gray-900 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary">
-                </div>
-                <div class="flex items-center justify-between mb-4">
-                    <label class="text-sm font-medium text-gray-900">Active</label>
-                    <input type="checkbox" name="is_active" <%= (!course || course.is_active) ? 'checked' : '' %> class="w-5 h-5 text-primary border-border-color rounded focus:ring-0 cursor-pointer">
-                </div>
-                <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover transition cursor-pointer">
-                    <%= mode === 'edit' ? 'Update Course' : 'Save Course' %>
+        <!-- =====================================================
+             ALERTS
+        ====================================================== -->
+
+        <% if (typeof errors !== 'undefined' &&
+               errors &&
+               errors.length) { %>
+
+            <div class="alert alert-danger alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <ul class="mb-0">
+
+                    <% errors.forEach(function(error) { %>
+
+                        <li>
+                            <%= error %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
                 </button>
-            </div>
-        </div>
-    </div>
-</form>
 
-<%- include('../../adminlayout/admin-layout-bottom') %>
+            </div>
+
+        <% } %>
+
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div class="alert alert-success alert-dismissible fade show mb-4"
+                 role="alert">
+
+                <%= success %>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =====================================================
+             COURSE FORM
+        ====================================================== -->
+
+        <form method="POST"
+              action="<%= formAction %>"
+              enctype="multipart/form-data"
+              id="courseForm">
+
+
+            <div class="row">
+
+
+                <!-- =================================================
+                     LEFT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-8">
+
+
+                    <!-- =================================================
+                         COURSE DETAILS
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Course Details
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- TITLE -->
+
+                            <div class="mb-4">
+
+                                <label for="titleInput"
+                                       class="form-label">
+
+                                    Course Title
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input type="text"
+                                       name="title"
+                                       id="titleInput"
+                                       required
+                                       value="<%= course ? (course.title || '') : '' %>"
+                                       class="form-control"
+                                       placeholder="Enter course title"
+                                       autocomplete="off">
+
+                            </div>
+
+
+                            <!-- SLUG -->
+
+                            <div class="mb-4">
+
+                                <label for="slugInput"
+                                       class="form-label">
+
+                                    Slug
+
+                                    <span class="text-muted">
+                                        (optional)
+                                    </span>
+
+                                </label>
+
+
+                                <input type="text"
+                                       name="slug"
+                                       id="slugInput"
+                                       value="<%= course ? (course.slug || '') : '' %>"
+                                       class="form-control"
+                                       placeholder="auto-generated-from-title"
+                                       autocomplete="off">
+
+
+                                <small class="text-muted d-block mt-1">
+
+                                    Course URL slug will be generated automatically
+                                    from the title if left unchanged.
+
+                                </small>
+
+                            </div>
+
+
+                            <!-- DESCRIPTION -->
+
+                            <div class="mb-0">
+
+                                <div class="d-flex align-items-center justify-content-between">
+
+                                    <label for="descriptionInput"
+                                           class="form-label">
+
+                                        Description
+
+                                    </label>
+
+                                    <span class="badge bg-light text-dark border">
+
+                                        <i class="ti ti-align-left me-1"></i>
+
+                                        Course Description
+
+                                    </span>
+
+                                </div>
+
+
+                                <textarea name="description"
+                                          id="descriptionInput"
+                                          rows="10"
+                                          class="form-control"
+                                          placeholder="Enter detailed course description..."><%= course ? (course.description || '') : '' %></textarea>
+
+
+                                <div class="description-counter">
+
+                                    <span id="descriptionCount">0</span>
+                                    characters
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         COURSE PREVIEW
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Course Preview
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="border rounded p-3">
+
+                                <div class="row align-items-center">
+
+                                    <div class="col-md-4 mb-3 mb-md-0">
+
+                                        <div class="course-thumbnail-preview">
+
+                                            <% if (course && course.thumbnail) { %>
+
+                                                <img src="<%= course.thumbnail %>"
+                                                     id="coursePreviewImage"
+                                                     alt="Course Thumbnail">
+
+                                            <% } else { %>
+
+                                                <img src=""
+                                                     id="coursePreviewImage"
+                                                     alt="Course Thumbnail"
+                                                     class="d-none">
+
+                                                <div id="coursePreviewPlaceholder"
+                                                     class="course-thumbnail-placeholder">
+
+                                                    <i class="ti ti-photo"></i>
+
+                                                    <span>
+                                                        Course Thumbnail
+                                                    </span>
+
+                                                </div>
+
+                                            <% } %>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-8">
+
+                                        <h5 id="previewCourseTitle"
+                                            class="mb-2">
+
+                                            <%= course && course.title
+                                                ? course.title
+                                                : 'Your Course Title' %>
+
+                                        </h5>
+
+
+                                        <p class="text-muted mb-3"
+                                           id="previewCourseDescription">
+
+                                            <%= course && course.description
+                                                ? course.description.substring(0, 180)
+                                                : 'Your course description will appear here.' %>
+
+                                        </p>
+
+
+                                        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+                                            <span>
+
+                                                <i class="ti ti-clock me-1"></i>
+
+                                                <span id="previewDuration">
+                                                    <%= course && course.duration_hours
+                                                        ? course.duration_hours
+                                                        : '0' %>
+                                                </span>
+
+                                                Hours
+
+                                            </span>
+
+
+                                            <span>
+
+                                                <i class="ti ti-circle-check me-1"></i>
+
+                                                <span id="previewStatus">
+
+                                                    <%= (!course || course.is_active)
+                                                        ? 'Active'
+                                                        : 'Inactive' %>
+
+                                                </span>
+
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         RECORD INFO
+                    ================================================== -->
+
+                    <% if (mode === 'edit' && course) { %>
+
+                        <div class="card border-0 rounded-0 mb-4">
+
+                            <div class="card-header">
+
+                                <h5 class="card-title mb-0">
+                                    Course Information
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body">
+
+                                <div class="row g-3">
+
+                                    <div class="col-md-4">
+
+                                        <div class="course-info-box">
+
+                                            <div class="info-label">
+                                                Course ID
+                                            </div>
+
+                                            <div class="info-value">
+                                                #<%= course.id %>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-4">
+
+                                        <div class="course-info-box">
+
+                                            <div class="info-label">
+                                                Duration
+                                            </div>
+
+                                            <div class="info-value">
+
+                                                <%= course.duration_hours || 0 %>
+                                                Hours
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-4">
+
+                                        <div class="course-info-box">
+
+                                            <div class="info-label">
+                                                Status
+                                            </div>
+
+                                            <div class="info-value"
+                                                 id="infoStatus">
+
+                                                <%= course.is_active
+                                                    ? 'Active'
+                                                    : 'Inactive' %>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    <% } %>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     RIGHT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-4">
+
+
+                    <!-- =================================================
+                         THUMBNAIL
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Thumbnail Image
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- PREVIEW -->
+
+                            <div class="course-thumbnail-preview mb-3">
+
+                                <% if (course && course.thumbnail) { %>
+
+                                    <div id="thumbPreviewWrap">
+
+                                        <img id="thumbPreviewImg"
+                                             src="<%= course.thumbnail %>"
+                                             alt="Thumbnail Preview">
+
+                                        <div class="position-absolute top-0 end-0 p-2">
+
+                                            <button type="button"
+                                                    id="removeThumbBtn"
+                                                    class="btn btn-danger btn-sm btn-icon"
+                                                    title="Remove image">
+
+                                                <i class="ti ti-trash"></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div id="thumbPlaceholder"
+                                         class="course-thumbnail-placeholder d-none">
+
+                                        <i class="ti ti-photo"></i>
+
+                                        <span>
+                                            16:9 Image Preview
+                                        </span>
+
+                                    </div>
+
+                                <% } else { %>
+
+                                    <div id="thumbPreviewWrap"
+                                         class="d-none">
+
+                                        <img id="thumbPreviewImg"
+                                             src=""
+                                             alt="Thumbnail Preview">
+
+                                        <div class="position-absolute top-0 end-0 p-2">
+
+                                            <button type="button"
+                                                    id="removeThumbBtn"
+                                                    class="btn btn-danger btn-sm btn-icon"
+                                                    title="Remove image">
+
+                                                <i class="ti ti-trash"></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div id="thumbPlaceholder"
+                                         class="course-thumbnail-placeholder">
+
+                                        <i class="ti ti-photo"></i>
+
+                                        <span>
+                                            16:9 Image Preview
+                                        </span>
+
+                                    </div>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <!-- FILE -->
+
+                            <div class="mb-2">
+
+                                <label for="thumbnailFileInput"
+                                       class="form-label">
+
+                                    Upload Thumbnail
+
+                                </label>
+
+                                <input type="file"
+                                       name="thumbnail"
+                                       id="thumbnailFileInput"
+                                       accept="image/*"
+                                       class="form-control">
+
+                            </div>
+
+
+                            <small class="text-muted d-block">
+
+                                JPG, PNG, WEBP, GIF
+                                <br>
+                                Maximum size: 5MB
+
+                                <% if (course && course.thumbnail) { %>
+
+                                    <br>
+                                    Leave blank to keep the current image.
+
+                                <% } %>
+
+                            </small>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PRICING & STATUS
+                    ================================================== -->
+
+                    <div class="card border-0 rounded-0 mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+                                Pricing & Status
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- DURATION -->
+
+                            <div class="mb-4">
+
+                                <label for="durationInput"
+                                       class="form-label">
+
+                                    Total Duration
+
+                                    <span class="text-muted">
+                                        (Hours)
+                                    </span>
+
+                                </label>
+
+
+                                <div class="input-group">
+
+                                    <input type="number"
+                                           step="0.5"
+                                           min="0"
+                                           name="duration_hours"
+                                           id="durationInput"
+                                           value="<%= course && course.duration_hours ? course.duration_hours : '' %>"
+                                           placeholder="e.g. 12.5"
+                                           class="form-control">
+
+                                    <span class="input-group-text">
+                                        Hours
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PRICE -->
+
+                            <div class="mb-4">
+
+                                <label for="priceInput"
+                                       class="form-label">
+
+                                    Price
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <div class="input-group">
+
+                                    <span class="input-group-text">
+                                        ₹
+                                    </span>
+
+                                    <input type="number"
+                                           step="0.01"
+                                           min="0"
+                                           name="price"
+                                           id="priceInput"
+                                           required
+                                           value="<%= course ? (course.price || '') : '' %>"
+                                           placeholder="0.00"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- DISCOUNT PRICE -->
+
+                            <div class="mb-4">
+
+                                <label for="discountPriceInput"
+                                       class="form-label">
+
+                                    Discount Price
+
+                                    <span class="text-muted">
+                                        (Optional)
+                                    </span>
+
+                                </label>
+
+
+                                <div class="input-group">
+
+                                    <span class="input-group-text">
+                                        ₹
+                                    </span>
+
+                                    <input type="number"
+                                           step="0.01"
+                                           min="0"
+                                           name="discount_price"
+                                           id="discountPriceInput"
+                                           value="<%= course && course.discount_price ? course.discount_price : '' %>"
+                                           placeholder="0.00"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PRICE PREVIEW -->
+
+                            <div class="price-preview mb-4">
+
+                                <div class="text-muted small mb-1">
+                                    Course Price Preview
+                                </div>
+
+
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                                    <span id="currentPricePreview"
+                                          class="current-price">
+
+                                        ₹<%= course && course.discount_price
+                                            ? course.discount_price
+                                            : (course && course.price
+                                                ? course.price
+                                                : '0.00') %>
+
+                                    </span>
+
+
+                                    <span id="oldPricePreview"
+                                          class="old-price
+                                          <%= course &&
+                                             course.discount_price &&
+                                             Number(course.discount_price) < Number(course.price)
+                                             ? ''
+                                             : 'd-none' %>">
+
+                                        ₹<%= course && course.price
+                                            ? course.price
+                                            : '0.00' %>
+
+                                    </span>
+
+
+                                    <span id="discountBadge"
+                                          class="badge bg-success discount-badge
+                                          <%= course &&
+                                             course.discount_price &&
+                                             Number(course.discount_price) < Number(course.price)
+                                             ? ''
+                                             : 'd-none' %>">
+
+                                        <%= course &&
+                                           course.discount_price &&
+                                           course.price &&
+                                           Number(course.price) > 0
+                                            ? Math.round(
+                                                ((Number(course.price) -
+                                                  Number(course.discount_price)) /
+                                                  Number(course.price)) * 100
+                                              )
+                                            : 0 %>% OFF
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <hr class="my-4">
+
+
+                            <!-- ACTIVE STATUS -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+                                <div>
+
+                                    <label for="activeStatusSwitch"
+                                           class="form-label mb-1">
+
+                                        Active Status
+
+                                    </label>
+
+                                    <small class="text-muted d-block">
+
+                                        Enable or disable this course.
+
+                                    </small>
+
+                                </div>
+
+
+                                <div class="form-check form-switch">
+
+                                    <input type="checkbox"
+                                           name="is_active"
+                                           value="on"
+                                           id="activeStatusSwitch"
+                                           class="form-check-input"
+                                           <%= (!course || course.is_active)
+                                               ? 'checked'
+                                               : '' %>>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- STATUS PREVIEW -->
+
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+
+                                <span class="text-muted">
+                                    Current Status
+                                </span>
+
+                                <span id="statusBadge"
+                                      class="badge
+                                      <%= (!course || course.is_active)
+                                          ? 'badge-soft-success'
+                                          : 'badge-soft-danger' %>">
+
+                                    <%= (!course || course.is_active)
+                                        ? 'Active'
+                                        : 'Inactive' %>
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- SUBMIT -->
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100"
+                                    id="submitBtn">
+
+                                <i class="ti ti-device-floppy me-1"></i>
+
+                                <%= mode === 'edit'
+                                    ? 'Update Course'
+                                    : 'Save Course' %>
+
+                            </button>
+
+
+                            <!-- CANCEL -->
+
+                            <a href="/admin/courses"
+                               class="btn btn-light w-100 mt-2">
+
+                                <i class="ti ti-x me-1"></i>
+
+                                Cancel
+
+                            </a>
+
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     COURSE FORM SCRIPT
+========================================================= -->
+
+<script>
+
+(function () {
+
+    'use strict';
+
+
+    /* =========================================================
+       ELEMENTS
+    ========================================================= */
+
+    const courseForm =
+        document.getElementById('courseForm');
+
+    const titleInput =
+        document.getElementById('titleInput');
+
+    const slugInput =
+        document.getElementById('slugInput');
+
+    const descriptionInput =
+        document.getElementById('descriptionInput');
+
+    const durationInput =
+        document.getElementById('durationInput');
+
+    const priceInput =
+        document.getElementById('priceInput');
+
+    const discountPriceInput =
+        document.getElementById('discountPriceInput');
+
+    const activeStatusSwitch =
+        document.getElementById('activeStatusSwitch');
+
+    const submitBtn =
+        document.getElementById('submitBtn');
+
+
+    /* =========================================================
+       PREVIEW ELEMENTS
+    ========================================================= */
+
+    const previewCourseTitle =
+        document.getElementById('previewCourseTitle');
+
+    const previewCourseDescription =
+        document.getElementById('previewCourseDescription');
+
+    const previewDuration =
+        document.getElementById('previewDuration');
+
+    const previewStatus =
+        document.getElementById('previewStatus');
+
+    const statusBadge =
+        document.getElementById('statusBadge');
+
+    const infoStatus =
+        document.getElementById('infoStatus');
+
+    const descriptionCount =
+        document.getElementById('descriptionCount');
+
+
+    /* =========================================================
+       THUMBNAIL ELEMENTS
+    ========================================================= */
+
+    const thumbnailFileInput =
+        document.getElementById('thumbnailFileInput');
+
+    const thumbPreviewWrap =
+        document.getElementById('thumbPreviewWrap');
+
+    const thumbPreviewImg =
+        document.getElementById('thumbPreviewImg');
+
+    const thumbPlaceholder =
+        document.getElementById('thumbPlaceholder');
+
+    const removeThumbBtn =
+        document.getElementById('removeThumbBtn');
+
+
+    /* =========================================================
+       PRICE PREVIEW
+    ========================================================= */
+
+    const currentPricePreview =
+        document.getElementById('currentPricePreview');
+
+    const oldPricePreview =
+        document.getElementById('oldPricePreview');
+
+    const discountBadge =
+        document.getElementById('discountBadge');
+
+
+    /* =========================================================
+       SLUGIFY
+    ========================================================= */
+
+    function slugify(text) {
+
+        return String(text || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[\s_]+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
+
+    }
+
+
+    /* =========================================================
+       AUTO SLUG
+    ========================================================= */
+
+    let slugManuallyChanged =
+        Boolean(slugInput && slugInput.value.trim());
+
+
+    if (slugInput) {
+
+        slugInput.addEventListener(
+            'input',
+            function () {
+
+                slugManuallyChanged = true;
+
+            }
+        );
+
+    }
+
+
+    if (titleInput) {
+
+        titleInput.addEventListener(
+            'input',
+            function () {
+
+                const title =
+                    this.value.trim();
+
+
+                if (previewCourseTitle) {
+
+                    previewCourseTitle.textContent =
+                        title || 'Your Course Title';
+
+                }
+
+
+                if (!slugManuallyChanged && slugInput) {
+
+                    slugInput.value =
+                        slugify(title);
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       DESCRIPTION PREVIEW
+    ========================================================= */
+
+    function updateDescriptionPreview() {
+
+        if (!descriptionInput) {
+            return;
+        }
+
+
+        const description =
+            descriptionInput.value.trim();
+
+
+        if (descriptionCount) {
+
+            descriptionCount.textContent =
+                description.length;
+
+        }
+
+
+        if (previewCourseDescription) {
+
+            previewCourseDescription.textContent =
+                description
+                    ? description.substring(0, 180)
+                    : 'Your course description will appear here.';
+
+        }
+
+    }
+
+
+    if (descriptionInput) {
+
+        descriptionInput.addEventListener(
+            'input',
+            updateDescriptionPreview
+        );
+
+        updateDescriptionPreview();
+
+    }
+
+
+    /* =========================================================
+       DURATION PREVIEW
+    ========================================================= */
+
+    if (durationInput) {
+
+        durationInput.addEventListener(
+            'input',
+            function () {
+
+                if (previewDuration) {
+
+                    previewDuration.textContent =
+                        this.value || '0';
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    function updateStatusPreview() {
+
+        if (!activeStatusSwitch) {
+            return;
+        }
+
+
+        const active =
+            activeStatusSwitch.checked;
+
+
+        if (previewStatus) {
+
+            previewStatus.textContent =
+                active
+                    ? 'Active'
+                    : 'Inactive';
+
+        }
+
+
+        if (infoStatus) {
+
+            infoStatus.textContent =
+                active
+                    ? 'Active'
+                    : 'Inactive';
+
+        }
+
+
+        if (statusBadge) {
+
+            statusBadge.textContent =
+                active
+                    ? 'Active'
+                    : 'Inactive';
+
+
+            statusBadge.classList.remove(
+                'badge-soft-success',
+                'badge-soft-danger'
+            );
+
+
+            statusBadge.classList.add(
+                active
+                    ? 'badge-soft-success'
+                    : 'badge-soft-danger'
+            );
+
+        }
+
+    }
+
+
+    if (activeStatusSwitch) {
+
+        activeStatusSwitch.addEventListener(
+            'change',
+            updateStatusPreview
+        );
+
+    }
+
+
+    /* =========================================================
+       PRICE CALCULATION
+    ========================================================= */
+
+    function updatePricePreview() {
+
+        if (!priceInput) {
+            return;
+        }
+
+
+        const price =
+            parseFloat(priceInput.value) || 0;
+
+
+        const discountPrice =
+            discountPriceInput
+                ? parseFloat(discountPriceInput.value) || 0
+                : 0;
+
+
+        const hasDiscount =
+            discountPrice > 0 &&
+            price > 0 &&
+            discountPrice < price;
+
+
+        const currentPrice =
+            hasDiscount
+                ? discountPrice
+                : price;
+
+
+        if (currentPricePreview) {
+
+            currentPricePreview.textContent =
+                '₹' + currentPrice.toFixed(2);
+
+        }
+
+
+        if (oldPricePreview) {
+
+            oldPricePreview.textContent =
+                '₹' + price.toFixed(2);
+
+
+            oldPricePreview.classList.toggle(
+                'd-none',
+                !hasDiscount
+            );
+
+        }
+
+
+        if (discountBadge) {
+
+            if (hasDiscount) {
+
+                const discount =
+                    Math.round(
+                        ((price - discountPrice) / price) * 100
+                    );
+
+
+                discountBadge.textContent =
+                    discount + '% OFF';
+
+
+                discountBadge.classList.remove(
+                    'd-none'
+                );
+
+            } else {
+
+                discountBadge.classList.add(
+                    'd-none'
+                );
+
+            }
+
+        }
+
+    }
+
+
+    if (priceInput) {
+
+        priceInput.addEventListener(
+            'input',
+            updatePricePreview
+        );
+
+    }
+
+
+    if (discountPriceInput) {
+
+        discountPriceInput.addEventListener(
+            'input',
+            updatePricePreview
+        );
+
+    }
+
+
+    updatePricePreview();
+
+
+    /* =========================================================
+       THUMBNAIL PREVIEW
+    ========================================================= */
+
+    function showThumbnailPreview(src) {
+
+        if (!src) {
+            return;
+        }
+
+
+        if (thumbPreviewImg) {
+
+            thumbPreviewImg.src =
+                src;
+
+        }
+
+
+        if (thumbPreviewWrap) {
+
+            thumbPreviewWrap.classList.remove(
+                'd-none'
+            );
+
+        }
+
+
+        if (thumbPlaceholder) {
+
+            thumbPlaceholder.classList.add(
+                'd-none'
+            );
+
+        }
+
+    }
+
+
+    function clearThumbnailPreview() {
+
+        if (thumbPreviewImg) {
+
+            thumbPreviewImg.src =
+                '';
+
+        }
+
+
+        if (thumbPreviewWrap) {
+
+            thumbPreviewWrap.classList.add(
+                'd-none'
+            );
+
+        }
+
+
+        if (thumbPlaceholder) {
+
+            thumbPlaceholder.classList.remove(
+                'd-none'
+            );
+
+        }
+
+
+        if (thumbnailFileInput) {
+
+            thumbnailFileInput.value =
+                '';
+
+        }
+
+    }
+
+
+    if (thumbnailFileInput) {
+
+        thumbnailFileInput.addEventListener(
+            'change',
+            function (event) {
+
+                const file =
+                    event.target.files &&
+                    event.target.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                if (!file.type.startsWith('image/')) {
+
+                    alert(
+                        'Please select a valid image file.'
+                    );
+
+                    this.value =
+                        '';
+
+                    return;
+
+                }
+
+
+                if (file.size > 5 * 1024 * 1024) {
+
+                    alert(
+                        'Image size must be less than 5MB.'
+                    );
+
+                    this.value =
+                        '';
+
+                    return;
+
+                }
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        showThumbnailPreview(
+                            event.target.result
+                        );
+
+                    };
+
+
+                reader.readAsDataURL(
+                    file
+                );
+
+            }
+        );
+
+    }
+
+
+    if (removeThumbBtn) {
+
+        removeThumbBtn.addEventListener(
+            'click',
+            function () {
+
+                clearThumbnailPreview();
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       INITIAL PREVIEW
+    ========================================================= */
+
+    if (titleInput && previewCourseTitle) {
+
+        previewCourseTitle.textContent =
+            titleInput.value.trim() ||
+            'Your Course Title';
+
+    }
+
+
+    updateStatusPreview();
+
+
+    /* =========================================================
+       FORM SUBMIT
+    ========================================================= */
+
+    if (courseForm) {
+
+        courseForm.addEventListener(
+            'submit',
+            function () {
+
+                if (submitBtn) {
+
+                    submitBtn.disabled =
+                        true;
+
+
+                    submitBtn.innerHTML = `
+
+                        <span class="spinner-border spinner-border-sm me-1"
+                              role="status"
+                              aria-hidden="true">
+                        </span>
+
+                        <%= mode === 'edit'
+                            ? 'Updating...'
+                            : 'Saving...' %>
+
+                    `;
+
+                }
+
+            }
+        );
+
+    }
+
+})();
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>
