@@ -9,6 +9,10 @@ router.get('/terms', pagesController.terms);
 router.get('/privacy-policy', pagesController.privacyPolicy);
 router.get('/disclaimer', pagesController.disclaimer);
 router.get('/faqs', pagesController.faqsPage);
+router.get(
+  '/questions',
+  pagesController.questionListPage
+);
 router.get('/contact', pagesController.renderContactPage);
 router.post('/contact/send', contactValidator, pagesController.contactSubmit);
 

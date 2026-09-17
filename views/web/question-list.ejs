@@ -1,0 +1,428 @@
+<%
+var pageStyles = `
+/* -------------------------------------------------------------------------- */
+/* 1. CORE VARIABLES & LAYOUT SETUP                                           */
+/* -------------------------------------------------------------------------- */
+:root {
+  --sr-red: #b91c1c;
+  --sr-red-hover: #991b1b;
+  --sr-red-light: #fef2f2;
+  --sr-navy: #0f172a;
+  --sr-navy-muted: #334155;
+  --sr-bg-page: #f8fafc;
+  --sr-card-bg: #ffffff;
+  --sr-border: #e2e8f0;
+  --sr-text: #1e293b;
+  --sr-text-muted: #64748b;
+  --sr-blue: #2563eb;
+  --sr-green: #16a34a;
+  --sr-radius: 14px;
+  --sr-radius-sm: 8px;
+  --sr-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --sr-shadow-md: 0 4px 14px rgba(15, 23, 42, 0.06);
+  --sr-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sr-qa-container {
+  max-width: 1200px;
+  margin: 24px auto 60px;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 992px) { .sr-qa-container { padding: 0 16px; margin-top: 16px; } }
+
+/* Grid Wrapper */
+.sr-qa-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .sr-qa-grid { grid-template-columns: 1fr; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 2. MAIN QUESTION CARD                                                      */
+/* -------------------------------------------------------------------------- */
+.sr-question-card {
+  background: var(--sr-card-bg);
+  border: 1px solid var(--sr-border);
+  border-radius: var(--sr-radius);
+  box-shadow: var(--sr-shadow-sm);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.sr-qa-breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--sr-border);
+  font-size: 13px;
+  color: var(--sr-text-muted);
+}
+
+.sr-status-badge {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sr-q-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sr-vote-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--sr-bg-page);
+  border: 1px solid var(--sr-border);
+  border-radius: var(--sr-radius-sm);
+  padding: 8px 10px;
+  height: fit-content;
+}
+
+.sr-vote-btn {
+  background: transparent;
+  border: none;
+  color: var(--sr-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  transition: var(--sr-transition);
+}
+
+.sr-vote-btn:hover { color: var(--sr-red); }
+
+.sr-vote-count {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--sr-navy);
+  margin: 4px 0;
+}
+
+.sr-q-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--sr-navy);
+  line-height: 1.35;
+  margin: 0 0 10px 0;
+}
+
+.sr-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--sr-text-muted);
+  flex-wrap: wrap;
+}
+
+.sr-meta-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--sr-navy);
+}
+
+.sr-meta-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sr-q-body {
+  font-size: 15px;
+  color: var(--sr-text);
+  line-height: 1.65;
+  margin-top: 16px;
+}
+
+.sr-tag-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.sr-tag {
+  background: var(--sr-bg-page);
+  border: 1px solid var(--sr-border);
+  color: var(--sr-navy-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.sr-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sr-border);
+}
+
+.sr-stats-group {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--sr-text-muted);
+  font-weight: 600;
+}
+
+.sr-btn-primary {
+  background: var(--sr-red);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: var(--sr-radius-sm);
+  cursor: pointer;
+  transition: var(--sr-transition);
+}
+
+.sr-btn-primary:hover { background: var(--sr-red-hover); }
+
+/* -------------------------------------------------------------------------- */
+/* 3. ANSWERS SECTION                                                         */
+/* -------------------------------------------------------------------------- */
+.sr-answers-header {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--sr-navy);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sr-answer-card {
+  background: var(--sr-card-bg);
+  border: 1px solid var(--sr-border);
+  border-radius: var(--sr-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.sr-answer-card.best-answer {
+  border: 2px solid var(--sr-green);
+  background: #fafdfb;
+}
+
+.sr-best-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #dcfce7;
+  color: var(--sr-green);
+  font-weight: 800;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 50px;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 4. RIGHT SIDEBAR                                                           */
+/* -------------------------------------------------------------------------- */
+.sr-sidebar-card {
+  background: var(--sr-card-bg);
+  border: 1px solid var(--sr-border);
+  border-radius: var(--sr-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--sr-shadow-sm);
+}
+
+.sr-sidebar-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--sr-navy);
+  margin-bottom: 14px;
+  border-bottom: 2px solid var(--sr-red-light);
+  padding-bottom: 8px;
+}
+
+.sr-related-item {
+  display: block;
+  text-decoration: none;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--sr-border);
+}
+
+.sr-related-item:last-child { border-bottom: none; }
+
+.sr-related-item h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sr-navy);
+  margin: 0 0 4px 0;
+  line-height: 1.35;
+  transition: var(--sr-transition);
+}
+
+.sr-related-item:hover h4 { color: var(--sr-red); }
+
+.sr-related-meta {
+  font-size: 12px;
+  color: var(--sr-text-muted);
+}
+`;
+%>
+
+<%- include('../weblayout/layout-top', { title: title, pageStyles: pageStyles }) %>
+
+<div class="sr-qa-container">
+  <div class="sr-qa-grid">
+    
+    <!-- LEFT COLUMN: QUESTION & ANSWERS -->
+    <main>
+      
+      <!-- MAIN QUESTION CARD -->
+      <article class="sr-question-card">
+        
+        <!-- Breadcrumb & Status -->
+        <div class="sr-qa-breadcrumb">
+          <div><i class="ti ti-home"></i> Home / Questions / Question No #1042</div>
+          <span class="sr-status-badge"><i class="ti ti-check"></i> Answered</span>
+        </div>
+
+        <!-- Question Body & Voting -->
+        <div class="sr-q-header">
+          <div class="sr-vote-box">
+            <button class="sr-vote-btn" title="Upvote"><i class="ti ti-chevron-up"></i></button>
+            <span class="sr-vote-count">14</span>
+            <button class="sr-vote-btn" title="Downvote"><i class="ti ti-chevron-down"></i></button>
+          </div>
+
+          <div>
+            <h1 class="sr-q-title">Am I eligible for SSC CGL 2026 if my final result is awaiting?</h1>
+            
+            <div class="sr-meta-row">
+              <div class="sr-meta-author">
+                <img src="https://ui-avatars.com/api/?name=Rahul+Sharma&background=0f172a&color=fff" class="sr-meta-avatar" alt="User">
+                <span>Rahul Sharma</span>
+              </div>
+              <span>• Asked: Sept 15, 2026</span>
+              <span>• Category: <strong class="text-dark">Sarkari Exams</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sr-q-body">
+          <p>I am currently in my final semester of graduation and my final exam results are expected by October 2026. Will I be considered eligible to fill out the online application form for SSC CGL 2026? Please clarify the crucial date criteria mentioned in the notification.</p>
+        </div>
+
+        <!-- Tags -->
+        <div class="sr-tag-list">
+          <span class="sr-tag">SSC CGL</span>
+          <span class="sr-tag">Eligibility</span>
+          <span class="sr-tag">Exam 2026</span>
+          <span class="sr-tag">Graduation</span>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="sr-action-bar">
+          <div class="sr-stats-group">
+            <span><i class="ti ti-message-dots"></i> 2 Answers</span>
+            <span><i class="ti ti-eye"></i> 412 Views</span>
+          </div>
+          <button class="sr-btn-primary"><i class="ti ti-pencil"></i> Write Answer</button>
+        </div>
+
+      </article>
+
+      <!-- ANSWERS SECTION -->
+      <div class="sr-answers-header">
+        <span>Answers (2)</span>
+      </div>
+
+      <!-- ANSWER 1 (Best Answer) -->
+      <div class="sr-answer-card best-answer">
+        <span class="sr-best-badge"><i class="ti ti-award"></i> Best Answer</span>
+        
+        <div class="sr-meta-row mb-3">
+          <div class="sr-meta-author">
+            <img src="https://ui-avatars.com/api/?name=Admin+Team&background=b91c1c&color=fff" class="sr-meta-avatar" alt="Expert">
+            <span>Sarkari Result Team</span>
+          </div>
+          <span>• Answered 2 hours ago</span>
+        </div>
+
+        <div class="sr-q-body">
+          <p>Yes, appearing candidates are generally eligible to apply, provided they acquire the essential qualification on or before the crucial date specified in the official notification. Make sure your mark sheet is issued before the cutoff date.</p>
+        </div>
+      </div>
+
+      <!-- ANSWER 2 -->
+      <div class="sr-answer-card">
+        <div class="sr-meta-row mb-3">
+          <div class="sr-meta-author">
+            <img src="https://ui-avatars.com/api/?name=Amit+Kumar&background=334155&color=fff" class="sr-meta-avatar" alt="User">
+            <span>Amit Kumar</span>
+          </div>
+          <span>• Answered 5 hours ago</span>
+        </div>
+
+        <div class="sr-q-body">
+          <p>Make sure you enter your provisional details accurately while filling out the form. You will need to produce your degree during Document Verification (DV).</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside>
+      
+      <!-- ASK QUESTION CALLOUT -->
+      <div class="sr-sidebar-card text-center">
+        <h3 class="sr-sidebar-title" style="border:none; margin-bottom: 6px;">Have a Question?</h3>
+        <p class="fs-13 text-muted mb-3">Get instant answers from government exam experts.</p>
+        <button class="sr-btn-primary w-100"><i class="ti ti-plus"></i> Ask A Question</button>
+      </div>
+
+      <!-- RELATED QUESTIONS -->
+      <div class="sr-sidebar-card">
+        <h3 class="sr-sidebar-title">Related Questions</h3>
+        
+        <a href="#" class="sr-related-item">
+          <h4>What is the upper age limit relaxation for OBC in UPSC CSE?</h4>
+          <span class="sr-related-meta">12 Answers • 1.2k Views</span>
+        </a>
+
+        <a href="#" class="sr-related-item">
+          <h4>How to download RRB NTPC City Intimation Slip 2026?</h4>
+          <span class="sr-related-meta">5 Answers • 890 Views</span>
+        </a>
+
+        <a href="#" class="sr-related-item">
+          <h4>Can I correct mistake in UP Police Constable application?</h4>
+          <span class="sr-related-meta">8 Answers • 540 Views</span>
+        </a>
+
+      </div>
+
+    </aside>
+
+  </div>
+</div>
+
+<%- include('../weblayout/layout-bottom') %>

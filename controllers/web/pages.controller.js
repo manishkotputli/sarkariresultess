@@ -49,6 +49,17 @@ async function faqsPage(req, res, next) {
   }
 }
 
+function questionListPage(req, res) {
+
+  res.render(
+    'web/question-list',
+    {
+      title: 'Questions'
+    }
+  );
+
+}
+
 module.exports = {
   about: staticPage('about', 'About Us'),
   terms: staticPage('terms', 'Terms & Conditions'),
@@ -57,4 +68,6 @@ module.exports = {
   renderContactPage,
   contactSubmit,
   faqsPage,
+
+  questionListPage
 };
