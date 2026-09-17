@@ -30,4 +30,5 @@ router.use(require('./purchase.routes'));
 router.use(require('./scraping.routes'));
 router.use(require('./profile.routes'));
 router.use(require('./trackingReport.routes'));
+router.use(require('./incomeExpenseCategory.routes'));
 module.exports = router;

@@ -1,0 +1,1456 @@
+<%
+    /*
+    |--------------------------------------------------------------------------
+    | SAFE LOCALS
+    |--------------------------------------------------------------------------
+    */
+
+    const categoryData =
+        typeof category !== 'undefined' && category
+            ? category
+            : {};
+
+    const isEdit =
+        typeof mode !== 'undefined' &&
+        mode === 'edit';
+
+    const categoryName =
+        categoryData.name || '';
+
+    const categoryType =
+        Number(categoryData.type || 1);
+
+    const actionUrl =
+        typeof formAction !== 'undefined' &&
+        formAction
+            ? formAction
+            : '/admin/income-expense/categories';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TYPE LABEL
+    |--------------------------------------------------------------------------
+    */
+
+    const typeLabel =
+        categoryType === 1
+            ? 'Income'
+            : 'Expense';
+
+%>
+
+
+<%- include('../../adminlayout/header') %>
+
+
+<style>
+
+    /* =========================================================
+       CATEGORY FORM
+    ========================================================= */
+
+    .category-type-card {
+
+        position: relative;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        padding: 16px;
+
+        cursor: pointer;
+
+        transition: all .2s ease;
+
+        background: #fff;
+
+        height: 100%;
+
+    }
+
+
+    .category-type-card:hover {
+
+        border-color: #cbd5e1;
+
+        box-shadow:
+            0 5px 18px rgba(0, 0, 0, .05);
+
+    }
+
+
+    .category-type-card.active-income {
+
+        border-color: #22a06b;
+
+        background: #f2fbf6;
+
+    }
+
+
+    .category-type-card.active-expense {
+
+        border-color: #dc3545;
+
+        background: #fff5f5;
+
+    }
+
+
+    .category-type-icon {
+
+        width: 45px;
+
+        height: 45px;
+
+        border-radius: 9px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 20px;
+
+        margin-bottom: 12px;
+
+    }
+
+
+    .income-icon {
+
+        background: #eaf8f0;
+
+        color: #198754;
+
+    }
+
+
+    .expense-icon {
+
+        background: #fff0f0;
+
+        color: #dc3545;
+
+    }
+
+
+    .category-preview {
+
+        border-radius: 10px;
+
+        background: #f8f9fb;
+
+        border: 1px dashed #dce1e8;
+
+        padding: 20px;
+
+    }
+
+
+    .preview-icon {
+
+        width: 48px;
+
+        height: 48px;
+
+        border-radius: 10px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 21px;
+
+    }
+
+
+    .preview-income {
+
+        background: #eaf8f0;
+
+        color: #198754;
+
+    }
+
+
+    .preview-expense {
+
+        background: #fff0f0;
+
+        color: #dc3545;
+
+    }
+
+
+    .category-info-box {
+
+        border-radius: 9px;
+
+        background: #f8f9fb;
+
+        border: 1px solid #e9edf3;
+
+    }
+
+
+    .category-example {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        padding: 5px 9px;
+
+        border-radius: 6px;
+
+        background: #fff;
+
+        border: 1px solid #e6eaf0;
+
+        font-size: 11px;
+
+        color: #5f6877;
+
+        margin: 3px;
+
+    }
+
+
+    .form-label {
+
+        font-weight: 600;
+
+    }
+
+
+    .required {
+
+        color: #dc3545;
+
+    }
+
+
+    @media (max-width: 767px) {
+
+        .category-type-card {
+
+            margin-bottom: 10px;
+
+        }
+
+    }
+
+</style>
+
+
+<div class="page-wrapper">
+
+    <div class="content pb-0">
+
+
+        <!-- =====================================================
+             ALERTS
+        ====================================================== -->
+
+        <% if (typeof success !== 'undefined' && success) { %>
+
+            <div
+                class="alert alert-success alert-dismissible fade show mb-4"
+                role="alert"
+            >
+
+                <i class="ti ti-circle-check me-2"></i>
+
+                <%= success %>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+        <% } %>
+
+
+        <% if (typeof error !== 'undefined' && error) { %>
+
+            <div
+                class="alert alert-danger alert-dismissible fade show mb-4"
+                role="alert"
+            >
+
+                <i class="ti ti-alert-circle me-2"></i>
+
+                <%= error %>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+        <% } %>
+
+
+        <% if (
+            typeof errors !== 'undefined' &&
+            Array.isArray(errors) &&
+            errors.length
+        ) { %>
+
+            <div
+                class="alert alert-danger alert-dismissible fade show mb-4"
+                role="alert"
+            >
+
+                <ul class="mb-0 ps-3">
+
+                    <% errors.forEach(function(err) { %>
+
+                        <li>
+                            <%= typeof err === 'string'
+                                ? err
+                                : (err.msg || err.message || 'Validation error.')
+                            %>
+                        </li>
+
+                    <% }) %>
+
+                </ul>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+        <% } %>
+
+
+        <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
+
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+
+
+            <div>
+
+                <h4 class="mb-1">
+
+                    <%= isEdit
+                        ? 'Edit Category'
+                        : 'Add Category'
+                    %>
+
+                </h4>
+
+
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb mb-0 p-0">
+
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin">
+                                Home
+                            </a>
+
+                        </li>
+
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin/income-expense">
+                                Income &amp; Expense
+                            </a>
+
+                        </li>
+
+
+                        <li class="breadcrumb-item">
+
+                            <a href="/admin/income-expense/categories">
+                                Categories
+                            </a>
+
+                        </li>
+
+
+                        <li
+                            class="breadcrumb-item active"
+                            aria-current="page"
+                        >
+
+                            <%= isEdit
+                                ? 'Edit'
+                                : 'Add'
+                            %>
+
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+            <!-- BACK -->
+
+            <a
+                href="/admin/income-expense/categories"
+                class="btn btn-outline-light shadow"
+            >
+
+                <i class="ti ti-arrow-left me-1"></i>
+
+                Back to Categories
+
+            </a>
+
+        </div>
+
+
+        <!-- =====================================================
+             FORM
+        ====================================================== -->
+
+        <form
+            method="POST"
+            action="<%= actionUrl %>"
+            id="categoryForm"
+        >
+
+
+            <div class="row">
+
+
+                <!-- =================================================
+                     LEFT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-8">
+
+
+                    <!-- CATEGORY DETAILS -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+
+                                <i class="ti ti-category me-2 text-primary"></i>
+
+                                Category Details
+
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <!-- NAME -->
+
+                            <div class="mb-4">
+
+                                <label
+                                    for="categoryName"
+                                    class="form-label"
+                                >
+
+                                    Category Name
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    id="categoryName"
+                                    name="name"
+                                    value="<%= categoryName %>"
+                                    class="form-control form-control-lg"
+                                    placeholder="e.g. Salary, Rent, Electricity"
+                                    maxlength="150"
+                                    autocomplete="off"
+                                    required
+                                >
+
+
+                                <div class="d-flex justify-content-between mt-2">
+
+                                    <small class="text-muted">
+
+                                        Enter a clear name for your category.
+
+                                    </small>
+
+
+                                    <small
+                                        class="text-muted"
+                                        id="nameCounter"
+                                    >
+                                        <%= categoryName.length %>/150
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- TYPE -->
+
+                            <div>
+
+                                <label class="form-label mb-3">
+
+                                    Category Type
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <div class="row">
+
+
+                                    <!-- INCOME -->
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label
+                                            class="category-type-card <%= categoryType === 1 ? 'active-income' : '' %>"
+                                            id="incomeCard"
+                                            for="incomeType"
+                                        >
+
+
+                                            <input
+                                                type="radio"
+                                                name="type"
+                                                id="incomeType"
+                                                value="1"
+                                                class="d-none category-type-radio"
+                                                <%= categoryType === 1 ? 'checked' : '' %>
+                                            >
+
+
+                                            <div class="category-type-icon income-icon">
+
+                                                <i class="ti ti-trending-up"></i>
+
+                                            </div>
+
+
+                                            <h6 class="mb-1">
+
+                                                Income
+
+                                            </h6>
+
+
+                                            <p class="text-muted small mb-0">
+
+                                                Money received or earned by you.
+
+                                            </p>
+
+
+                                            <div class="mt-2">
+
+                                                <span class="badge bg-soft-success text-success">
+
+                                                    Example: Salary
+
+                                                </span>
+
+                                            </div>
+
+                                        </label>
+
+                                    </div>
+
+
+                                    <!-- EXPENSE -->
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label
+                                            class="category-type-card <%= categoryType === 2 ? 'active-expense' : '' %>"
+                                            id="expenseCard"
+                                            for="expenseType"
+                                        >
+
+
+                                            <input
+                                                type="radio"
+                                                name="type"
+                                                id="expenseType"
+                                                value="2"
+                                                class="d-none category-type-radio"
+                                                <%= categoryType === 2 ? 'checked' : '' %>
+                                            >
+
+
+                                            <div class="category-type-icon expense-icon">
+
+                                                <i class="ti ti-trending-down"></i>
+
+                                            </div>
+
+
+                                            <h6 class="mb-1">
+
+                                                Expense
+
+                                            </h6>
+
+
+                                            <p class="text-muted small mb-0">
+
+                                                Money spent or paid by you.
+
+                                            </p>
+
+
+                                            <div class="mt-2">
+
+                                                <span class="badge bg-soft-danger text-danger">
+
+                                                    Example: Rent
+
+                                                </span>
+
+                                            </div>
+
+                                        </label>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CATEGORY GUIDELINES -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+
+                                <i class="ti ti-info-circle me-2 text-info"></i>
+
+                                Category Guidelines
+
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="category-info-box p-3">
+
+
+                                <div class="d-flex align-items-start gap-3 mb-3">
+
+                                    <span class="avatar avatar-sm bg-soft-primary text-primary">
+
+                                        <i class="ti ti-bulb"></i>
+
+                                    </span>
+
+
+                                    <div>
+
+                                        <h6 class="mb-1">
+
+                                            Keep category names simple
+
+                                        </h6>
+
+                                        <p class="text-muted small mb-0">
+
+                                            Use meaningful names so transactions
+                                            can be easily identified and filtered.
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="mb-1">
+
+                                    <strong class="small text-dark">
+                                        Income examples
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="mb-3">
+
+                                    <span class="category-example">
+                                        Salary
+                                    </span>
+
+                                    <span class="category-example">
+                                        Freelancing
+                                    </span>
+
+                                    <span class="category-example">
+                                        Commission
+                                    </span>
+
+                                    <span class="category-example">
+                                        Business Income
+                                    </span>
+
+                                    <span class="category-example">
+                                        Interest
+                                    </span>
+
+                                </div>
+
+
+                                <div class="mb-1">
+
+                                    <strong class="small text-dark">
+                                        Expense examples
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span class="category-example">
+                                        Rent
+                                    </span>
+
+                                    <span class="category-example">
+                                        Electricity
+                                    </span>
+
+                                    <span class="category-example">
+                                        Internet
+                                    </span>
+
+                                    <span class="category-example">
+                                        Travel
+                                    </span>
+
+                                    <span class="category-example">
+                                        Food
+                                    </span>
+
+                                    <span class="category-example">
+                                        Office
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EDIT INFORMATION -->
+
+                    <% if (isEdit) { %>
+
+                        <div class="card mb-4">
+
+                            <div class="card-header">
+
+                                <h5 class="card-title mb-0">
+
+                                    <i class="ti ti-history me-2 text-secondary"></i>
+
+                                    Record Information
+
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body">
+
+
+                                <div class="row">
+
+
+                                    <div class="col-md-6 mb-3 mb-md-0">
+
+                                        <div class="text-muted small mb-1">
+                                            Category ID
+                                        </div>
+
+                                        <div class="fw-semibold">
+
+                                            #<%= categoryData.id || '—' %>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <div class="text-muted small mb-1">
+                                            Current Type
+                                        </div>
+
+                                        <div>
+
+                                            <span
+                                                class="badge <%= categoryType === 1
+                                                    ? 'bg-soft-success text-success'
+                                                    : 'bg-soft-danger text-danger'
+                                                %>"
+                                                id="currentTypeBadge"
+                                            >
+
+                                                <%= typeLabel %>
+
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    <% } %>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     RIGHT COLUMN
+                ================================================== -->
+
+                <div class="col-xl-4">
+
+
+                    <!-- LIVE PREVIEW -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="card-title mb-0">
+
+                                <i class="ti ti-eye me-2 text-primary"></i>
+
+                                Category Preview
+
+                            </h5>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+
+                            <div class="category-preview">
+
+
+                                <div class="d-flex align-items-center gap-3">
+
+
+                                    <div
+                                        id="previewIcon"
+                                        class="preview-icon <%= categoryType === 1
+                                            ? 'preview-income'
+                                            : 'preview-expense'
+                                        %>"
+                                    >
+
+                                        <i
+                                            id="previewIconElement"
+                                            class="ti <%= categoryType === 1
+                                                ? 'ti-trending-up'
+                                                : 'ti-trending-down'
+                                            %>"
+                                        ></i>
+
+                                    </div>
+
+
+                                    <div class="min-w-0">
+
+
+                                        <div
+                                            class="fw-bold text-dark"
+                                            id="previewName"
+                                        >
+
+                                            <%= categoryName || 'Category Name' %>
+
+                                        </div>
+
+
+                                        <div
+                                            class="small mt-1 <%= categoryType === 1
+                                                ? 'text-success'
+                                                : 'text-danger'
+                                            %>"
+                                            id="previewType"
+                                        >
+
+                                            <%= typeLabel %>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SECURITY -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-body">
+
+
+                            <div class="d-flex align-items-start gap-3">
+
+
+                                <span class="avatar avatar-md bg-soft-success text-success">
+
+                                    <i class="ti ti-shield-check"></i>
+
+                                </span>
+
+
+                                <div>
+
+                                    <h6 class="mb-1">
+
+                                        Your Private Category
+
+                                    </h6>
+
+
+                                    <p class="text-muted small mb-0">
+
+                                        This category belongs only to your
+                                        account and can be used with your
+                                        own income and expense transactions.
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTION -->
+
+                    <div class="card">
+
+                        <div class="card-body">
+
+
+                            <div class="d-grid gap-2">
+
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                    id="submitCategoryBtn"
+                                >
+
+                                    <i
+                                        class="ti <%= isEdit
+                                            ? 'ti-device-floppy'
+                                            : 'ti-plus'
+                                        %> me-1"
+                                    ></i>
+
+
+                                    <span id="submitText">
+
+                                        <%= isEdit
+                                            ? 'Update Category'
+                                            : 'Create Category'
+                                        %>
+
+                                    </span>
+
+                                </button>
+
+
+                                <a
+                                    href="/admin/income-expense/categories"
+                                    class="btn btn-light"
+                                >
+
+                                    Cancel
+
+                                </a>
+
+                            </div>
+
+
+                            <div class="text-center mt-3">
+
+                                <small class="text-muted">
+
+                                    <i class="ti ti-lock me-1"></i>
+
+                                    Changes are saved securely.
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ELEMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        const nameInput =
+            document.getElementById(
+                'categoryName'
+            );
+
+
+        const nameCounter =
+            document.getElementById(
+                'nameCounter'
+            );
+
+
+        const incomeType =
+            document.getElementById(
+                'incomeType'
+            );
+
+
+        const expenseType =
+            document.getElementById(
+                'expenseType'
+            );
+
+
+        const incomeCard =
+            document.getElementById(
+                'incomeCard'
+            );
+
+
+        const expenseCard =
+            document.getElementById(
+                'expenseCard'
+            );
+
+
+        const previewName =
+            document.getElementById(
+                'previewName'
+            );
+
+
+        const previewType =
+            document.getElementById(
+                'previewType'
+            );
+
+
+        const previewIcon =
+            document.getElementById(
+                'previewIcon'
+            );
+
+
+        const previewIconElement =
+            document.getElementById(
+                'previewIconElement'
+            );
+
+
+        const currentTypeBadge =
+            document.getElementById(
+                'currentTypeBadge'
+            );
+
+
+        const form =
+            document.getElementById(
+                'categoryForm'
+            );
+
+
+        const submitButton =
+            document.getElementById(
+                'submitCategoryBtn'
+            );
+
+
+        const submitText =
+            document.getElementById(
+                'submitText'
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NAME PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function updateName() {
+
+            if (!nameInput) {
+                return;
+            }
+
+
+            const value =
+                nameInput.value.trim();
+
+
+            if (previewName) {
+
+                previewName.textContent =
+                    value || 'Category Name';
+
+            }
+
+
+            if (nameCounter) {
+
+                nameCounter.textContent =
+                    value.length + '/150';
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TYPE PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function updateType() {
+
+            const type =
+                incomeType &&
+                incomeType.checked
+                    ? 1
+                    : 2;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Cards
+            |--------------------------------------------------------------------------
+            */
+
+            if (incomeCard) {
+
+                incomeCard.classList.toggle(
+                    'active-income',
+                    type === 1
+                );
+
+            }
+
+
+            if (expenseCard) {
+
+                expenseCard.classList.toggle(
+                    'active-expense',
+                    type === 2
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Preview icon
+            |--------------------------------------------------------------------------
+            */
+
+            if (previewIcon) {
+
+                previewIcon.classList.remove(
+                    'preview-income',
+                    'preview-expense'
+                );
+
+
+                previewIcon.classList.add(
+                    type === 1
+                        ? 'preview-income'
+                        : 'preview-expense'
+                );
+
+            }
+
+
+            if (previewIconElement) {
+
+                previewIconElement.className =
+                    'ti ' +
+                    (
+                        type === 1
+                            ? 'ti-trending-up'
+                            : 'ti-trending-down'
+                    );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Preview type
+            |--------------------------------------------------------------------------
+            */
+
+            if (previewType) {
+
+                previewType.textContent =
+                    type === 1
+                        ? 'Income'
+                        : 'Expense';
+
+
+                previewType.classList.remove(
+                    'text-success',
+                    'text-danger'
+                );
+
+
+                previewType.classList.add(
+                    type === 1
+                        ? 'text-success'
+                        : 'text-danger'
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Edit information
+            |--------------------------------------------------------------------------
+            */
+
+            if (currentTypeBadge) {
+
+                currentTypeBadge.textContent =
+                    type === 1
+                        ? 'Income'
+                        : 'Expense';
+
+
+                currentTypeBadge.classList.remove(
+                    'bg-soft-success',
+                    'text-success',
+                    'bg-soft-danger',
+                    'text-danger'
+                );
+
+
+                if (type === 1) {
+
+                    currentTypeBadge.classList.add(
+                        'bg-soft-success',
+                        'text-success'
+                    );
+
+                } else {
+
+                    currentTypeBadge.classList.add(
+                        'bg-soft-danger',
+                        'text-danger'
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INPUT EVENTS
+        |--------------------------------------------------------------------------
+        */
+
+        if (nameInput) {
+
+            nameInput.addEventListener(
+                'input',
+                updateName
+            );
+
+        }
+
+
+        if (incomeType) {
+
+            incomeType.addEventListener(
+                'change',
+                updateType
+            );
+
+        }
+
+
+        if (expenseType) {
+
+            expenseType.addEventListener(
+                'change',
+                updateType
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INITIAL
+        |--------------------------------------------------------------------------
+        */
+
+        updateName();
+
+        updateType();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FORM SUBMIT
+        |--------------------------------------------------------------------------
+        */
+
+        if (form) {
+
+            form.addEventListener(
+                'submit',
+                function () {
+
+
+                    if (
+                        submitButton &&
+                        submitButton.disabled
+                    ) {
+
+                        return false;
+
+                    }
+
+
+                    if (submitButton) {
+
+                        submitButton.disabled =
+                            true;
+
+                    }
+
+
+                    if (submitText) {
+
+                        submitText.textContent =
+                            '<%= isEdit
+                                ? "Updating..."
+                                : "Creating..."
+                            %>';
+
+                    }
+
+                }
+            );
+
+        }
+
+    }
+);
+
+</script>
+
+
+<%- include('../../adminlayout/footer') %>

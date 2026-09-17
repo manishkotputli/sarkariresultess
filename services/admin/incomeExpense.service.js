@@ -223,10 +223,10 @@ async function addEntry(body, loggedInUserId) {
   if (body.bank_id) {
 
     const bank =
-      await repo.findBankForUser(
-        body.bank_id,
-        userId
-      );
+  await repo.findBankByIdForUser(
+    body.bank_id,
+    userId
+  );
 
 
     if (!bank) {
@@ -403,11 +403,11 @@ async function editEntry(
 
   if (body.bank_id) {
 
-    const bank =
-      await repo.findBankForUser(
-        body.bank_id,
-        userId
-      );
+   const bank =
+  await repo.findBankByIdForUser(
+    body.bank_id,
+    userId
+  );
 
 
     if (!bank) {
