@@ -1,0 +1,32 @@
+{
+  "name": "Sarkari Resultess",
+  "short_name": "Sarkari Resultess",
+  "description": "Latest Government Jobs, Results, Admit Cards, Answer Keys, Syllabus, Courses and Test Series.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#d90000",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "government",
+    "news"
+  ],
+  "icons": [
+    {
+      "src": "/admin_assets/img/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/admin_assets/img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

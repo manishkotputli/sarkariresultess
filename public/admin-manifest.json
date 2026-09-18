@@ -1,0 +1,25 @@
+{
+  "name": "Sarkari Resultess Admin",
+  "short_name": "SR Admin",
+  "description": "Sarkari Resultess Administration Panel",
+  "start_url": "/admin/dashboard",
+  "scope": "/admin/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#d90000",
+  "icons": [
+    {
+      "src": "/admin_assets/img/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/admin_assets/img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

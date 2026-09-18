@@ -155,7 +155,29 @@
 <button class="back-to-top-btn" id="backToTopBtn" aria-label="Scroll Back to Top">
   <i class="ti ti-arrow-up"></i>
 </button>
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
 
+        navigator.serviceWorker.register('/sw.js', {
+            scope: '/'
+        })
+        .then(function (registration) {
+            console.log(
+                '✅ Website PWA Service Worker registered:',
+                registration.scope
+            );
+        })
+        .catch(function (error) {
+            console.error(
+                '❌ Website PWA Service Worker registration failed:',
+                error
+            );
+        });
+
+    });
+}
+</script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     var backToTopBtn = document.getElementById('backToTopBtn');

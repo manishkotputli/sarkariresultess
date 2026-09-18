@@ -11,13 +11,14 @@
   <% if (typeof metaKeywords !== 'undefined' && metaKeywords) { %>
     <meta name="keywords" content="<%= metaKeywords %>">
   <% } %>
+
   <meta property="og:title" content="<%= typeof title !== 'undefined' && title ? title : ((site_setting && site_setting.site_title) || 'Sarkari Result') %>">
   <meta property="og:type" content="article">
   <!-- <% if (site_setting && site_setting.favicon) { %>
     <link rel="icon" href="<%= site_setting.favicon %>">
   <% } %> -->
   <link rel="shortcut icon" href="/admin_assets/img/logo.png">
-
+<link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/css/sarkari-style.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
