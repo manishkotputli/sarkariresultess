@@ -3,30 +3,26 @@
 set -e
 
 echo "========================================"
-echo "🚀 Starting deployment"
+echo "🚀 Starting Sarkari Resultess deployment"
 echo "========================================"
 
-# Project directory
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$APP_DIR"
 
 echo "📁 App directory: $APP_DIR"
 
 # --------------------------------------------------
-# Node environment
+# Environment
 # --------------------------------------------------
 
 export NODE_ENV=production
 export ENV=production
 
-echo "========================================"
-echo "🔧 Environment"
 echo "NODE_ENV=$NODE_ENV"
 echo "ENV=$ENV"
-echo "========================================"
 
 # --------------------------------------------------
-# Find Node / npm
+# Node / npm
 # --------------------------------------------------
 
 NODE_BIN="$(command -v node || true)"
@@ -49,11 +45,11 @@ node -v
 npm -v
 
 # --------------------------------------------------
-# Install dependencies
+# Dependencies
 # --------------------------------------------------
 
 echo "========================================"
-echo "📦 Installing dependencies"
+echo "📦 Installing production dependencies"
 echo "========================================"
 
 if [ -f package-lock.json ]; then
@@ -75,18 +71,14 @@ echo "========================================"
 echo "✅ Migrations completed"
 
 # --------------------------------------------------
-# DO NOT RUN SEEDERS
+# Seeders
 # --------------------------------------------------
-echo "========================================"
-echo "🌱 Running database seeders"
-echo "========================================"
-
-"$NODE_BIN" ./node_modules/sequelize-cli/lib/sequelize db:seed:all --env production
-
-echo "✅ Seeders completed"
+# DO NOT run seeders automatically in production.
+# Run manually only when required.
+# --------------------------------------------------
 
 echo "========================================"
-echo "🌱 Seeders skipped"
+echo "🌱 Production seeders skipped"
 echo "========================================"
 
 # --------------------------------------------------
@@ -94,16 +86,12 @@ echo "========================================"
 # --------------------------------------------------
 
 echo "========================================"
-echo "♻️ Restarting application"
+echo "♻️ Restarting Node application"
 echo "========================================"
 
-# Hostinger Passenger usually detects restart.txt
 mkdir -p tmp
 touch tmp/restart.txt
 
-# If your Hostinger setup uses passenger directly,
-# this file is enough to trigger restart.
-
 echo "========================================"
-echo "✅ Deployment completed"
+echo "✅ Deployment completed successfully"
 echo "========================================"
