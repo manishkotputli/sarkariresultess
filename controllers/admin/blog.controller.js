@@ -45,7 +45,14 @@ async function createForm(req, res, next) {
 
 async function store(req, res, next) {
   try {
-    const blog = await blogService.createBlog(req.body, req.file);
+    const authorId = req.session.admin.id;
+
+    const blog = await blogService.createBlog(
+      req.body,
+      req.file,
+      authorId
+    );
+
     req.flash('success', 'Blog post created successfully.');
     res.redirect(`/admin/blogs/${blog.id}/edit`);
   } catch (err) {
@@ -53,6 +60,7 @@ async function store(req, res, next) {
       req.flash('error', err.message);
       return res.redirect('/admin/blogs/create');
     }
+
     next(err);
   }
 }

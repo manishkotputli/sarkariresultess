@@ -31,38 +31,70 @@ async function getById(id) {
   return repo.findById(id);
 }
 
-async function createBlog(body, file) {
+async function createBlog(body, file, authorId) {
+  if (!authorId) {
+    const err = new Error('Logged-in user not found.');
+    err.status = 400;
+    throw err;
+  }
+
   if (!body.title) {
     const err = new Error('Title is required.');
     err.status = 400;
     throw err;
   }
-  let slug = (body.slug || '').trim() ? slugify(body.slug) : slugify(body.title);
+
+  let slug = (body.slug || '').trim()
+    ? slugify(body.slug)
+    : slugify(body.title);
+
   const existing = await repo.findBySlug(slug);
-  if (existing) slug = `${slug}-${Date.now().toString().slice(-5)}`;
+
+  if (existing) {
+    slug = `${slug}-${Date.now().toString().slice(-5)}`;
+  }
 
   const { word_count, read_time } = computeWordStats(body.content);
-  const status = body.status === 'published' ? 'published' : 'draft';
+
+  const status = body.status === 'published'
+    ? 'published'
+    : 'draft';
 
   return repo.create({
     title: body.title.trim(),
     slug,
+
     short_description: body.short_description || null,
     content: body.content || null,
+
     thumbnail: resolveThumbnail(body, file, null),
+
     category_id: body.category_id || null,
+
+    // IMPORTANT
+    author_id: authorId,
+
     tags: body.tags || null,
+
     meta_title: body.meta_title || null,
     meta_keywords: body.meta_keywords || null,
     meta_description: body.meta_description || null,
+
     noindex: body.noindex === 'on',
     nofollow: body.nofollow === 'on',
+
     canonical_url: body.canonical_url || null,
+
     word_count,
     read_time,
+
     is_featured: body.is_featured === 'on',
+
     status,
-    published_at: status === 'published' ? new Date() : null,
+
+    published_at: status === 'published'
+      ? new Date()
+      : null,
   });
 }
 
