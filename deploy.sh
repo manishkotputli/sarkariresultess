@@ -111,11 +111,11 @@ git fetch origin "$BRANCH"
 
 echo "Switching to branch: $BRANCH"
 
-git checkout -B "$BRANCH" "origin/$BRANCH"
+git checkout -B "$BRANCH" FETCH_HEAD
 
 echo "Resetting to latest origin/$BRANCH"
 
-git reset --hard "origin/$BRANCH"
+git reset --hard FETCH_HEAD
 
 echo ""
 echo "✅ Source code updated"
