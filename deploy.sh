@@ -132,6 +132,14 @@ echo "========================================"
 echo "🔧 Node Environment"
 echo "========================================"
 
+# Hostinger Node.js runtime
+NODE_PATH="/opt/alt/alt-nodejs22/root/usr/bin"
+
+if [ -d "$NODE_PATH" ]; then
+    export PATH="$NODE_PATH:$PATH"
+fi
+
+
 NODE_BIN="$(command -v node || true)"
 NPM_BIN="$(command -v npm || true)"
 
