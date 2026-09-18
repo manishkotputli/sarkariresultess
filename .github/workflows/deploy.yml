@@ -3,35 +3,86 @@ name: Sarkari Resultess Auto Deploy
 on:
   push:
     branches:
-      - Manish
+      - development
+      - production
+
+concurrency:
+  group: sarkari-resultess-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    name: Deploy Sarkari Resultess
+
     runs-on: ubuntu-latest
+
+    env:
+      ENV: ${{ github.ref == 'refs/heads/production' && 'production' || 'local' }}
+
+      SERVER_IP: ${{ github.ref == 'refs/heads/production' && secrets.PROD_SERVER_IP || secrets.DEV_SERVER_IP }}
+      SERVER_USER: ${{ github.ref == 'refs/heads/production' && secrets.PROD_SERVER_USER || secrets.DEV_SERVER_USER }}
+      SERVER_PORT: ${{ github.ref == 'refs/heads/production' && secrets.PROD_SERVER_PORT || secrets.DEV_SERVER_PORT }}
+      PROJECT_PATH: ${{ github.ref == 'refs/heads/production' && secrets.PROD_PROJECT_PATH || secrets.DEV_PROJECT_PATH }}
+      SSH_PRIVATE_KEY: ${{ github.ref == 'refs/heads/production' && secrets.PROD_SSH_PRIVATE_KEY || secrets.DEV_SSH_PRIVATE_KEY }}
 
     steps:
 
+      # -----------------------------------------
+      # Checkout
+      # -----------------------------------------
+
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # -----------------------------------------
+      # Show deployment environment
+      # -----------------------------------------
+
+      - name: Show deployment environment
+        run: |
+          echo "========================================"
+          echo "🚀 Sarkari Resultess Deployment"
+          echo "========================================"
+
+          echo "Branch: ${{ github.ref_name }}"
+          echo "ENV: $ENV"
+
+          if [ "$ENV" = "production" ]; then
+            echo "🎯 Target: PRODUCTION / LIVE"
+            echo "🌐 Domain: sarkariresultess.com"
+          else
+            echo "🎯 Target: DEVELOPMENT / UAT"
+            echo "🌐 Domain: uat.sarkariresultess.com"
+          fi
+
+          echo "========================================"
+
+      # -----------------------------------------
+      # SSH Setup
+      # -----------------------------------------
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
 
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
 
           chmod 600 ~/.ssh/id_ed25519
 
           ssh-keyscan \
-            -p "${{ secrets.SERVER_PORT }}" \
-            -H "${{ secrets.SERVER_IP }}" \
+            -p "$SERVER_PORT" \
+            -H "$SERVER_IP" \
             >> ~/.ssh/known_hosts
+
+      # -----------------------------------------
+      # Deploy
+      # -----------------------------------------
 
       - name: Deploy to Hostinger
         run: |
           ssh \
             -i ~/.ssh/id_ed25519 \
-            -p "${{ secrets.SERVER_PORT }}" \
+            -p "$SERVER_PORT" \
             -o StrictHostKeyChecking=yes \
-            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}" \
-            "bash '${{ secrets.PROJECT_PATH }}/deploy.sh'"
+            "$SERVER_USER@$SERVER_IP" \
+            "ENV='$ENV' PROJECT_PATH='$PROJECT_PATH' bash '$PROJECT_PATH/deploy.sh'"
